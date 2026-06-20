@@ -1,0 +1,52 @@
+# =========================================================================
+# Build Artifacts & Dependency Caches
+# =========================================================================
+**/target/
+**/build/
+**/out/
+.gradle/
+wrapper/
+**/*.jar
+**/*.war
+**/*.ear
+**/*.class
+
+# =========================================================================
+# IDEs & System Metadata
+# =========================================================================
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Eclipse
+.metadata/
+.classpath
+.project
+.settings/
+*.launch
+
+# NetBeans
+**/nbproject/private/
+**/nbbuild/
+**/dist/
+**/nbdist/
+
+# VS Code
+.vscode/
+
+# OS Specific
+.DS_Store
+Thumbs.db
+
+# =========================================================================
+# Version Control & Local Environments
+# =========================================================================
+.git
+.gitignore
+.hg
+.svn
+*.log
+.env
+.env.*
