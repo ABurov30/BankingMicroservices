@@ -3,9 +3,9 @@ services:
     image: postgres:16
     container_name: auth-postgres
     environment:
-      POSTGRES_DB: auth_db
-      POSTGRES_USER: auth_user
-      POSTGRES_PASSWORD: auth_password
+      POSTGRES_DB: ${AUTH_POSTGRES_DB}
+      POSTGRES_USER: ${AUTH_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${AUTH_POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -19,9 +19,11 @@ services:
     depends_on:
       - postgres
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/auth_db
-      SPRING_DATASOURCE_USERNAME: auth_user
-      SPRING_DATASOURCE_PASSWORD: auth_password
+      NAME: ${AUTH_NAME}
+      PORT: ${AUTH_PORT}
+      SPRING_DATASOURCE_URL: ${AUTH_SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${AUTH_SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${AUTH_SPRING_DATASOURCE_PASSWORD}
 
   api-gateway:
     build: ../ApiGateway
@@ -30,6 +32,12 @@ services:
       - "8080:8080"
     depends_on:
       - auth-service
+    environment:
+      NAME: ${API_GATEWAY_NAME}
+      PORT: ${API_GATEWAY_PORT}
+      AUTH_ROUTE_ID: ${AUTH_ROUTE_ID}
+      AUTH_SERVICE_URI: ${AUTH_SERVICE_URI}
+      AUTH_ROUTE_PATHS: ${AUTH_ROUTE_PATHS}
 
 volumes:
   postgres_data:

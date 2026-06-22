@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
-    @GetMapping
-    public String getAuth() {
-        return "Auth service";
-    }
+  @GetMapping
+  public String getAuth() {
+    return "Auth service";
+  }
 }

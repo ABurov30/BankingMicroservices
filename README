@@ -1,0 +1,78 @@
+# Project
+
+Небольшой Spring Boot проект, разбитый на два приложения:
+
+- `ApiGateway` - входная точка для запросов;
+- `AuthService` - сервис аутентификации с PostgreSQL.
+
+Проект собран на Java 17 и Maven. Для локального запуска используется Docker Compose.
+
+## Структура
+
+| Модуль | Назначение |
+| --- | --- |
+| `ApiGateway` | Spring Cloud Gateway, проксирование запросов к сервисам |
+| `AuthService` | REST-сервис с endpoint `/auth` и подключением к PostgreSQL |
+| `Infra` | Общий `docker-compose.yml` и переменные окружения для запуска всей связки |
+
+## Требования
+
+- Java 17+
+- Maven 3.9+
+- Docker Desktop
+
+## Локальный запуск
+
+### Через Docker Compose
+
+Из папки `Infra`:
+
+```bash
+docker compose up -d
+```
+
+После старта:
+
+- API Gateway: `http://localhost:8080`
+- Auth Service: `http://localhost:8081/auth`
+- PostgreSQL: `localhost:5432`
+
+### Без Docker
+
+Запуск каждого сервиса отдельно:
+
+```bash
+cd AuthService
+mvn spring-boot:run
+```
+
+```bash
+cd ApiGateway
+mvn spring-boot:run
+```
+
+Перед запуском убедись, что в корне соответствующего модуля лежит `.env.local` или `.env` с нужными переменными.
+
+## Конфигурация
+
+`ApiGateway` читает настройки маршрутов из переменных окружения:
+
+- `AUTH_ROUTE_ID`
+- `AUTH_SERVICE_URI`
+- `AUTH_ROUTE_PATHS`
+
+`AuthService` использует переменные для подключения к базе:
+
+- `AUTH_SPRING_DATASOURCE_URL`
+- `AUTH_SPRING_DATASOURCE_USERNAME`
+- `AUTH_SPRING_DATASOURCE_PASSWORD`
+
+## Проверка
+
+Можно проверить доступность сервиса напрямую:
+
+```bash
+curl http://localhost:8081/auth
+```
+
+Если нужен health-check через actuator, он зависит от текущей конфигурации приложения.
