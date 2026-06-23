@@ -12,7 +12,10 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   auth-service:
-    build: .
+    build:
+      context: .
+      args:
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
     container_name: auth-service
     ports:
       - "8081:8081"
@@ -20,6 +23,7 @@ services:
       - postgres
     environment:
       SPRING_DATASOURCE_URL: ${AUTH_SPRING_DATASOURCE_URL}
+      GRPC_PORT: ${GRPC_PORT}
       SPRING_DATASOURCE_USERNAME: ${AUTH_SPRING_DATASOURCE_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${AUTH_SPRING_DATASOURCE_PASSWORD}
 

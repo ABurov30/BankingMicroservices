@@ -1,13 +1,16 @@
+
 FROM eclipse-temurin:17-jdk AS build
+
+ARG GITHUB_TOKEN
 
 WORKDIR /app
 
 COPY .mvn .mvn
 COPY mvnw pom.xml ./
-RUN ./mvnw dependency:go-offline
+RUN ./mvnw -s .mvn/settings-docker.xml dependency:go-offline -DskipTests
 
 COPY src src
-RUN ./mvnw clean package -DskipTests
+RUN ./mvnw -s .mvn/settings-docker.xml clean package -DskipTests
 
 FROM eclipse-temurin:17-jre
 

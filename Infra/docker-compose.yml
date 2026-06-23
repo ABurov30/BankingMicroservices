@@ -12,7 +12,10 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   auth-service:
-    build: ../AuthService
+    build:
+      context: ../AuthService
+      args:
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
     container_name: auth-service
     ports:
       - "8081:8081"
@@ -21,12 +24,16 @@ services:
     environment:
       NAME: ${AUTH_NAME}
       PORT: ${AUTH_PORT}
+      GRPC_PORT: ${AUTH_GRPC_PORT}
       SPRING_DATASOURCE_URL: ${AUTH_SPRING_DATASOURCE_URL}
       SPRING_DATASOURCE_USERNAME: ${AUTH_SPRING_DATASOURCE_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${AUTH_SPRING_DATASOURCE_PASSWORD}
 
   api-gateway:
-    build: ../ApiGateway
+    build:
+      context: ../ApiGateway
+      args:
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
     container_name: api-gateway
     ports:
       - "8080:8080"
@@ -35,9 +42,8 @@ services:
     environment:
       NAME: ${API_GATEWAY_NAME}
       PORT: ${API_GATEWAY_PORT}
-      AUTH_ROUTE_ID: ${AUTH_ROUTE_ID}
-      AUTH_SERVICE_URI: ${AUTH_SERVICE_URI}
-      AUTH_ROUTE_PATHS: ${AUTH_ROUTE_PATHS}
+      AUTH_GRPC_HOST: ${AUTH_GRPC_HOST}
+      AUTH_GRPC_PORT: ${AUTH_GRPC_PORT}
 
 volumes:
   postgres_data:
