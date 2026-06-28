@@ -16,9 +16,10 @@ services:
       context: .
       args:
         GITHUB_TOKEN: ${GITHUB_TOKEN}
+        PORT: ${PORT}
     container_name: auth-service
     ports:
-      - "8081:8081"
+      - "${PORT}:${PORT}"
     depends_on:
       - postgres
     environment:

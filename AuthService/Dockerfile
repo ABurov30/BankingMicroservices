@@ -1,6 +1,7 @@
 FROM eclipse-temurin:17-jdk AS build
 
 ARG GITHUB_TOKEN
+ARG PORT
 
 WORKDIR /app
 
@@ -17,6 +18,6 @@ WORKDIR /app
 
 COPY --from=build /app/target/*.jar app.jar
 
-EXPOSE 8081
+EXPOSE ${PORT}
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

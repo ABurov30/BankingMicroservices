@@ -1,0 +1,37 @@
+name: Push to main branch
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  test:
+    name: Test ${{ matrix.service }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+            - service: auth-service
+              path: AuthService
+            - service: api-gateway
+              path: ApiGateway
+
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+
+        - name: Set up Java
+          uses: actions/setup-java@v4
+          with:
+            distribution: temurin
+            java-version: 17
+            cache: maven
+
+        - name: Run tests
+          working-directory: ${{ matrix.path }}
+          run: mvn test
+

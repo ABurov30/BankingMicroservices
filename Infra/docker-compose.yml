@@ -16,9 +16,10 @@ services:
       context: ../AuthService
       args:
         GITHUB_TOKEN: ${GITHUB_TOKEN}
+        PORT: ${AUTH_PORT}
     container_name: auth-service
     ports:
-      - "8081:8081"
+      - "${AUTH_PORT}:${AUTH_PORT}"
     depends_on:
       - postgres
     environment:
@@ -34,9 +35,10 @@ services:
       context: ../ApiGateway
       args:
         GITHUB_TOKEN: ${GITHUB_TOKEN}
+        PORT: ${API_GATEWAY_PORT}
     container_name: api-gateway
     ports:
-      - "8080:8080"
+      - "${API_GATEWAY_PORT}:${API_GATEWAY_PORT}"
     depends_on:
       - auth-service
     environment:
