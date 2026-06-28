@@ -15,10 +15,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-            - service: auth-service
-              path: AuthService
-            - service: api-gateway
-              path: ApiGateway
+          - service: auth-service
+            path: AuthService
+            db_required: true
+          - service: api-gateway
+            path: ApiGateway
+            db_required: false
 
     steps:
       - name: Checkout
@@ -31,8 +33,67 @@ jobs:
           java-version: 17
           cache: maven
 
+      - name: Start PostgreSQL
+        if: matrix.db_required == true
+        run: |
+          docker run -d \
+            --name auth-postgres \
+            -e POSTGRES_DB=${{ vars.AUTH_POSTGRES_DB }} \
+            -e POSTGRES_USER=${{ vars.AUTH_POSTGRES_USER }} \
+            -e POSTGRES_PASSWORD=${{ secrets.AUTH_POSTGRES_PASSWORD }} \
+            -p 5432:5432 \
+            postgres:16
+
+      - name: Wait for PostgreSQL
+        if: matrix.db_required == true
+        run: |
+          for i in {1..30}; do
+            docker exec auth-postgres pg_isready \
+              -U ${{ vars.AUTH_POSTGRES_USER }} \
+              -d ${{ vars.AUTH_POSTGRES_DB }} && exit 0
+            sleep 2
+          done
+          docker logs auth-postgres
+          exit 1
+
       - name: Run tests
         working-directory: ${{ matrix.path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+          API_GATEWAY_NAME: ${{ vars.API_GATEWAY_NAME }}
+          API_GATEWAY_PORT: ${{ vars.API_GATEWAY_PORT }}
+          AUTH_NAME: ${{ vars.AUTH_NAME }}
+          AUTH_PORT: ${{ vars.AUTH_PORT }}
+          AUTH_GRPC_HOST: ${{ vars.AUTH_GRPC_HOST }}
+          AUTH_GRPC_PORT: ${{ vars.AUTH_GRPC_PORT }}
+          AUTH_SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/${{ vars.AUTH_POSTGRES_DB }}
+          AUTH_SPRING_DATASOURCE_USERNAME: ${{ vars.AUTH_SPRING_DATASOURCE_USERNAME }}
+          AUTH_SPRING_DATASOURCE_PASSWORD: ${{ secrets.AUTH_SPRING_DATASOURCE_PASSWORD }}
+          AUTH_POSTGRES_DB: ${{ vars.AUTH_POSTGRES_DB }}
+          AUTH_POSTGRES_USER: ${{ vars.AUTH_POSTGRES_USER }}
+          AUTH_POSTGRES_PASSWORD: ${{ secrets.AUTH_POSTGRES_PASSWORD }}
+        run: mvn -s .mvn/settings-docker.xml test
+
+      - name: Print test reports
+        if: failure()
+        working-directory: ${{ matrix.path }}
+        run: cat target/surefire-reports/*.txt
+
+      - name: Stop PostgreSQL
+        if: always() && matrix.db_required == true
+        run: docker rm -f auth-postgres
+
+  build:
+    name: Build Docker Compose
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start Docker Compose
+        working-directory: Infra
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
           API_GATEWAY_NAME: ${{ vars.API_GATEWAY_NAME }}
@@ -47,4 +108,13 @@ jobs:
           AUTH_POSTGRES_DB: ${{ vars.AUTH_POSTGRES_DB }}
           AUTH_POSTGRES_USER: ${{ vars.AUTH_POSTGRES_USER }}
           AUTH_POSTGRES_PASSWORD: ${{ secrets.AUTH_POSTGRES_PASSWORD }}
-        run: mvn -s .mvn/settings-docker.xml test
+        run: docker compose up --build -d
+
+      - name: Show Docker Compose status
+        working-directory: Infra
+        run: docker compose ps
+
+      - name: Stop Docker Compose
+        if: always()
+        working-directory: Infra
+        run: docker compose down -v
