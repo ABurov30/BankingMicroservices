@@ -33,4 +33,6 @@ jobs:
 
       - name: Run tests
         working-directory: ${{ matrix.path }}
-        run: mvn test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+        run: mvn -s .mvn/settings-docker.xml test
