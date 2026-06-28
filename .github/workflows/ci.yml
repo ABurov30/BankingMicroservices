@@ -112,9 +112,37 @@ jobs:
 
       - name: Show Docker Compose status
         working-directory: Infra
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+          API_GATEWAY_NAME: ${{ vars.API_GATEWAY_NAME }}
+          API_GATEWAY_PORT: ${{ vars.API_GATEWAY_PORT }}
+          AUTH_NAME: ${{ vars.AUTH_NAME }}
+          AUTH_PORT: ${{ vars.AUTH_PORT }}
+          AUTH_GRPC_HOST: ${{ vars.AUTH_GRPC_HOST }}
+          AUTH_GRPC_PORT: ${{ vars.AUTH_GRPC_PORT }}
+          AUTH_SPRING_DATASOURCE_URL: ${{ vars.AUTH_SPRING_DATASOURCE_URL }}
+          AUTH_SPRING_DATASOURCE_USERNAME: ${{ vars.AUTH_SPRING_DATASOURCE_USERNAME }}
+          AUTH_SPRING_DATASOURCE_PASSWORD: ${{ secrets.AUTH_SPRING_DATASOURCE_PASSWORD }}
+          AUTH_POSTGRES_DB: ${{ vars.AUTH_POSTGRES_DB }}
+          AUTH_POSTGRES_USER: ${{ vars.AUTH_POSTGRES_USER }}
+          AUTH_POSTGRES_PASSWORD: ${{ secrets.AUTH_POSTGRES_PASSWORD }}
         run: docker compose ps
 
       - name: Stop Docker Compose
         if: always()
         working-directory: Infra
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+          API_GATEWAY_NAME: ${{ vars.API_GATEWAY_NAME }}
+          API_GATEWAY_PORT: ${{ vars.API_GATEWAY_PORT }}
+          AUTH_NAME: ${{ vars.AUTH_NAME }}
+          AUTH_PORT: ${{ vars.AUTH_PORT }}
+          AUTH_GRPC_HOST: ${{ vars.AUTH_GRPC_HOST }}
+          AUTH_GRPC_PORT: ${{ vars.AUTH_GRPC_PORT }}
+          AUTH_SPRING_DATASOURCE_URL: ${{ vars.AUTH_SPRING_DATASOURCE_URL }}
+          AUTH_SPRING_DATASOURCE_USERNAME: ${{ vars.AUTH_SPRING_DATASOURCE_USERNAME }}
+          AUTH_SPRING_DATASOURCE_PASSWORD: ${{ secrets.AUTH_SPRING_DATASOURCE_PASSWORD }}
+          AUTH_POSTGRES_DB: ${{ vars.AUTH_POSTGRES_DB }}
+          AUTH_POSTGRES_USER: ${{ vars.AUTH_POSTGRES_USER }}
+          AUTH_POSTGRES_PASSWORD: ${{ secrets.AUTH_POSTGRES_PASSWORD }}
         run: docker compose down -v
