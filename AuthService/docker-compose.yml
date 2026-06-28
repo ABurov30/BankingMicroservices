@@ -16,15 +16,17 @@ services:
       context: .
       args:
         GITHUB_TOKEN: ${GITHUB_TOKEN}
-        PORT: ${PORT}
+        PORT: ${AUTH_PORT}
     container_name: auth-service
     ports:
-      - "${PORT}:${PORT}"
+      - "${AUTH_PORT}:${AUTH_PORT}"
     depends_on:
       - postgres
     environment:
+      AUTH_NAME: ${AUTH_NAME}
+      AUTH_PORT: ${AUTH_PORT}
+      AUTH_GRPC_PORT: ${AUTH_GRPC_PORT}
       SPRING_DATASOURCE_URL: ${AUTH_SPRING_DATASOURCE_URL}
-      GRPC_PORT: ${GRPC_PORT}
       SPRING_DATASOURCE_USERNAME: ${AUTH_SPRING_DATASOURCE_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${AUTH_SPRING_DATASOURCE_PASSWORD}
 

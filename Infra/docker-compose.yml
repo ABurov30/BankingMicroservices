@@ -23,9 +23,9 @@ services:
     depends_on:
       - postgres
     environment:
-      NAME: ${AUTH_NAME}
-      PORT: ${AUTH_PORT}
-      GRPC_PORT: ${AUTH_GRPC_PORT}
+      AUTH_NAME: ${AUTH_NAME}
+      AUTH_PORT: ${AUTH_PORT}
+      AUTH_GRPC_PORT: ${AUTH_GRPC_PORT}
       SPRING_DATASOURCE_URL: ${AUTH_SPRING_DATASOURCE_URL}
       SPRING_DATASOURCE_USERNAME: ${AUTH_SPRING_DATASOURCE_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${AUTH_SPRING_DATASOURCE_PASSWORD}
@@ -42,8 +42,8 @@ services:
     depends_on:
       - auth-service
     environment:
-      NAME: ${API_GATEWAY_NAME}
-      PORT: ${API_GATEWAY_PORT}
+      API_GATEWAY_NAME: ${API_GATEWAY_NAME}
+      API_GATEWAY_PORT: ${API_GATEWAY_PORT}
       AUTH_GRPC_HOST: ${AUTH_GRPC_HOST}
       AUTH_GRPC_PORT: ${AUTH_GRPC_PORT}
 

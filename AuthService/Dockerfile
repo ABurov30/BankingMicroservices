@@ -14,6 +14,8 @@ RUN ./mvnw -s .mvn/settings-docker.xml clean package -DskipTests
 
 FROM eclipse-temurin:17-jre
 
+ARG PORT=8081
+
 WORKDIR /app
 
 COPY --from=build /app/target/*.jar app.jar

@@ -5,13 +5,12 @@ services:
       context: .
       args:
         GITHUB_TOKEN: ${GITHUB_TOKEN}
-        PORT: ${PORT}
-    container_name: auth-service
+        PORT: ${API_GATEWAY_PORT}
+    container_name: api-gateway
     ports:
-      - "${PORT}:${PORT}"
+      - "${API_GATEWAY_PORT}:${API_GATEWAY_PORT}"
     environment:
-      NAME: ${NAME}
-      PORT: ${PORT}
+      API_GATEWAY_NAME: ${API_GATEWAY_NAME}
+      API_GATEWAY_PORT: ${API_GATEWAY_PORT}
       AUTH_GRPC_HOST: ${AUTH_GRPC_HOST}
       AUTH_GRPC_PORT: ${AUTH_GRPC_PORT}
-
