@@ -55,17 +55,111 @@ mvn spring-boot:run
 
 ## Конфигурация
 
-`ApiGateway` читает настройки маршрутов из переменных окружения:
+Для локального запуска используются env-файлы:
+
+| Файл | Назначение |
+| --- | --- |
+| `Infra/.env` | Переменные для запуска всей связки через общий Docker Compose |
+| `ApiGateway/.env.local` | Локальный запуск `ApiGateway` без Docker |
+| `ApiGateway/.env.docker` | Запуск `ApiGateway` через compose внутри модуля |
+| `AuthService/.env.local` | Локальный запуск `AuthService` без Docker |
+| `AuthService/.env.docker` | Запуск `AuthService` через compose внутри модуля |
+
+Имена переменных унифицированы по сервисам:
+
+`ApiGateway`:
+
+- `API_GATEWAY_NAME`
+- `API_GATEWAY_PORT`
+- `AUTH_GRPC_HOST`
+- `AUTH_GRPC_PORT`
 
 - `AUTH_ROUTE_ID`
 - `AUTH_SERVICE_URI`
 - `AUTH_ROUTE_PATHS`
 
-`AuthService` использует переменные для подключения к базе:
+`AuthService`:
+
+- `AUTH_NAME`
+- `AUTH_PORT`
+- `AUTH_GRPC_PORT`
 
 - `AUTH_SPRING_DATASOURCE_URL`
 - `AUTH_SPRING_DATASOURCE_USERNAME`
 - `AUTH_SPRING_DATASOURCE_PASSWORD`
+
+PostgreSQL:
+
+- `AUTH_POSTGRES_DB`
+- `AUTH_POSTGRES_USER`
+- `AUTH_POSTGRES_PASSWORD`
+
+Не коммить реальные токены и пароли в репозиторий. Для локального запуска держи их только в env-файлах, которые не попадают в git.
+
+## CI
+
+GitHub Actions workflow находится в `.github/workflows/ci.yml`.
+
+Pipeline запускается на:
+
+- `push` в `main`;
+- `pull_request` в `main`.
+
+Проверки запускаются через matrix для сервисов:
+
+- `AuthService`
+- `ApiGateway`
+
+Каждый сервис запускает:
+
+```bash
+mvn -s .mvn/settings-docker.xml test
+```
+
+`settings-docker.xml` нужен для доступа Maven к GitHub Packages:
+
+```text
+https://maven.pkg.github.com/ABurov30/BankingProtoContracts
+```
+
+### GitHub Secrets
+
+Добавить в репозитории:
+
+`Settings -> Secrets and variables -> Actions -> Secrets`
+
+| Secret | Назначение |
+| --- | --- |
+| `GH_PACKAGES_TOKEN` | GitHub PAT для чтения Maven packages |
+| `AUTH_SPRING_DATASOURCE_PASSWORD` | Пароль пользователя БД для `AuthService` |
+| `AUTH_POSTGRES_PASSWORD` | Пароль PostgreSQL контейнера |
+
+Для `GH_PACKAGES_TOKEN` нужны права:
+
+- `read:packages`
+- `repo`, если репозиторий с package приватный
+
+### GitHub Variables
+
+Добавить в:
+
+`Settings -> Secrets and variables -> Actions -> Variables`
+
+| Variable | Пример |
+| --- | --- |
+| `API_GATEWAY_NAME` | `api-gateway` |
+| `API_GATEWAY_PORT` | `8080` |
+| `AUTH_ROUTE_ID` | `auth-service` |
+| `AUTH_SERVICE_URI` | `http://auth-service:8081` |
+| `AUTH_ROUTE_PATHS` | `/auth/**` |
+| `AUTH_NAME` | `auth-service` |
+| `AUTH_PORT` | `8081` |
+| `AUTH_GRPC_HOST` | `auth-service` |
+| `AUTH_GRPC_PORT` | `9090` |
+| `AUTH_SPRING_DATASOURCE_URL` | `jdbc:postgresql://postgres:5432/auth_db` |
+| `AUTH_SPRING_DATASOURCE_USERNAME` | `auth_user` |
+| `AUTH_POSTGRES_DB` | `auth_db` |
+| `AUTH_POSTGRES_USER` | `auth_user` |
 
 ## Проверка
 
