@@ -1,0 +1,34 @@
+services:
+  transaction-postgres:
+    image: postgres:16
+    container_name: transaction-postgres
+    environment:
+      POSTGRES_DB: ${TRANSACTION_POSTGRES_DB}
+      POSTGRES_USER: ${TRANSACTION_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${TRANSACTION_POSTGRES_PASSWORD}
+    ports:
+      - "${TRANSACTION_POSTGRES_PORT}:5432"
+    volumes:
+      - transaction_postgres_data:/var/lib/postgresql/data
+
+  transaction-service:
+    build:
+      context: .
+      args:
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
+        PORT: ${TRANSACTION_PORT}
+    container_name: transaction-service
+    ports:
+      - "${TRANSACTION_PORT}:${TRANSACTION_PORT}"
+    depends_on:
+      - transaction-postgres
+    environment:
+      TRANSACTION_NAME: ${TRANSACTION_NAME}
+      TRANSACTION_PORT: ${TRANSACTION_PORT}
+      TRANSACTION_GRPC_PORT: ${TRANSACTION_GRPC_PORT}
+      SPRING_DATASOURCE_URL: ${TRANSACTION_SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${TRANSACTION_SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${TRANSACTION_SPRING_DATASOURCE_PASSWORD}
+
+volumes:
+  transaction_postgres_data:

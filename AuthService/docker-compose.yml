@@ -1,5 +1,5 @@
 services:
-  postgres:
+  auth-postgres:
     image: postgres:16
     container_name: auth-postgres
     environment:
@@ -7,9 +7,9 @@ services:
       POSTGRES_USER: ${AUTH_POSTGRES_USER}
       POSTGRES_PASSWORD: ${AUTH_POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${AUTH_POSTGRES_PORT}:${AUTH_POSTGRES_PORT}"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - auth_postgres_data:/var/lib/postgresql/data
 
   auth-service:
     build:
@@ -21,7 +21,7 @@ services:
     ports:
       - "${AUTH_PORT}:${AUTH_PORT}"
     depends_on:
-      - postgres
+      - auth-postgres
     environment:
       AUTH_NAME: ${AUTH_NAME}
       AUTH_PORT: ${AUTH_PORT}
@@ -31,4 +31,4 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${AUTH_SPRING_DATASOURCE_PASSWORD}
 
 volumes:
-  postgres_data:
+  auth_postgres_data:

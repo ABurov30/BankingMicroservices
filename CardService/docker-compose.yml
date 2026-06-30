@@ -1,0 +1,34 @@
+services:
+  card-postgres:
+    image: postgres:16
+    container_name: card-postgres
+    environment:
+      POSTGRES_DB: ${CARD_POSTGRES_DB}
+      POSTGRES_USER: ${CARD_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${CARD_POSTGRES_PASSWORD}
+    ports:
+      - "${CARD_POSTGRES_PORT}:${CARD_POSTGRES_PORT}"
+    volumes:
+      - card_postgres_data:/var/lib/postgresql/data
+
+  card-service:
+    build:
+      context: .
+      args:
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
+        PORT: ${CARD_PORT}
+    container_name: card-service
+    ports:
+      - "${CARD_PORT}:${CARD_PORT}"
+    depends_on:
+      - card-postgres
+    environment:
+      CARD_NAME: ${CARD_NAME}
+      CARD_PORT: ${CARD_PORT}
+      CARD_GRPC_PORT: ${CARD_GRPC_PORT}
+      SPRING_DATASOURCE_URL: ${CARD_SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${CARD_SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${CARD_SPRING_DATASOURCE_PASSWORD}
+
+volumes:
+  card_postgres_data:

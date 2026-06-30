@@ -1,0 +1,34 @@
+services:
+  user-postgres:
+    image: postgres:16
+    container_name: user-postgres
+    environment:
+      POSTGRES_DB: ${USER_POSTGRES_DB}
+      POSTGRES_USER: ${USER_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${USER_POSTGRES_PASSWORD}
+    ports:
+      - "${USER_POSTGRES_PORT}:${USER_POSTGRES_PORT}"
+    volumes:
+      - user_postgres_data:/var/lib/postgresql/data
+
+  user-service:
+    build:
+      context: .
+      args:
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
+        PORT: ${USER_PORT}
+    container_name: USER-service
+    ports:
+      - "${USER_PORT}:${USER_PORT}"
+    depends_on:
+      - user-postgres
+    environment:
+      USER_NAME: ${USER_NAME}
+      USER_PORT: ${USER_PORT}
+      USER_GRPC_PORT: ${USER_GRPC_PORT}
+      SPRING_DATASOURCE_URL: ${USER_SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${USER_SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${USER_SPRING_DATASOURCE_PASSWORD}
+
+volumes:
+  user_postgres_data:

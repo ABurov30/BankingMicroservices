@@ -1,172 +1,186 @@
-# Project
+# Bank Microservices
 
-Небольшой Spring Boot проект, разбитый на два приложения:
+Учебный проект банковской микросервисной системы на Spring Boot. Внешние HTTP-запросы принимает `ApiGateway`, а доменные сервисы общаются с gateway по gRPC-контрактам из Maven package `com.burov:contracts`.
 
-- `ApiGateway` - входная точка для запросов;
-- `AuthService` - сервис аутентификации с PostgreSQL.
+## Модули
 
-Проект собран на Java 17 и Maven. Для локального запуска используется Docker Compose.
+| Модуль | Назначение | HTTP | gRPC | БД |
+| --- | --- | --- | --- | --- |
+| `ApiGateway` | HTTP entrypoint, REST-контроллеры и gRPC-клиенты | `8080` | - | - |
+| `AuthService` | Аутентификация | `8081` | `9090` | `auth-postgres` |
+| `UserService` | Пользователи | `8082` | `9091` | `user-postgres` |
+| `AccountService` | Банковские счета | `8083` | `9092` | `account-postgres` |
+| `CardService` | Банковские карты | `8084` | `9093` | `card-postgres` |
+| `TransactionService` | Транзакции | `8085` | `9094` | `transaction-postgres` |
+| `NotificationService` | Уведомления | `8086` | `9095` | `notification-postgres` |
+| `Infra` | Общий Docker Compose для всей системы | - | - | - |
 
-## Структура
+## Стек
 
-| Модуль | Назначение |
-| --- | --- |
-| `ApiGateway` | Spring Cloud Gateway, проксирование запросов к сервисам |
-| `AuthService` | REST-сервис с endpoint `/auth` и подключением к PostgreSQL |
-| `Infra` | Общий `docker-compose.yml` и переменные окружения для запуска всей связки |
+- Java 17
+- Spring Boot
+- Spring Cloud Gateway Server WebMVC в `ApiGateway`
+- gRPC через `grpc-netty-shaded`
+- PostgreSQL 16
+- Maven Wrapper
+- Spotless и Checkstyle
+- Docker Compose
 
 ## Требования
 
 - Java 17+
-- Maven 3.9+
-- Docker Desktop
+- Docker Desktop или совместимый Docker Engine
+- GitHub token с доступом к Maven package `com.burov:contracts`
 
-## Локальный запуск
-
-### Через Docker Compose
-
-Из папки `Infra`:
-
-```bash
-docker compose up -d
-```
-
-После старта:
-
-- API Gateway: `http://localhost:8080`
-- Auth Service: `http://localhost:8081/auth`
-- PostgreSQL: `localhost:5432`
-
-### Без Docker
-
-Запуск каждого сервиса отдельно:
-
-```bash
-cd AuthService
-mvn spring-boot:run
-```
-
-```bash
-cd ApiGateway
-mvn spring-boot:run
-```
-
-Перед запуском убедись, что в корне соответствующего модуля лежит `.env.local` или `.env` с нужными переменными.
+Для Maven package нужен token с правом `read:packages`; если репозиторий с package приватный, также нужен доступ к репозиторию.
 
 ## Конфигурация
 
-Для локального запуска используются env-файлы:
+Каждый сервис читает переменные из env-файла:
 
-| Файл | Назначение |
+- `ApiGateway` по умолчанию читает `.env.local`; можно переопределить через `ENV_FILE`.
+- Остальные сервисы читают `.env` из текущей директории или из директории сервиса.
+- Для Docker Compose используются `.env.docker` в модулях и `Infra/.env` для общей связки.
+
+Основные группы переменных:
+
+| Группа | Переменные |
 | --- | --- |
-| `Infra/.env` | Переменные для запуска всей связки через общий Docker Compose |
-| `ApiGateway/.env.local` | Локальный запуск `ApiGateway` без Docker |
-| `ApiGateway/.env.docker` | Запуск `ApiGateway` через compose внутри модуля |
-| `AuthService/.env.local` | Локальный запуск `AuthService` без Docker |
-| `AuthService/.env.docker` | Запуск `AuthService` через compose внутри модуля |
+| Gateway | `API_GATEWAY_NAME`, `API_GATEWAY_PORT` |
+| gRPC clients | `AUTH_GRPC_HOST`, `AUTH_GRPC_PORT`, `USER_GRPC_HOST`, `USER_GRPC_PORT`, `ACCOUNT_GRPC_HOST`, `ACCOUNT_GRPC_PORT`, `CARD_GRPC_HOST`, `CARD_GRPC_PORT`, `TRANSACTION_GRPC_HOST`, `TRANSACTION_GRPC_PORT` |
+| Service runtime | `<SERVICE>_NAME`, `<SERVICE>_PORT`, `<SERVICE>_GRPC_PORT` |
+| Datasource | `<SERVICE>_SPRING_DATASOURCE_URL`, `<SERVICE>_SPRING_DATASOURCE_USERNAME`, `<SERVICE>_SPRING_DATASOURCE_PASSWORD` |
+| PostgreSQL container | `<SERVICE>_POSTGRES_DB`, `<SERVICE>_POSTGRES_PORT`, `<SERVICE>_POSTGRES_USER`, `<SERVICE>_POSTGRES_PASSWORD` |
+| Maven packages | `GITHUB_TOKEN` |
 
-Имена переменных унифицированы по сервисам:
+`<SERVICE>` используется в верхнем регистре: `AUTH`, `USER`, `ACCOUNT`, `CARD`, `TRANSACTION`, `NOTIFICATION`.
 
-`ApiGateway`:
+Не коммить реальные токены и пароли. Если token уже попал в репозиторий, его нужно отозвать в GitHub и выпустить новый.
 
-- `API_GATEWAY_NAME`
-- `API_GATEWAY_PORT`
-- `AUTH_GRPC_HOST`
-- `AUTH_GRPC_PORT`
+## Запуск через Docker Compose
 
-- `AUTH_ROUTE_ID`
-- `AUTH_SERVICE_URI`
-- `AUTH_ROUTE_PATHS`
+Общий запуск всей системы:
 
-`AuthService`:
+```bash
+cd Infra
+docker compose up --build -d
+```
 
-- `AUTH_NAME`
-- `AUTH_PORT`
-- `AUTH_GRPC_PORT`
+Проверка статуса:
 
-- `AUTH_SPRING_DATASOURCE_URL`
-- `AUTH_SPRING_DATASOURCE_USERNAME`
-- `AUTH_SPRING_DATASOURCE_PASSWORD`
+```bash
+docker compose ps
+```
 
-PostgreSQL:
+Остановка с удалением volume:
 
-- `AUTH_POSTGRES_DB`
-- `AUTH_POSTGRES_USER`
-- `AUTH_POSTGRES_PASSWORD`
+```bash
+docker compose down -v
+```
 
-Не коммить реальные токены и пароли в репозиторий. Для локального запуска держи их только в env-файлах, которые не попадают в git.
+После запуска gateway доступен на `http://localhost:8080`.
+
+## HTTP endpoints
+
+`ApiGateway` сейчас проксирует простые GET-запросы в gRPC-сервисы:
+
+| Endpoint | Сервис |
+| --- | --- |
+| `GET /auth` | `AuthService` |
+| `GET /user` | `UserService` |
+| `GET /account` | `AccountService` |
+| `GET /card` | `CardService` |
+| `GET /transaction` | `TransactionService` |
+
+Пример проверки:
+
+```bash
+curl http://localhost:8080/auth
+curl http://localhost:8080/user
+curl http://localhost:8080/account
+curl http://localhost:8080/card
+curl http://localhost:8080/transaction
+```
+
+`NotificationService` есть в инфраструктуре, но отдельный gateway endpoint для него сейчас не подключен.
+
+## Локальный запуск без Docker
+
+Для локального запуска сервиса нужна поднятая PostgreSQL с параметрами из соответствующего env-файла.
+
+Пример:
+
+```bash
+cd AuthService
+./mvnw spring-boot:run
+```
+
+Gateway запускается отдельно и должен видеть gRPC-порты доменных сервисов:
+
+```bash
+cd ApiGateway
+./mvnw spring-boot:run
+```
+
+Если нужно запустить gateway с другим env-файлом:
+
+```bash
+cd ApiGateway
+ENV_FILE=.env.docker ./mvnw spring-boot:run
+```
+
+## Сборка и тесты
+
+Запуск тестов в отдельном модуле:
+
+```bash
+cd AuthService
+./mvnw test
+```
+
+Если Maven должен скачать приватный package с контрактами, передай `GITHUB_TOKEN` через env или используй настройки Maven, которые уже лежат в `.mvn/settings-docker.xml`.
+
+Проверки качества:
+
+```bash
+./mvnw spotless:check
+./mvnw checkstyle:check
+```
 
 ## CI
 
 GitHub Actions workflow находится в `.github/workflows/ci.yml`.
 
-Pipeline запускается на:
+Текущее состояние pipeline:
 
-- `push` в `main`;
-- `pull_request` в `main`.
+- запускается на `push` и `pull_request` в `main`;
+- тестирует `AuthService` и `ApiGateway`;
+- для `AuthService` поднимает PostgreSQL;
+- после тестов собирает общий Docker Compose из `Infra`.
 
-Проверки запускаются через matrix для сервисов:
+Для CI нужны secrets и variables в `Settings -> Secrets and variables -> Actions`.
 
-- `AuthService`
-- `ApiGateway`
-
-Каждый сервис запускает:
-
-```bash
-mvn -s .mvn/settings-docker.xml test
-```
-
-`settings-docker.xml` нужен для доступа Maven к GitHub Packages:
-
-```text
-https://maven.pkg.github.com/ABurov30/BankingProtoContracts
-```
-
-### GitHub Secrets
-
-Добавить в репозитории:
-
-`Settings -> Secrets and variables -> Actions -> Secrets`
+Минимальные secrets:
 
 | Secret | Назначение |
 | --- | --- |
-| `GH_PACKAGES_TOKEN` | GitHub PAT для чтения Maven packages |
-| `AUTH_SPRING_DATASOURCE_PASSWORD` | Пароль пользователя БД для `AuthService` |
+| `GH_PACKAGES_TOKEN` | PAT для чтения Maven packages |
+| `AUTH_SPRING_DATASOURCE_PASSWORD` | Пароль datasource для `AuthService` |
 | `AUTH_POSTGRES_PASSWORD` | Пароль PostgreSQL контейнера |
 
-Для `GH_PACKAGES_TOKEN` нужны права:
-
-- `read:packages`
-- `repo`, если репозиторий с package приватный
-
-### GitHub Variables
-
-Добавить в:
-
-`Settings -> Secrets and variables -> Actions -> Variables`
+Минимальные variables для текущего workflow:
 
 | Variable | Пример |
 | --- | --- |
 | `API_GATEWAY_NAME` | `api-gateway` |
 | `API_GATEWAY_PORT` | `8080` |
-| `AUTH_ROUTE_ID` | `auth-service` |
-| `AUTH_SERVICE_URI` | `http://auth-service:8081` |
-| `AUTH_ROUTE_PATHS` | `/auth/**` |
 | `AUTH_NAME` | `auth-service` |
 | `AUTH_PORT` | `8081` |
 | `AUTH_GRPC_HOST` | `auth-service` |
 | `AUTH_GRPC_PORT` | `9090` |
-| `AUTH_SPRING_DATASOURCE_URL` | `jdbc:postgresql://postgres:5432/auth_db` |
+| `AUTH_SPRING_DATASOURCE_URL` | `jdbc:postgresql://auth-postgres:5432/auth_db` |
 | `AUTH_SPRING_DATASOURCE_USERNAME` | `auth_user` |
 | `AUTH_POSTGRES_DB` | `auth_db` |
 | `AUTH_POSTGRES_USER` | `auth_user` |
 
-## Проверка
-
-Можно проверить доступность сервиса напрямую:
-
-```bash
-curl http://localhost:8081/auth
-```
-
-Если нужен health-check через actuator, он зависит от текущей конфигурации приложения.
+Если CI будет собирать все сервисы из `Infra/docker-compose.yml`, нужно добавить variables и secrets для `USER`, `ACCOUNT`, `CARD`, `TRANSACTION` и `NOTIFICATION` по той же схеме.

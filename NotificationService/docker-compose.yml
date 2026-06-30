@@ -1,0 +1,34 @@
+services:
+  notification-postgres:
+    image: postgres:16
+    container_name: notification-postgres
+    environment:
+      POSTGRES_DB: ${NOTIFICATION_POSTGRES_DB}
+      POSTGRES_USER: ${NOTIFICATION_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${NOTIFICATION_POSTGRES_PASSWORD}
+    ports:
+      - "${NOTIFICATION_POSTGRES_PORT}:5432"
+    volumes:
+      - notification_postgres_data:/var/lib/postgresql/data
+
+  notification-service:
+    build:
+      context: .
+      args:
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
+        PORT: ${NOTIFICATION_PORT}
+    container_name: notification-service
+    ports:
+      - "${NOTIFICATION_PORT}:${NOTIFICATION_PORT}"
+    depends_on:
+      - notification-postgres
+    environment:
+      NOTIFICATION_NAME: ${NOTIFICATION_NAME}
+      NOTIFICATION_PORT: ${NOTIFICATION_PORT}
+      NOTIFICATION_GRPC_PORT: ${NOTIFICATION_GRPC_PORT}
+      NOTIFICATION_SPRING_DATASOURCE_URL: ${NOTIFICATION_SPRING_DATASOURCE_URL}
+      NOTIFICATION_SPRING_DATASOURCE_USERNAME: ${NOTIFICATION_SPRING_DATASOURCE_USERNAME}
+      NOTIFICATION_SPRING_DATASOURCE_PASSWORD: ${NOTIFICATION_SPRING_DATASOURCE_PASSWORD}
+
+volumes:
+  notification_postgres_data:

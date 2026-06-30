@@ -9,14 +9,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/auth")
 public class AuthGatewayController {
 
-    private final AuthGrpcClient authClient;
+  private final AuthGrpcClient authClient;
 
-    public AuthGatewayController (AuthGrpcClient authClient) {
-        this.authClient = authClient;
-    }
+  public AuthGatewayController(AuthGrpcClient authClient) {
+    this.authClient = authClient;
+  }
 
-    @GetMapping
-    public String getAuth() {
-        return  authClient.getAuth();
-    }
+  @GetMapping
+  public String getAuth() {
+    return authClient.getAuth();
+  }
 }
