@@ -1,15 +1,15 @@
 services:
-  notification-postgres:
-    image: postgres:16
-    container_name: notification-postgres
+  notification-mongodb:
+    image: mongo:7
+    container_name: notification-mongodb
     environment:
-      POSTGRES_DB: ${NOTIFICATION_POSTGRES_DB}
-      POSTGRES_USER: ${NOTIFICATION_POSTGRES_USER}
-      POSTGRES_PASSWORD: ${NOTIFICATION_POSTGRES_PASSWORD}
+      MONGO_INITDB_DATABASE: ${NOTIFICATION_MONGO_DB}
+      MONGO_INITDB_ROOT_USERNAME: ${NOTIFICATION_MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${NOTIFICATION_MONGO_PASSWORD}
     ports:
-      - "${NOTIFICATION_POSTGRES_PORT}:5432"
+      - "${NOTIFICATION_MONGO_PORT}:${NOTIFICATION_MONGO_PORT}"
     volumes:
-      - notification_postgres_data:/var/lib/postgresql/data
+      - notification_mongo_data:/data/db
 
   notification-service:
     build:
@@ -21,14 +21,14 @@ services:
     ports:
       - "${NOTIFICATION_PORT}:${NOTIFICATION_PORT}"
     depends_on:
-      - notification-postgres
+      - notification-mongodb
     environment:
       NOTIFICATION_NAME: ${NOTIFICATION_NAME}
       NOTIFICATION_PORT: ${NOTIFICATION_PORT}
       NOTIFICATION_GRPC_PORT: ${NOTIFICATION_GRPC_PORT}
-      NOTIFICATION_SPRING_DATASOURCE_URL: ${NOTIFICATION_SPRING_DATASOURCE_URL}
-      NOTIFICATION_SPRING_DATASOURCE_USERNAME: ${NOTIFICATION_SPRING_DATASOURCE_USERNAME}
-      NOTIFICATION_SPRING_DATASOURCE_PASSWORD: ${NOTIFICATION_SPRING_DATASOURCE_PASSWORD}
+      NOTIFICATION_MONGO_HOST: ${NOTIFICATION_MONGO_HOST}
+      NOTIFICATION_MONGO_USER: ${NOTIFICATION_MONGO_USER}
+      NOTIFICATION_MONGO_PASSWORD: ${NOTIFICATION_MONGO_PASSWORD}
 
 volumes:
   notification_postgres_data:
