@@ -57,22 +57,29 @@ jobs:
 
       - name: Start PostgreSQL
         if: matrix.db_type == 'postgres'
+        env:
+          DB_NAME: ${{ vars[matrix.db_config.DB_VAR] }}
+          DB_USER: ${{ vars[matrix.db_config.USER_VAR] }}
+          DB_PASSWORD: ${{ secrets[matrix.db_config.PASSWORD_SECRET] }}
         run: |
           docker run -d \
             --name ${{ matrix.db_config.CONTAINER_NAME }} \
-            -e POSTGRES_DB=${{ vars[matrix.db_config.DB_VAR] }} \
-            -e POSTGRES_USER=${{ vars[matrix.db_config.USER_VAR] }} \
-            -e POSTGRES_PASSWORD=${{ secrets[matrix.db_config.PASSWORD_SECRET] }} \
+            -e POSTGRES_DB="$DB_NAME" \
+            -e POSTGRES_USER="$DB_USER" \
+            -e POSTGRES_PASSWORD="$DB_PASSWORD" \
             -p 5432:5432 \
             postgres:16
 
       - name: Wait for PostgreSQL
         if: matrix.db_type == 'postgres'
+        env:
+          DB_NAME: ${{ vars[matrix.db_config.DB_VAR] }}
+          DB_USER: ${{ vars[matrix.db_config.USER_VAR] }}
         run: |
           for i in {1..30}; do
             docker exec ${{ matrix.db_config.CONTAINER_NAME }} pg_isready \
-              -U ${{ vars[matrix.db_config.USER_VAR] }} \
-              -d ${{ vars[matrix.db_config.DB_VAR] }} && exit 0
+              -U "$DB_USER" \
+              -d "$DB_NAME" && exit 0
             sleep 2
           done
           docker logs ${{ matrix.db_config.CONTAINER_NAME }}
@@ -80,23 +87,30 @@ jobs:
 
       - name: Start MongoDB
         if: matrix.db_type == 'mongo'
+        env:
+          DB_NAME: ${{ vars[matrix.db_config.DB_VAR] }}
+          DB_USER: ${{ vars[matrix.db_config.USER_VAR] }}
+          DB_PASSWORD: ${{ secrets[matrix.db_config.PASSWORD_SECRET] }}
         run: |
           docker run -d \
             --name ${{ matrix.db_config.CONTAINER_NAME }} \
-            -e MONGO_INITDB_DATABASE=${{ vars[matrix.db_config.DB_VAR] }} \
-            -e MONGO_INITDB_ROOT_USERNAME=${{ vars[matrix.db_config.USER_VAR] }} \
-            -e MONGO_INITDB_ROOT_PASSWORD=${{ secrets[matrix.db_config.PASSWORD_SECRET] }} \
+            -e MONGO_INITDB_DATABASE="$DB_NAME" \
+            -e MONGO_INITDB_ROOT_USERNAME="$DB_USER" \
+            -e MONGO_INITDB_ROOT_PASSWORD="$DB_PASSWORD" \
             -p 27017:27017 \
             mongo:7
 
       - name: Wait for MongoDB
         if: matrix.db_type == 'mongo'
+        env:
+          DB_USER: ${{ vars[matrix.db_config.USER_VAR] }}
+          DB_PASSWORD: ${{ secrets[matrix.db_config.PASSWORD_SECRET] }}
         run: |
           for i in {1..30}; do
             docker exec ${{ matrix.db_config.CONTAINER_NAME }} mongosh \
               --quiet \
-              --username ${{ vars[matrix.db_config.USER_VAR] }} \
-              --password ${{ secrets[matrix.db_config.PASSWORD_SECRET] }} \
+              --username "$DB_USER" \
+              --password "$DB_PASSWORD" \
               --authenticationDatabase admin \
               --eval "db.adminCommand('ping').ok" | grep 1 && exit 0
           
