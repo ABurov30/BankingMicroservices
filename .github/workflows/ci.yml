@@ -97,29 +97,8 @@ jobs:
             -e MONGO_INITDB_DATABASE="$DB_NAME" \
             -e MONGO_INITDB_ROOT_USERNAME="$DB_USER" \
             -e MONGO_INITDB_ROOT_PASSWORD="$DB_PASSWORD" \
-            -p 27017:27017 \
+            -p ${{ vars.NOTIFICATION_MONGO_PORT }}:${{ vars.NOTIFICATION_MONGO_PORT }} \
             mongo:7
-
-      - name: Print mongo env
-        if: matrix.db_type == 'mongo'
-        run: |
-         echo "DB_NAME=$DB_NAME"
-         echo "DB_USER=$DB_USER"
-         if [ -z "$DB_PASSWORD" ]; then
-         echo "PASSWORD IS EMPTY"
-         else
-         echo "PASSWORD EXISTS"
-         fi
-        env:
-          DB_NAME: ${{ vars[matrix.db_config.DB_VAR] }}
-          DB_USER: ${{ vars[matrix.db_config.USER_VAR] }}
-          DB_PASSWORD: ${{ secrets[matrix.db_config.PASSWORD_SECRET] }}
-
-      - name: Mongo logs
-        if: matrix.db_type == 'mongo'
-        run: |
-         sleep 5
-         docker logs ${{ matrix.db_config.CONTAINER_NAME }}
 
       - name: Wait for MongoDB
         if: matrix.db_type == 'mongo'
@@ -127,24 +106,19 @@ jobs:
           DB_USER: ${{ vars[matrix.db_config.USER_VAR] }}
           DB_PASSWORD: ${{ secrets[matrix.db_config.PASSWORD_SECRET] }}
         run: |
-          for i in {1..30}; do
+          sleep 10
+          for i in {1..60}; do
+            echo "Waiting for MongoDB attempt $i"
             docker exec ${{ matrix.db_config.CONTAINER_NAME }} mongosh \
               --quiet \
               --username "$DB_USER" \
               --password "$DB_PASSWORD" \
               --authenticationDatabase admin \
               --eval "db.adminCommand('ping').ok" | grep 1 && exit 0
-            # docker exec notification-mongodb env
-            # docker exec ${{ matrix.db_config.CONTAINER_NAME }} mongosh \
-            #   --quiet \
-            #   --username "$DB_USER" \
-            #   --password "$DB_PASSWORD" \
-            #   --authenticationDatabase admin \
-            #   --eval "db.adminCommand('ping').ok" | grep 1 && exit 0
 
-            sleep 2
+            sleep 3
           done
-          
+
           docker logs ${{ matrix.db_config.CONTAINER_NAME }}
           exit 1
 
@@ -214,8 +188,8 @@ jobs:
           NOTIFICATION_NAME: ${{ vars.NOTIFICATION_NAME }}
           NOTIFICATION_PORT: ${{ vars.NOTIFICATION_PORT }}
           NOTIFICATION_GRPC_PORT: ${{ vars.NOTIFICATION_GRPC_PORT }}
-          NOTIFICATION_MONGO_HOST: localhost
-          NOTIFICATION_MONGO_PORT: 27017
+          NOTIFICATION_MONGO_HOST: ${{ vars.NOTIFICATION_MONGO_HOST }}
+          NOTIFICATION_MONGO_PORT: ${{ vars.NOTIFICATION_MONGO_PORT }}
           NOTIFICATION_MONGO_DB: ${{ vars.NOTIFICATION_MONGO_DB }}
           NOTIFICATION_MONGO_USER: ${{ vars.NOTIFICATION_MONGO_USER }}
           NOTIFICATION_MONGO_PASSWORD: ${{ secrets.NOTIFICATION_MONGO_PASSWORD }}
