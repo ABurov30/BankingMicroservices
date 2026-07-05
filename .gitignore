@@ -5,6 +5,8 @@ target/
 !**/src/test/**/target/
 .DS_Store
 .env*
+!.env.example
+!**/.env.example
 
 ### STS ###
 .apt_generated
