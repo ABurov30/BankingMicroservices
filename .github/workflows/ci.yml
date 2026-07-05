@@ -128,14 +128,20 @@ jobs:
           DB_PASSWORD: ${{ secrets[matrix.db_config.PASSWORD_SECRET] }}
         run: |
           for i in {1..30}; do
-             docker exec notification-mongodb env
-#            docker exec ${{ matrix.db_config.CONTAINER_NAME }} mongosh \
-#              --quiet \
-#              --username "$DB_USER" \
-#              --password "$DB_PASSWORD" \
-#              --authenticationDatabase admin \
-#              --eval "db.adminCommand('ping').ok" | grep 1 && exit 0
-          
+            docker exec ${{ matrix.db_config.CONTAINER_NAME }} mongosh \
+              --quiet \
+              --username "$DB_USER" \
+              --password "$DB_PASSWORD" \
+              --authenticationDatabase admin \
+              --eval "db.adminCommand('ping').ok" | grep 1 && exit 0
+            # docker exec notification-mongodb env
+            # docker exec ${{ matrix.db_config.CONTAINER_NAME }} mongosh \
+            #   --quiet \
+            #   --username "$DB_USER" \
+            #   --password "$DB_PASSWORD" \
+            #   --authenticationDatabase admin \
+            #   --eval "db.adminCommand('ping').ok" | grep 1 && exit 0
+
             sleep 2
           done
           
