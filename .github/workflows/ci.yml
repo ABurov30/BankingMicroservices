@@ -100,6 +100,27 @@ jobs:
             -p 27017:27017 \
             mongo:7
 
+      - name: Print mongo env
+        if: matrix.db_type == 'mongo'
+        run: |
+         echo "DB_NAME=$DB_NAME"
+         echo "DB_USER=$DB_USER"
+         if [ -z "$DB_PASSWORD" ]; then
+         echo "PASSWORD IS EMPTY"
+         else
+         echo "PASSWORD EXISTS"
+         fi
+        env:
+          DB_NAME: ${{ vars[matrix.db_config.DB_VAR] }}
+          DB_USER: ${{ vars[matrix.db_config.USER_VAR] }}
+          DB_PASSWORD: ${{ secrets[matrix.db_config.PASSWORD_SECRET] }}
+
+      - name: Mongo logs
+        if: matrix.db_type == 'mongo'
+        run: |
+         sleep 5
+         docker logs ${{ matrix.db_config.CONTAINER_NAME }}
+
       - name: Wait for MongoDB
         if: matrix.db_type == 'mongo'
         env:
@@ -107,12 +128,13 @@ jobs:
           DB_PASSWORD: ${{ secrets[matrix.db_config.PASSWORD_SECRET] }}
         run: |
           for i in {1..30}; do
-            docker exec ${{ matrix.db_config.CONTAINER_NAME }} mongosh \
-              --quiet \
-              --username "$DB_USER" \
-              --password "$DB_PASSWORD" \
-              --authenticationDatabase admin \
-              --eval "db.adminCommand('ping').ok" | grep 1 && exit 0
+             docker exec notification-mongodb env
+#            docker exec ${{ matrix.db_config.CONTAINER_NAME }} mongosh \
+#              --quiet \
+#              --username "$DB_USER" \
+#              --password "$DB_PASSWORD" \
+#              --authenticationDatabase admin \
+#              --eval "db.adminCommand('ping').ok" | grep 1 && exit 0
           
             sleep 2
           done

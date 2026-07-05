@@ -31,4 +31,4 @@ services:
       NOTIFICATION_MONGO_PASSWORD: ${NOTIFICATION_MONGO_PASSWORD}
 
 volumes:
-  notification_postgres_data:
+  notification_mongo_data:
