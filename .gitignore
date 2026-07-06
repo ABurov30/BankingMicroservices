@@ -35,3 +35,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Helm ###
+Infra/helm/dev/values-secret.yaml

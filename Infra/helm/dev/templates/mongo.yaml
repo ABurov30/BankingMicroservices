@@ -1,0 +1,67 @@
+{{- range $key, $svc := .Values.services }}
+{{- if $svc.mongo }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: notification-mongo-secret
+type: Opaque
+stringData:
+  MONGO_INITDB_DATABASE: {{ $svc.mongo.db | quote }}
+  MONGO_INITDB_ROOT_USERNAME: {{ $svc.mongo.user | quote }}
+  MONGO_INITDB_ROOT_PASSWORD: {{ $svc.mongo.password | quote }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: notification-mongo-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ $.Values.mongo.storage }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $svc.mongo.host }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ $svc.mongo.host }}
+  template:
+    metadata:
+      labels:
+        app: {{ $svc.mongo.host }}
+    spec:
+      containers:
+        - name: mongo
+          image: {{ $.Values.mongo.image }}
+          ports:
+            - name: mongo
+              containerPort: {{ $svc.mongo.port }}
+          envFrom:
+            - secretRef:
+                name: notification-mongo-secret
+          volumeMounts:
+            - name: data
+              mountPath: /data/db
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: notification-mongo-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $svc.mongo.host }}
+spec:
+  selector:
+    app: {{ $svc.mongo.host }}
+  ports:
+    - name: mongo
+      port: {{ $svc.mongo.port }}
+      targetPort: mongo
+{{- end }}
+{{- end }}

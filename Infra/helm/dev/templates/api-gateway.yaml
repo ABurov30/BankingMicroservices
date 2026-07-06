@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.apiGateway.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.apiGateway.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.apiGateway.name }}
+    spec:
+      containers:
+        - name: {{ .Values.apiGateway.name }}
+          image: "{{ .Values.images.apiGateway }}:{{ .Values.global.imageTag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.apiGateway.port }}
+          env:
+            - name: API_GATEWAY_NAME
+              value: {{ .Values.apiGateway.name | quote }}
+            - name: API_GATEWAY_PORT
+              value: {{ .Values.apiGateway.port | quote }}
+
+            - name: AUTH_GRPC_HOST
+              value: {{ .Values.services.auth.name | quote }}
+            - name: AUTH_GRPC_PORT
+              value: {{ .Values.services.auth.grpcPort | quote }}
+
+            - name: USER_GRPC_HOST
+              value: {{ .Values.services.user.name | quote }}
+            - name: USER_GRPC_PORT
+              value: {{ .Values.services.user.grpcPort | quote }}
+
+            - name: ACCOUNT_GRPC_HOST
+              value: {{ .Values.services.account.name | quote }}
+            - name: ACCOUNT_GRPC_PORT
+              value: {{ .Values.services.account.grpcPort | quote }}
+
+            - name: CARD_GRPC_HOST
+              value: {{ .Values.services.card.name | quote }}
+            - name: CARD_GRPC_PORT
+              value: {{ .Values.services.card.grpcPort | quote }}
+
+            - name: TRANSACTION_GRPC_HOST
+              value: {{ .Values.services.transaction.name | quote }}
+            - name: TRANSACTION_GRPC_PORT
+              value: {{ .Values.services.transaction.grpcPort | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.apiGateway.name }}
+spec:
+  type: {{ .Values.apiGateway.serviceType }}
+  selector:
+    app: {{ .Values.apiGateway.name }}
+  ports:
+    - name: http
+      port: {{ .Values.apiGateway.port }}
+      targetPort: http

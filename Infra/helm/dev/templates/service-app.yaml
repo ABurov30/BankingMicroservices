@@ -1,0 +1,68 @@
+{{- range $key, $svc := .Values.services }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $svc.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ $svc.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $svc.name }}
+    spec:
+      containers:
+        - name: {{ $svc.name }}
+          image: "{{ index $.Values.images $key }}:{{ $.Values.global.imageTag }}"
+          imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ $svc.port }}
+            - name: grpc
+              containerPort: {{ $svc.grpcPort }}
+          env:
+            - name: {{ upper $key }}_NAME
+              value: {{ $svc.name | quote }}
+            - name: {{ upper $key }}_PORT
+              value: {{ $svc.port | quote }}
+            - name: {{ upper $key }}_GRPC_PORT
+              value: {{ $svc.grpcPort | quote }}
+{{- if $svc.postgres }}
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://{{ $svc.postgres.host }}:5432/{{ $svc.postgres.db }}"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: {{ $svc.postgres.user | quote }}
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: {{ $svc.postgres.password | quote }}
+{{- end }}
+{{- if $svc.mongo }}
+            - name: NOTIFICATION_MONGO_HOST
+              value: {{ $svc.mongo.host | quote }}
+            - name: NOTIFICATION_MONGO_PORT
+              value: {{ $svc.mongo.port | quote }}
+            - name: NOTIFICATION_MONGO_DB
+              value: {{ $svc.mongo.db | quote }}
+            - name: NOTIFICATION_MONGO_USER
+              value: {{ $svc.mongo.user | quote }}
+            - name: NOTIFICATION_MONGO_PASSWORD
+              value: {{ $svc.mongo.password | quote }}
+{{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $svc.name }}
+spec:
+  selector:
+    app: {{ $svc.name }}
+  ports:
+    - name: http
+      port: {{ $svc.port }}
+      targetPort: http
+    - name: grpc
+      port: {{ $svc.grpcPort }}
+      targetPort: grpc
+{{- end }}

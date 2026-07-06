@@ -1,0 +1,96 @@
+global:
+  imageTag: dev
+  imagePullPolicy: IfNotPresent
+
+images:
+  auth: auth-service
+  user: user-service
+  account: account-service
+  card: card-service
+  transaction: transaction-service
+  notification: notification-service
+  apiGateway: api-gateway
+
+kafka:
+  image: apache/kafka:3.7.0
+  containerPort: 9092
+  controllerPort: 9093
+  ui:
+    enabled: true
+    image: provectuslabs/kafka-ui:latest
+    port: 8080
+
+postgres:
+  image: postgres:16
+  storage: 1Gi
+
+mongo:
+  image: mongo:7
+  storage: 1Gi
+
+services:
+  auth:
+    name: auth-service
+    port: 8081
+    grpcPort: 9090
+    postgres:
+      host: auth-postgres
+      db: auth_db
+      user: auth_user
+      password: ""
+
+  user:
+    name: user-service
+    port: 8082
+    grpcPort: 9091
+    postgres:
+      host: user-postgres
+      db: user_db
+      user: user_user
+      password: ""
+
+  account:
+    name: account-service
+    port: 8083
+    grpcPort: 9092
+    postgres:
+      host: account-postgres
+      db: account_db
+      user: account_user
+      password: ""
+
+  card:
+    name: card-service
+    port: 8084
+    grpcPort: 9093
+    postgres:
+      host: card-postgres
+      db: card_db
+      user: card_user
+      password: ""
+
+  transaction:
+    name: transaction-service
+    port: 8085
+    grpcPort: 9094
+    postgres:
+      host: transaction-postgres
+      db: transaction_db
+      user: transaction_user
+      password: ""
+
+  notification:
+    name: notification-service
+    port: 8086
+    grpcPort: 9095
+    mongo:
+      host: notification-mongodb
+      port: 27017
+      db: notification_db
+      user: notification_user
+      password: ""
+
+apiGateway:
+  name: api-gateway
+  port: 8080
+  serviceType: NodePort

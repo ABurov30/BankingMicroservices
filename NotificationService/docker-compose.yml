@@ -12,6 +12,7 @@ services:
       - notification_mongo_data:/data/db
 
   notification-service:
+    image: notification-service:${IMAGE_TAG:-dev}
     build:
       context: .
       args:

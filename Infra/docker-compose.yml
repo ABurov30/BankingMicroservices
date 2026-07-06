@@ -9,7 +9,7 @@ services:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:${KAFKA_CONTROLLER_PORT}"
-      KAFKA_LISTENERS: "PLAINTEXT://kafka:${KAFKA_CONTAINER_PORT},CONTROLLER://kafka:${KAFKA_CONTROLLER_PORT},PLAINTEXT_HOST://0.0.0.0:${KAFKA_LOCAL_PORT}"
+      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:${KAFKA_CONTAINER_PORT},CONTROLLER://0.0.0.0:${KAFKA_CONTROLLER_PORT},PLAINTEXT_HOST://0.0.0.0:${KAFKA_LOCAL_PORT}"
       KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:${KAFKA_CONTAINER_PORT},PLAINTEXT_HOST://localhost:${KAFKA_LOCAL_PORT}"
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
@@ -42,6 +42,7 @@ services:
       - auth_postgres_data:/var/lib/postgresql/data
 
   auth-service:
+    image: auth-service:${IMAGE_TAG:-dev}
     build:
       context: ../AuthService
       args:
@@ -74,6 +75,7 @@ services:
       - user_postgres_data:/var/lib/postgresql/data
 
   user-service:
+    image: user-service:${IMAGE_TAG:-dev}
     build:
       context: ../UserService
       args:
@@ -106,6 +108,7 @@ services:
       - account_postgres_data:/var/lib/postgresql/data
 
   account-service:
+    image: account-service:${IMAGE_TAG:-dev}
     build:
       context: ../AccountService
       args:
@@ -138,6 +141,7 @@ services:
       - card_postgres_data:/var/lib/postgresql/data
 
   card-service:
+    image: card-service:${IMAGE_TAG:-dev}
     build:
       context: ../CardService
       args:
@@ -170,6 +174,7 @@ services:
       - transaction_postgres_data:/var/lib/postgresql/data
 
   transaction-service:
+    image: transaction-service:${IMAGE_TAG:-dev}
     build:
       context: ../TransactionService
       args:
@@ -202,6 +207,7 @@ services:
       - notification_mongo_data:/data/db
 
   notification-service:
+    image: notification-service:${IMAGE_TAG:-dev}
     build:
       context: ../NotificationService
       args:
@@ -222,6 +228,7 @@ services:
       NOTIFICATION_MONGO_PASSWORD: ${NOTIFICATION_MONGO_PASSWORD}
 
   api-gateway:
+    image: api-gateway:${IMAGE_TAG:-dev}
     build:
       context: ../ApiGateway
       args:
