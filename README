@@ -1,27 +1,29 @@
 # Bank Microservices
 
-Учебный проект банковской микросервисной системы на Spring Boot. Внешние HTTP-запросы принимает `ApiGateway`, а доменные сервисы общаются с gateway по gRPC-контрактам из Maven package `com.burov:contracts`.
+Учебный проект банковской микросервисной системы на Spring Boot. Внешний REST API находится в `ApiGateway`; gateway вызывает доменные сервисы по gRPC-контрактам из Maven package `com.burov:contracts`.
 
-## Модули
+## Состав проекта
 
-| Модуль | Назначение | HTTP | gRPC | БД |
+| Модуль | Назначение | HTTP | gRPC | Хранилище |
 | --- | --- | --- | --- | --- |
-| `ApiGateway` | HTTP entrypoint, REST-контроллеры и gRPC-клиенты | `8080` | - | - |
-| `AuthService` | Аутентификация | `8081` | `9090` | `auth-postgres` |
-| `UserService` | Пользователи | `8082` | `9091` | `user-postgres` |
-| `AccountService` | Банковские счета | `8083` | `9092` | `account-postgres` |
-| `CardService` | Банковские карты | `8084` | `9093` | `card-postgres` |
-| `TransactionService` | Транзакции | `8085` | `9094` | `transaction-postgres` |
-| `NotificationService` | Уведомления | `8086` | `9095` | `notification-postgres` |
-| `Infra` | Общий Docker Compose для всей системы | - | - | - |
+| `ApiGateway` | REST entrypoint и gRPC-клиенты | `8080` | - | - |
+| `AuthService` | Аутентификация | `8081` | `9090` | PostgreSQL |
+| `UserService` | Пользователи | `8082` | `9091` | PostgreSQL |
+| `AccountService` | Банковские счета | `8083` | `9092` | PostgreSQL |
+| `CardService` | Банковские карты | `8084` | `9093` | PostgreSQL |
+| `TransactionService` | Транзакции | `8085` | `9094` | PostgreSQL |
+| `NotificationService` | Уведомления | `8086` | `9095` | MongoDB |
+| `Infra` | Общий Docker Compose для всей системы | - | - | PostgreSQL, MongoDB, Kafka |
 
 ## Стек
 
 - Java 17
-- Spring Boot
+- Spring Boot 4.1.0
 - Spring Cloud Gateway Server WebMVC в `ApiGateway`
 - gRPC через `grpc-netty-shaded`
 - PostgreSQL 16
+- MongoDB 7
+- Apache Kafka 3.7.0 и Kafka UI
 - Maven Wrapper
 - Spotless и Checkstyle
 - Docker Compose
@@ -32,57 +34,69 @@
 - Docker Desktop или совместимый Docker Engine
 - GitHub token с доступом к Maven package `com.burov:contracts`
 
-Для Maven package нужен token с правом `read:packages`; если репозиторий с package приватный, также нужен доступ к репозиторию.
+Для GitHub Packages нужен token с правом `read:packages`. Если package или репозиторий приватные, token также должен иметь доступ к этому репозиторию.
 
 ## Конфигурация
 
-Каждый сервис читает переменные из env-файла:
+В репозитории есть шаблоны `.env.example`:
 
-- `ApiGateway` по умолчанию читает `.env.local`; можно переопределить через `ENV_FILE`.
-- Остальные сервисы читают `.env` из текущей директории или из директории сервиса.
-- Для Docker Compose используются `.env.docker` в модулях и `Infra/.env` для общей связки.
+- `Infra/.env.example` для запуска всей системы через общий Docker Compose;
+- `<Service>/.env.example` для локального запуска отдельного сервиса.
+
+Перед запуском скопируй нужный шаблон:
+
+```bash
+cp Infra/.env.example Infra/.env
+cp AuthService/.env.example AuthService/.env
+```
+
+Не коммить реальные токены и пароли. Если token попал в репозиторий, его нужно отозвать в GitHub и выпустить новый.
 
 Основные группы переменных:
 
 | Группа | Переменные |
 | --- | --- |
+| Docker build | `GITHUB_TOKEN`, `IMAGE_TAG` |
+| Kafka | `KAFKA_CONTAINER_PORT`, `KAFKA_LOCAL_PORT`, `KAFKA_CONTROLLER_PORT`, `KAFKA_UI_PORT` |
 | Gateway | `API_GATEWAY_NAME`, `API_GATEWAY_PORT` |
 | gRPC clients | `AUTH_GRPC_HOST`, `AUTH_GRPC_PORT`, `USER_GRPC_HOST`, `USER_GRPC_PORT`, `ACCOUNT_GRPC_HOST`, `ACCOUNT_GRPC_PORT`, `CARD_GRPC_HOST`, `CARD_GRPC_PORT`, `TRANSACTION_GRPC_HOST`, `TRANSACTION_GRPC_PORT` |
 | Service runtime | `<SERVICE>_NAME`, `<SERVICE>_PORT`, `<SERVICE>_GRPC_PORT` |
-| Datasource | `<SERVICE>_SPRING_DATASOURCE_URL`, `<SERVICE>_SPRING_DATASOURCE_USERNAME`, `<SERVICE>_SPRING_DATASOURCE_PASSWORD` |
-| PostgreSQL container | `<SERVICE>_POSTGRES_DB`, `<SERVICE>_POSTGRES_PORT`, `<SERVICE>_POSTGRES_USER`, `<SERVICE>_POSTGRES_PASSWORD` |
-| Maven packages | `GITHUB_TOKEN` |
+| PostgreSQL services | `<SERVICE>_POSTGRES_DB`, `<SERVICE>_POSTGRES_PORT`, `<SERVICE>_POSTGRES_USER`, `<SERVICE>_POSTGRES_PASSWORD`, `<SERVICE>_SPRING_DATASOURCE_URL`, `<SERVICE>_SPRING_DATASOURCE_USERNAME`, `<SERVICE>_SPRING_DATASOURCE_PASSWORD` |
+| Notification MongoDB | `NOTIFICATION_MONGO_HOST`, `NOTIFICATION_MONGO_PORT`, `NOTIFICATION_MONGO_DB`, `NOTIFICATION_MONGO_USER`, `NOTIFICATION_MONGO_PASSWORD` |
 
 `<SERVICE>` используется в верхнем регистре: `AUTH`, `USER`, `ACCOUNT`, `CARD`, `TRANSACTION`, `NOTIFICATION`.
 
-Не коммить реальные токены и пароли. Если token уже попал в репозиторий, его нужно отозвать в GitHub и выпустить новый.
-
-## Запуск через Docker Compose
-
-Общий запуск всей системы:
+## Запуск всей системы
 
 ```bash
 cd Infra
+cp .env.example .env
 docker compose up --build -d
 ```
 
-Проверка статуса:
+После запуска:
+
+- API Gateway: `http://localhost:8080`
+- Kafka UI: `http://localhost:8079`
+- Kafka bootstrap для локальных клиентов: `localhost:29092`
+
+Проверка контейнеров:
 
 ```bash
+cd Infra
 docker compose ps
 ```
 
 Остановка с удалением volume:
 
 ```bash
+cd Infra
 docker compose down -v
 ```
 
-После запуска gateway доступен на `http://localhost:8080`.
-
 ## HTTP endpoints
 
-`ApiGateway` сейчас проксирует простые GET-запросы в gRPC-сервисы:
+`ApiGateway` сейчас открывает простые GET endpoint'ы и проксирует их в gRPC-сервисы:
 
 | Endpoint | Сервис |
 | --- | --- |
@@ -102,16 +116,17 @@ curl http://localhost:8080/card
 curl http://localhost:8080/transaction
 ```
 
-`NotificationService` есть в инфраструктуре, но отдельный gateway endpoint для него сейчас не подключен.
+`NotificationService` есть в инфраструктуре, но отдельный REST endpoint в gateway для него сейчас не подключен.
 
-## Локальный запуск без Docker
+## Локальный запуск сервиса
 
-Для локального запуска сервиса нужна поднятая PostgreSQL с параметрами из соответствующего env-файла.
+Для локального запуска доменного сервиса нужна поднятая база данных с параметрами из его `.env`.
 
-Пример:
+Пример для `AuthService`:
 
 ```bash
 cd AuthService
+cp .env.example .env
 ./mvnw spring-boot:run
 ```
 
@@ -119,15 +134,18 @@ Gateway запускается отдельно и должен видеть gRP
 
 ```bash
 cd ApiGateway
+cp .env.example .env.local
 ./mvnw spring-boot:run
 ```
 
-Если нужно запустить gateway с другим env-файлом:
+`ApiGateway` по умолчанию читает `.env.local`. Другой файл можно передать через `ENV_FILE`:
 
 ```bash
 cd ApiGateway
 ENV_FILE=.env.docker ./mvnw spring-boot:run
 ```
+
+Остальные сервисы читают `.env` из текущей директории или из директории сервиса.
 
 ## Сборка и тесты
 
@@ -138,7 +156,12 @@ cd AuthService
 ./mvnw test
 ```
 
-Если Maven должен скачать приватный package с контрактами, передай `GITHUB_TOKEN` через env или используй настройки Maven, которые уже лежат в `.mvn/settings-docker.xml`.
+Если Maven должен скачать приватный package с контрактами, передай `GITHUB_TOKEN` через env или используй настройки Maven из `.mvn/settings-docker.xml`:
+
+```bash
+cd AuthService
+GITHUB_TOKEN=replace_me ./mvnw -s .mvn/settings-docker.xml test
+```
 
 Проверки качества:
 
@@ -147,40 +170,29 @@ cd AuthService
 ./mvnw checkstyle:check
 ```
 
+Команды запускаются из директории конкретного сервиса, потому что у каждого модуля свой Maven Wrapper и свой `pom.xml`.
+
 ## CI
 
 GitHub Actions workflow находится в `.github/workflows/ci.yml`.
 
-Текущее состояние pipeline:
+Pipeline запускается на `push` и `pull_request` в `main`:
 
-- запускается на `push` и `pull_request` в `main`;
-- тестирует `AuthService` и `ApiGateway`;
-- для `AuthService` поднимает PostgreSQL;
-- после тестов собирает общий Docker Compose из `Infra`.
+- тестирует `NotificationService`, `UserService`, `TransactionService`, `CardService`, `AccountService`, `AuthService` и `ApiGateway`;
+- для PostgreSQL-сервисов поднимает временный `postgres:16`;
+- для `NotificationService` поднимает временный `mongo:7`;
+- после тестов собирает и запускает общий Docker Compose из `Infra`;
+- в конце останавливает compose через `docker compose down -v`.
 
-Для CI нужны secrets и variables в `Settings -> Secrets and variables -> Actions`.
+Для CI нужны repository variables и secrets в `Settings -> Secrets and variables -> Actions`.
 
-Минимальные secrets:
+Обязательные secrets:
 
 | Secret | Назначение |
 | --- | --- |
 | `GH_PACKAGES_TOKEN` | PAT для чтения Maven packages |
-| `AUTH_SPRING_DATASOURCE_PASSWORD` | Пароль datasource для `AuthService` |
-| `AUTH_POSTGRES_PASSWORD` | Пароль PostgreSQL контейнера |
+| `<SERVICE>_SPRING_DATASOURCE_PASSWORD` | Пароль datasource для PostgreSQL-сервисов |
+| `<SERVICE>_POSTGRES_PASSWORD` | Пароль PostgreSQL контейнера |
+| `NOTIFICATION_MONGO_PASSWORD` | Пароль MongoDB для `NotificationService` |
 
-Минимальные variables для текущего workflow:
-
-| Variable | Пример |
-| --- | --- |
-| `API_GATEWAY_NAME` | `api-gateway` |
-| `API_GATEWAY_PORT` | `8080` |
-| `AUTH_NAME` | `auth-service` |
-| `AUTH_PORT` | `8081` |
-| `AUTH_GRPC_HOST` | `auth-service` |
-| `AUTH_GRPC_PORT` | `9090` |
-| `AUTH_SPRING_DATASOURCE_URL` | `jdbc:postgresql://auth-postgres:5432/auth_db` |
-| `AUTH_SPRING_DATASOURCE_USERNAME` | `auth_user` |
-| `AUTH_POSTGRES_DB` | `auth_db` |
-| `AUTH_POSTGRES_USER` | `auth_user` |
-
-Если CI будет собирать все сервисы из `Infra/docker-compose.yml`, нужно добавить variables и secrets для `USER`, `ACCOUNT`, `CARD`, `TRANSACTION` и `NOTIFICATION` по той же схеме.
+Обязательные variables соответствуют ключам из `Infra/.env.example`: порты, имена сервисов, gRPC hosts/ports, datasource URL/username, PostgreSQL DB/user/port, MongoDB host/port/db/user и Kafka ports.
