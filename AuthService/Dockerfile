@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.7
+
 FROM eclipse-temurin:17-jdk AS build
 
 ARG GITHUB_TOKEN
@@ -7,10 +9,12 @@ WORKDIR /app
 
 COPY .mvn .mvn
 COPY mvnw pom.xml ./
-RUN ./mvnw -s .mvn/settings-docker.xml dependency:go-offline -DskipTests
+RUN --mount=type=cache,target=/root/.m2 \
+    ./mvnw -s .mvn/settings-docker.xml dependency:go-offline -DskipTests
 
 COPY src src
-RUN ./mvnw -s .mvn/settings-docker.xml clean package -DskipTests
+RUN --mount=type=cache,target=/root/.m2 \
+    ./mvnw -s .mvn/settings-docker.xml clean package -DskipTests
 
 FROM eclipse-temurin:17-jre
 

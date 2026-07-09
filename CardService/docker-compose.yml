@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: ${CARD_POSTGRES_USER}
       POSTGRES_PASSWORD: ${CARD_POSTGRES_PASSWORD}
     ports:
-      - "${CARD_POSTGRES_PORT}:${CARD_POSTGRES_PORT}"
+      - "${CARD_POSTGRES_PORT}:5432"
     volumes:
       - card_postgres_data:/var/lib/postgresql/data
 
