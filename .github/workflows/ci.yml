@@ -38,9 +38,11 @@ jobs:
           - service: auth-service
             path: AuthService
             db_type: postgres
+            keys_required: true
             db_config: { DB_VAR: AUTH_POSTGRES_DB, USER_VAR: AUTH_POSTGRES_USER, PASSWORD_SECRET: AUTH_POSTGRES_PASSWORD, CONTAINER_NAME: 'auth-postgres' }
           - service: api-gateway
             path: ApiGateway
+            keys_required: true
             db_type: none
 
 
@@ -54,6 +56,16 @@ jobs:
           distribution: temurin
           java-version: 17
           cache: maven
+
+      - name: Generate ephemeral JWT keys
+        working-directory: Infra
+        if: matrix.keys_required == true
+        run: |
+          mkdir -p secrets
+          openssl genrsa -out secrets/private.pem 2048
+          openssl rsa -in secrets/private.pem -pubout -out secrets/public.pem
+          chmod 600 secrets/private.pem
+          chmod 644 secrets/public.pem
 
       - name: Start PostgreSQL
         if: matrix.db_type == 'postgres'
@@ -193,6 +205,9 @@ jobs:
           NOTIFICATION_MONGO_DB: ${{ vars.NOTIFICATION_MONGO_DB }}
           NOTIFICATION_MONGO_USER: ${{ vars.NOTIFICATION_MONGO_USER }}
           NOTIFICATION_MONGO_PASSWORD: ${{ secrets.NOTIFICATION_MONGO_PASSWORD }}
+
+          JWT_PRIVATE_KEY_PATH: ${{ github.workspace }}/Infra${{ vars.JWT_PRIVATE_KEY_PATH }}
+          JWT_PUBLIC_KEY_PATH: ${{ github.workspace }}/Infra${{ vars.JWT_PUBLIC_KEY_PATH }}
         run: mvn -s .mvn/settings-docker.xml test
 
       - name: Print test reports
@@ -212,6 +227,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Generate ephemeral JWT keys
+        working-directory: Infra
+        run: |
+          mkdir -p secrets
+          openssl genrsa -out secrets/private.pem 2048
+          openssl rsa -in secrets/private.pem -pubout -out secrets/public.pem
+          chmod 600 secrets/private.pem
+          chmod 644 secrets/public.pem
 
       - name: Start Docker Compose
         working-directory: Infra
@@ -294,6 +318,9 @@ jobs:
           NOTIFICATION_MONGO_DB: ${{ vars.NOTIFICATION_MONGO_DB }}
           NOTIFICATION_MONGO_USER: ${{ vars.NOTIFICATION_MONGO_USER }}
           NOTIFICATION_MONGO_PASSWORD: ${{ secrets.NOTIFICATION_MONGO_PASSWORD }}
+
+          JWT_PRIVATE_KEY_PATH: ${{ vars.JWT_PRIVATE_KEY_PATH }}
+          JWT_PUBLIC_KEY_PATH: ${{ vars.JWT_PUBLIC_KEY_PATH }}
         run: docker compose up --build -d
 
       - name: Show Docker Compose status
@@ -377,6 +404,9 @@ jobs:
           NOTIFICATION_MONGO_DB: ${{ vars.NOTIFICATION_MONGO_DB }}
           NOTIFICATION_MONGO_USER: ${{ vars.NOTIFICATION_MONGO_USER }}
           NOTIFICATION_MONGO_PASSWORD: ${{ secrets.NOTIFICATION_MONGO_PASSWORD }}
+
+          JWT_PRIVATE_KEY_PATH: ${{ vars.JWT_PRIVATE_KEY_PATH }}
+          JWT_PUBLIC_KEY_PATH: ${{ vars.JWT_PUBLIC_KEY_PATH }}
         run: docker compose ps
 
       - name: Stop Docker Compose
@@ -462,4 +492,7 @@ jobs:
           NOTIFICATION_MONGO_USER: ${{ vars.NOTIFICATION_MONGO_USER }}
           NOTIFICATION_MONGO_URI: ${{ vars.NOTIFICATION_MONGO_URI }}
           NOTIFICATION_MONGO_PASSWORD: ${{ secrets.NOTIFICATION_MONGO_PASSWORD }}
+
+          JWT_PRIVATE_KEY_PATH: ${{ vars.JWT_PRIVATE_KEY_PATH }}
+          JWT_PUBLIC_KEY_PATH: ${{ vars.JWT_PUBLIC_KEY_PATH }}
         run: docker compose down -v

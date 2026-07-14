@@ -1,19 +1,64 @@
 package authservice.grpc;
 
-import auth.contract.v1.AuthRpcServiceGrpc;
-import auth.contract.v1.GetAuthRequest;
-import auth.contract.v1.GetAuthResponse;
+import auth.contract.v1.*;
+import authservice.dto.*;
+import authservice.mapper.AuthMapper;
+import authservice.service.AuthService;
+import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthGrpcService extends AuthRpcServiceGrpc.AuthRpcServiceImplBase {
+    private final AuthService authService;
+    private final AuthMapper authMapper;
+
+    public AuthGrpcService (AuthService authService, AuthMapper authMapper) {
+        this.authService =authService;
+        this.authMapper = authMapper;
+    }
 
     @Override
-    public void getAuth(GetAuthRequest request, StreamObserver<GetAuthResponse> responseObserver) {
-        GetAuthResponse response = GetAuthResponse.newBuilder().setMessage("Auth service GRPC").build();
+    public void getAuth(GetAuthGrpcRequest request, StreamObserver<GetAuthGrpcResponse> responseObserver) {
+        GetAuthGrpcResponse response = GetAuthGrpcResponse.newBuilder().setMessage("Auth service GRPC").build();
 
         responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void signup(SignupAuthGrpcRequest request, StreamObserver<SignupAuthGrpcResponse> responseObserver) {
+        SignupCommand signupCommand = authMapper.toSignupCommand(request);
+        SignupAuthGrpcResponse response = authMapper.toSignupGrpcResponse(authService.signup(signupCommand));
+
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void login(LoginAuthGrpcRequest request, StreamObserver<LoginAuthGrpcResponse> responseObserver) {
+        LoginCommand loginCommand = authMapper.toLoginCommand(request);
+        LoginAuthGrpcResponse response = authMapper.toLoginGrpcResponse(authService.login(loginCommand));
+
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void logout(LogoutAuthGrpcRequest request, StreamObserver<Empty> responseObserver) {
+        LogoutCommand logoutCommand = authMapper.toLogoutCommand(request);
+        authService.logout(logoutCommand);
+
+        responseObserver.onNext(Empty.getDefaultInstance());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void refresh(RefreshAuthGrpcRequest request, StreamObserver<RefreshAuthGrpcResponse> responseObserver) {
+       RefreshCommand refreshCommand = authMapper.toRefreshCommand(request);
+        RefreshAuthGrpcResponse refreshAuthGrpcResponse = authMapper.toRefreshGrpcResponse(authService.refresh(refreshCommand));
+
+        responseObserver.onNext(refreshAuthGrpcResponse);
         responseObserver.onCompleted();
     }
 }
