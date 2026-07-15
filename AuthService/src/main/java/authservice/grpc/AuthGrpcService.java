@@ -8,6 +8,8 @@ import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 public class AuthGrpcService extends AuthRpcServiceGrpc.AuthRpcServiceImplBase {
     private final AuthService authService;
@@ -19,8 +21,8 @@ public class AuthGrpcService extends AuthRpcServiceGrpc.AuthRpcServiceImplBase {
     }
 
     @Override
-    public void getAuth(GetAuthGrpcRequest request, StreamObserver<GetAuthGrpcResponse> responseObserver) {
-        GetAuthGrpcResponse response = GetAuthGrpcResponse.newBuilder().setMessage("Auth service GRPC").build();
+    public void getAuthHealth(GetAuthHealthGrpcRequest request, StreamObserver<GetAuthHealthGrpcResponse> responseObserver) {
+        GetAuthHealthGrpcResponse response = GetAuthHealthGrpcResponse.newBuilder().setMessage("Auth service GRPC health " + LocalDateTime.now()).build();
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();

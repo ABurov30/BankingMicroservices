@@ -1,15 +1,18 @@
 package authservice.config;
 
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.io.Resource;
+import org.springframework.validation.annotation.Validated;
+import jakarta.validation.constraints.Positive;
 
-
+@Validated
 @ConfigurationProperties(prefix = "jwt")
 public record JwtProperties(
         String issuer,
         String audience,
-        long accessTokenTtlMinutes,
-        long refreshTokenTtlDays,
+        @Positive long accessTokenTtlMinutes,
+        @Positive long refreshTokenTtlDays,
         Resource privateKeyLocation,
         Resource publicKeyLocation
 ) {

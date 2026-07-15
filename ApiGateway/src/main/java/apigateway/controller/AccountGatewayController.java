@@ -9,14 +9,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/account")
 public class AccountGatewayController {
 
-  private final AccountGrpcClient accountClient;
+    private final AccountGrpcClient accountClient;
 
-  public AccountGatewayController(AccountGrpcClient accountClient) {
-    this.accountClient = accountClient;
-  }
+    public AccountGatewayController(AccountGrpcClient accountClient) {
+        this.accountClient = accountClient;
+    }
 
-  @GetMapping
-  public String getAccount() {
-    return accountClient.getAccount();
-  }
+    @GetMapping("/health")
+    public String getAccountHealth() {
+        return accountClient.getAccountHealth();
+    }
 }

@@ -9,14 +9,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/card")
 public class CardGatewayController {
 
-  private final CardGrpcClient cardClient;
+    private final CardGrpcClient cardClient;
 
-  public CardGatewayController(CardGrpcClient cardClient) {
-    this.cardClient = cardClient;
-  }
+    public CardGatewayController(CardGrpcClient cardClient) {
+        this.cardClient = cardClient;
+    }
 
-  @GetMapping
-  public String getCard() {
-    return cardClient.getCard();
-  }
+    @GetMapping("/health")
+    public String getCardHealth() {
+        return cardClient.getCardHealth();
+    }
 }

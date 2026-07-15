@@ -16,7 +16,7 @@ import java.util.List;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(RuntimeException.class)
+    @ExceptionHandler(StatusRuntimeException.class)
     public ResponseEntity<ApiErrorResponse> handleGrpcException(StatusRuntimeException exception) {
         HttpStatus httpStatus = mapGrpcStatus(exception.getStatus().getCode());
 
@@ -26,7 +26,7 @@ public class GlobalExceptionHandler {
         }
 
 
-        List<String> messages  = new  ArrayList<>();
+        List<String> messages = new ArrayList<>();
         messages.add(message);
         ApiErrorResponse response = new ApiErrorResponse(
                 Instant.now(),
@@ -35,6 +35,21 @@ public class GlobalExceptionHandler {
                 messages);
 
         return ResponseEntity.status(httpStatus).body(response);
+    }
+
+    @ExceptionHandler(MissingRefreshTokenException.class)
+    public ResponseEntity<ApiErrorResponse> handleRuntimeException(MissingRefreshTokenException exception) {
+        List messages = new ArrayList();
+        messages.add(exception.getMessage());
+
+        ApiErrorResponse response = new ApiErrorResponse(
+                Instant.now(),
+                HttpStatus.UNAUTHORIZED.value(),
+                "Unauthorized",
+                messages
+        );
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

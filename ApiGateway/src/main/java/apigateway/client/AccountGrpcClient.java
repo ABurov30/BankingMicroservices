@@ -1,8 +1,7 @@
 package apigateway.client;
 
-import account.contract.v1.AccountRpcServiceGrpc;
-import account.contract.v1.GetAccountRequest;
-import account.contract.v1.GetAccountResponse;
+import account.contract.v1.*;
+
 import java.util.concurrent.TimeUnit;
 import org.springframework.stereotype.Service;
 
@@ -14,10 +13,10 @@ public class AccountGrpcClient {
     this.stub = stub;
   }
 
-  public String getAccount() {
-    GetAccountResponse response =
+  public String getAccountHealth() {
+    GetAccountHealthGrpcResponse response =
         stub.withDeadlineAfter(2, TimeUnit.SECONDS)
-            .getAccount(GetAccountRequest.newBuilder().build());
+            .getAccountHealth(GetAccountHealthGrpcRequest.newBuilder().build());
     return response.getMessage();
   }
 }

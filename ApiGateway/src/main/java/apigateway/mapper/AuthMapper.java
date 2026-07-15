@@ -4,12 +4,14 @@ import apigateway.dto.*;
 import auth.contract.v1.*;
 import org.mapstruct.Mapper;
 
+import java.util.Locale;
+
 @Mapper(componentModel = "spring")
 public interface AuthMapper {
 
     default SignupAuthGrpcRequest toSignupAuthGrpcRequest(SignupRequestDto request) {
         return SignupAuthGrpcRequest.newBuilder()
-                .setEmail(request.email())
+                .setEmail(request.email().trim().toLowerCase(Locale.ROOT))
                 .setPassword(request.password())
                 .setFirstName(request.firstName())
                 .setLastName(request.lastName())
@@ -27,7 +29,7 @@ public interface AuthMapper {
 
     default LoginAuthGrpcRequest toLoginAuthGrpcRequest(LoginRequestDto request) {
         return LoginAuthGrpcRequest.newBuilder()
-                .setEmail(request.email())
+                .setEmail(request.email().trim().toLowerCase(Locale.ROOT))
                 .setPassword(request.password())
                 .build();
     }

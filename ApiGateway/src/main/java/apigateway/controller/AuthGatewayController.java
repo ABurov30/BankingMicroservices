@@ -3,6 +3,7 @@ package apigateway.controller;
 import apigateway.client.AuthGrpcClient;
 import apigateway.config.CookieConfig;
 import apigateway.dto.*;
+import apigateway.exception.MissingRefreshTokenException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -32,11 +33,13 @@ public class AuthGatewayController {
                 (int) signupResponse.accessTokenMinutesTtl(),
                 signupResponse.refreshToken(),
                 (int) signupResponse.refreshTokenDaysTtl());
-    };
+    }
+
+    ;
 
     @PostMapping("/login")
     public void Login(@Valid @RequestBody LoginRequestDto request, HttpServletResponse response) {
-         LoginResponseDto loginResponse = authClient.login(request);
+        LoginResponseDto loginResponse = authClient.login(request);
 
         cookieConfig.setCookieTokens(
                 response,
@@ -44,11 +47,18 @@ public class AuthGatewayController {
                 (int) loginResponse.accessTokenMinutesTtl(),
                 loginResponse.refreshToken(),
                 (int) loginResponse.refreshTokenDaysTtl());
-    };
+    }
+
+    ;
 
     @DeleteMapping("/logout")
     public void Logout(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = cookieConfig.getCookieByKey(request, "rt");
+
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new MissingRefreshTokenException();
+        }
+
         authClient.logout(new LogoutRequestDto(refreshToken));
         cookieConfig.clearCookieTokens(response);
     }
@@ -56,7 +66,12 @@ public class AuthGatewayController {
     @PostMapping("/refresh")
     public void Refresh(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = cookieConfig.getCookieByKey(request, "rt");
-        RefreshResponseDto refreshResponse  = authClient.refresh(new RefreshRequestDto(refreshToken));
+
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new MissingRefreshTokenException();
+        }
+
+        RefreshResponseDto refreshResponse = authClient.refresh(new RefreshRequestDto(refreshToken));
 
         cookieConfig.setCookieTokens(
                 response,
@@ -66,8 +81,8 @@ public class AuthGatewayController {
                 (int) refreshResponse.refreshTokenDaysTtl());
     }
 
-    @GetMapping
-    public String getAuth() {
-        return authClient.getAuth();
+    @GetMapping("/health")
+    public String getAuthHealth() {
+        return authClient.getAuthHealth();
     }
 }

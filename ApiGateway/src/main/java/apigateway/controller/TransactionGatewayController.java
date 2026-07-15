@@ -9,14 +9,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/transaction")
 public class TransactionGatewayController {
 
-  private final TransactionGrpcClient transactionClient;
+    private final TransactionGrpcClient transactionClient;
 
-  public TransactionGatewayController(TransactionGrpcClient transactionClient) {
-    this.transactionClient = transactionClient;
-  }
+    public TransactionGatewayController(TransactionGrpcClient transactionClient) {
+        this.transactionClient = transactionClient;
+    }
 
-  @GetMapping
-  public String getTransaction() {
-    return transactionClient.getTransaction();
-  }
+    @GetMapping("/health")
+    public String getTransactionHealth() {
+        return transactionClient.getTransactionHealth();
+    }
 }

@@ -15,12 +15,16 @@ import authservice.repository.AuthUserRepository;
 import authservice.repository.RefreshTokenRepository;
 import authservice.repository.RoleRepository;
 import authservice.repository.UserRoleRepository;
+import jakarta.persistence.LockModeType;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Locale;
 
 @Service
 public class AuthService {
@@ -52,7 +56,6 @@ public class AuthService {
 
     @Transactional
     public SignupResult signup(SignupCommand signupCommand) {
-
         if (authUserRepository.existsByEmail(signupCommand.email())) {
             throw new EmailAlreadyExistsException(signupCommand.email());
         }
@@ -62,7 +65,13 @@ public class AuthService {
         userEntity.setEmail(signupCommand.email());
         userEntity.setPasswordHash(passwordEncoder.encode(signupCommand.password()));
 
-        AuthUserEntity savedUser = authUserRepository.save(userEntity);
+        AuthUserEntity savedUser;
+        try {
+            savedUser = authUserRepository.saveAndFlush(userEntity);
+        } catch (DataIntegrityViolationException e) {
+            throw new EmailAlreadyExistsException(signupCommand.email());
+        }
+
         RoleEntity roleEntity = roleRepository.findByName(Roles.USER)
                 .orElseThrow(() -> new IllegalStateException("Role USER not found"));
 
@@ -139,7 +148,7 @@ public class AuthService {
     @Transactional
     public RefreshResult refresh(RefreshCommand refreshCommand) {
         String logoutTokenHash = tokenService.hashToken(refreshCommand.refreshToken());
-        RefreshTokenEntity refreshTokenEntity = refreshTokenRepository.findByTokenHash(logoutTokenHash)
+        RefreshTokenEntity refreshTokenEntity = refreshTokenRepository.findByTokenHashForUpdate(logoutTokenHash)
                 .orElseThrow(() -> new RefreshTokenNotFoundException());
 
         if (refreshTokenEntity.getRevokedAt() != null) {

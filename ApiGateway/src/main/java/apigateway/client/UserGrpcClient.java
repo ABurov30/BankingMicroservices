@@ -2,9 +2,7 @@ package apigateway.client;
 
 import java.util.concurrent.TimeUnit;
 import org.springframework.stereotype.Service;
-import user.contract.v1.GetUserRequest;
-import user.contract.v1.GetUserResponse;
-import user.contract.v1.UserRpcServiceGrpc;
+import user.contract.v1.*;
 
 @Service
 public class UserGrpcClient {
@@ -14,9 +12,9 @@ public class UserGrpcClient {
     this.stub = stub;
   }
 
-  public String getUser() {
-    GetUserResponse response =
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS).getUser(GetUserRequest.newBuilder().build());
+  public String getUserHealth() {
+    GetUserHealthGrpcResponse response =
+        stub.withDeadlineAfter(2, TimeUnit.SECONDS).getUserHealth(GetUserHealthGrpcRequest.newBuilder().build());
     return response.getMessage();
   }
 }

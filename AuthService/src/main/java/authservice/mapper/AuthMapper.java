@@ -4,13 +4,14 @@ import auth.contract.v1.*;
 import authservice.dto.*;
 import org.mapstruct.Mapper;
 
+import java.util.Locale;
 import java.util.UUID;
 
 @Mapper(componentModel = "spring")
 public interface AuthMapper {
     default SignupCommand toSignupCommand(SignupAuthGrpcRequest signupAuthGrpcRequest) {
         return new SignupCommand(
-                signupAuthGrpcRequest.getEmail(),
+                signupAuthGrpcRequest.getEmail().trim().toLowerCase(Locale.ROOT),
                 signupAuthGrpcRequest.getPassword(),
                 signupAuthGrpcRequest.getFirstName(),
                 signupAuthGrpcRequest.getLastName()
@@ -28,7 +29,7 @@ public interface AuthMapper {
 
     default LoginCommand toLoginCommand(LoginAuthGrpcRequest loginAuthGrpcRequest) {
         return new LoginCommand(
-                loginAuthGrpcRequest.getEmail(),
+                loginAuthGrpcRequest.getEmail().trim().toLowerCase(Locale.ROOT),
                 loginAuthGrpcRequest.getPassword()
         );
     }

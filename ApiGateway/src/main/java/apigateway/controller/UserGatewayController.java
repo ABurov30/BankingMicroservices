@@ -9,14 +9,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/user")
 public class UserGatewayController {
 
-  private final UserGrpcClient userClient;
+    private final UserGrpcClient userClient;
 
-  public UserGatewayController(UserGrpcClient userClient) {
-    this.userClient = userClient;
-  }
+    public UserGatewayController(UserGrpcClient userClient) {
+        this.userClient = userClient;
+    }
 
-  @GetMapping
-  public String getUser() {
-    return userClient.getUser();
-  }
+    @GetMapping("/health")
+    public String getUserHealth() {
+        return userClient.getUserHealth();
+    }
 }

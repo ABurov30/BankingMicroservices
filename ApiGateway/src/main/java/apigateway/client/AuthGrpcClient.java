@@ -18,9 +18,9 @@ public class AuthGrpcClient {
         this.authMapper = authMapper;
     }
 
-    public String getAuth() {
-        GetAuthGrpcResponse response =
-                stub.withDeadlineAfter(2, TimeUnit.SECONDS).getAuth(GetAuthGrpcRequest.newBuilder().build());
+    public String getAuthHealth() {
+        GetAuthHealthGrpcResponse response =
+                stub.withDeadlineAfter(2, TimeUnit.SECONDS).getAuthHealth(GetAuthHealthGrpcRequest.newBuilder().build());
         return response.getMessage();
     }
 
