@@ -1,6 +1,7 @@
 package apigateway.client;
 
 import card.contract.v1.*;
+import com.google.protobuf.Empty;
 
 import java.util.concurrent.TimeUnit;
 import org.springframework.stereotype.Service;
@@ -15,7 +16,7 @@ public class CardGrpcClient {
 
   public String getCardHealth() {
     GetCardHealthGrpcResponse response =
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS).getCardHealth(GetCardHealthGrpcRequest.newBuilder().build());
+        stub.withDeadlineAfter(2, TimeUnit.SECONDS).getCardHealth(Empty.getDefaultInstance());
     return response.getMessage();
   }
 }

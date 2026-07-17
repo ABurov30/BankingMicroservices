@@ -1,8 +1,9 @@
 package apigateway.client;
 
-import apigateway.dto.*;
+import apigateway.dto.auth.*;
 import apigateway.mapper.AuthMapper;
 import auth.contract.v1.*;
+import com.google.protobuf.Empty;
 
 import java.util.concurrent.TimeUnit;
 
@@ -20,7 +21,7 @@ public class AuthGrpcClient {
 
     public String getAuthHealth() {
         GetAuthHealthGrpcResponse response =
-                stub.withDeadlineAfter(2, TimeUnit.SECONDS).getAuthHealth(GetAuthHealthGrpcRequest.newBuilder().build());
+                stub.withDeadlineAfter(2, TimeUnit.SECONDS).getAuthHealth(Empty.getDefaultInstance());
         return response.getMessage();
     }
 

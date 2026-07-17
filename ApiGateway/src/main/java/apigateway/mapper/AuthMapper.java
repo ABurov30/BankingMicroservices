@@ -1,6 +1,6 @@
 package apigateway.mapper;
 
-import apigateway.dto.*;
+import apigateway.dto.auth.*;
 import auth.contract.v1.*;
 import org.mapstruct.Mapper;
 

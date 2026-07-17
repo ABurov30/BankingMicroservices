@@ -21,7 +21,7 @@ public class AuthGrpcService extends AuthRpcServiceGrpc.AuthRpcServiceImplBase {
     }
 
     @Override
-    public void getAuthHealth(GetAuthHealthGrpcRequest request, StreamObserver<GetAuthHealthGrpcResponse> responseObserver) {
+    public void getAuthHealth(Empty request, StreamObserver<GetAuthHealthGrpcResponse> responseObserver) {
         GetAuthHealthGrpcResponse response = GetAuthHealthGrpcResponse.newBuilder().setMessage("Auth service GRPC health " + LocalDateTime.now()).build();
 
         responseObserver.onNext(response);

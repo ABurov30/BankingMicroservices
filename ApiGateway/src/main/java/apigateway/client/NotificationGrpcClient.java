@@ -1,6 +1,6 @@
 package apigateway.client;
 
-import notification.contract.v1.GetNotificationHealthGrpcRequest;
+import com.google.protobuf.Empty;
 import notification.contract.v1.GetNotificationHealthGrpcResponse;
 import notification.contract.v1.NotificationRpcServiceGrpc;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,7 @@ public class NotificationGrpcClient {
     public String getNotificationHealth() {
         GetNotificationHealthGrpcResponse response =
                 stub.withDeadlineAfter(2, TimeUnit.SECONDS)
-                        .getNotificationHealth(GetNotificationHealthGrpcRequest.newBuilder().build());
+                        .getNotificationHealth(Empty.getDefaultInstance());
         return response.getMessage();
     }
 }

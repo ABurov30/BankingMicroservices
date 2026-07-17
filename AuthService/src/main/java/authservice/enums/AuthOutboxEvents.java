@@ -1,5 +1,5 @@
 package authservice.enums;
 
 public enum AuthOutboxEvents {
-    USER_CREATED,
+    AUTH_USER_CREATED,
 }

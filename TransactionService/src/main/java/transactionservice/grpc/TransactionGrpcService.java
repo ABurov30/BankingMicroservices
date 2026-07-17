@@ -1,5 +1,6 @@
 package transactionservice.grpc;
 
+import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
 import org.springframework.stereotype.Service;
 import transaction.contract.v1.*;
@@ -12,7 +13,7 @@ public class TransactionGrpcService
 
   @Override
   public void getTransactionHealth(
-          GetTransactionHealthGrpcRequest request, StreamObserver<GetTransactionHealthGrpcResponse> responseObserver) {
+      Empty request, StreamObserver<GetTransactionHealthGrpcResponse> responseObserver) {
     GetTransactionHealthGrpcResponse response =
         GetTransactionHealthGrpcResponse.newBuilder().setMessage("Transaction service GRPC health " + LocalDateTime.now()).build();
 

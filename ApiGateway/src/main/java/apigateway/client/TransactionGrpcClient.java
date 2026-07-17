@@ -1,5 +1,6 @@
 package apigateway.client;
 
+import com.google.protobuf.Empty;
 import java.util.concurrent.TimeUnit;
 import org.springframework.stereotype.Service;
 import transaction.contract.v1.*;
@@ -15,7 +16,7 @@ public class TransactionGrpcClient {
   public String getTransactionHealth() {
     GetTransactionHealthGrpcResponse response =
         stub.withDeadlineAfter(2, TimeUnit.SECONDS)
-            .getTransactionHealth(GetTransactionHealthGrpcRequest.newBuilder().build());
+            .getTransactionHealth(Empty.getDefaultInstance());
     return response.getMessage();
   }
 }

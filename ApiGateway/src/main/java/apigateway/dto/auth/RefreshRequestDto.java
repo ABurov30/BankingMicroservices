@@ -1,4 +1,4 @@
-package apigateway.dto;
+package apigateway.dto.auth;
 
 import jakarta.validation.constraints.NotBlank;
 

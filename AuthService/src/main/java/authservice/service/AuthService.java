@@ -2,19 +2,14 @@ package authservice.service;
 
 import authservice.config.JwtProperties;
 import authservice.dto.*;
-import authservice.entity.AuthUserEntity;
-import authservice.entity.RefreshTokenEntity;
-import authservice.entity.RoleEntity;
-import authservice.entity.UserRoleEntity;
+import authservice.entity.*;
+import authservice.enums.AuthOutboxEvents;
 import authservice.enums.Roles;
 import authservice.exception.EmailAlreadyExistsException;
 import authservice.exception.InvalidEmailOrPasswordException;
 import authservice.exception.RefreshTokenNotFoundException;
 import authservice.exception.RoleNotFoundException;
-import authservice.repository.AuthUserRepository;
-import authservice.repository.RefreshTokenRepository;
-import authservice.repository.RoleRepository;
-import authservice.repository.UserRoleRepository;
+import authservice.repository.*;
 import jakarta.persistence.LockModeType;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.jpa.repository.Lock;
@@ -25,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Locale;
+import java.util.Map;
 
 @Service
 public class AuthService {
@@ -35,6 +31,7 @@ public class AuthService {
     private final TokenService tokenService;
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtProperties jwtProperties;
+    private final AuthOutboxEventRepository authOutboxEventRepository;
 
     public AuthService(
             AuthUserRepository authUserRepository,
@@ -43,7 +40,8 @@ public class AuthService {
             TokenService tokenService,
             RoleRepository roleRepository,
             RefreshTokenRepository refreshTokenRepository,
-            JwtProperties jwtProperties
+            JwtProperties jwtProperties,
+            AuthOutboxEventRepository authOutboxEventRepository
     ) {
         this.authUserRepository = authUserRepository;
         this.userRoleRepository = userRoleRepository;
@@ -52,6 +50,7 @@ public class AuthService {
         this.roleRepository = roleRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.jwtProperties = jwtProperties;
+        this.authOutboxEventRepository = authOutboxEventRepository;
     }
 
     @Transactional
@@ -90,6 +89,21 @@ public class AuthService {
         refreshTokenEntity.setTokenHash(refreshTokenHash);
         refreshTokenEntity.setExpiresAt(tokenService.refreshTokenExpiresAt());
         refreshTokenRepository.save(refreshTokenEntity);
+
+        AuthOutboxEventEntity authOutboxEvent = new AuthOutboxEventEntity();
+        authOutboxEvent.setAggregateType("AUTH_USER");
+        authOutboxEvent.setAggregateId(savedUser.getId());
+        authOutboxEvent.setEventType(AuthOutboxEvents.AUTH_USER_CREATED);
+        authOutboxEvent.setTopic("auth.user.created");
+        authOutboxEvent.setEventKey(savedUser.getId().toString());
+        authOutboxEvent.setSchemaVersion("1");
+        authOutboxEvent.setPayload(Map.of(
+                "authUserId", savedUser.getId().toString(),
+                "email", savedUser.getEmail().toString(),
+                "firstName", signupCommand.firstName(),
+                "lastName", signupCommand.lastName()
+        ));
+        authOutboxEventRepository.save(authOutboxEvent);
 
         return new SignupResult(accessToken, refreshToken, jwtProperties.accessTokenTtlMinutes(), jwtProperties.refreshTokenTtlDays());
     }

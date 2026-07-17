@@ -7,6 +7,7 @@ import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.grpc.Status;
 import org.springframework.stereotype.Component;
+import userservice.exception.UserProfileNotFoundException;
 
 @Component
 public class GrpcExceptionInterceptor implements ServerInterceptor {
@@ -33,6 +34,10 @@ public class GrpcExceptionInterceptor implements ServerInterceptor {
     }
 
     private Status mapException(Exception exception) {
+        if (exception instanceof UserProfileNotFoundException) {
+            return Status.NOT_FOUND;
+        }
+
         if (exception instanceof IllegalArgumentException) {
             return Status.INVALID_ARGUMENT;
         }

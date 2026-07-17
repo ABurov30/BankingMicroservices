@@ -2,7 +2,7 @@ package apigateway.controller;
 
 import apigateway.client.AuthGrpcClient;
 import apigateway.config.CookieConfig;
-import apigateway.dto.*;
+import apigateway.dto.auth.*;
 import apigateway.exception.MissingRefreshTokenException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

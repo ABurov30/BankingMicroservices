@@ -14,7 +14,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
     private final CookieConfig cookieConfig;
 
-    public SecurityConfig(CookieConfig cookieConfig, JwtConfig jwtConfig) {
+    public SecurityConfig(CookieConfig cookieConfig) {
         this.cookieConfig = cookieConfig;
     }
 

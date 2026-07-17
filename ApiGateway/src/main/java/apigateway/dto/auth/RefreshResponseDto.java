@@ -1,10 +1,9 @@
-package apigateway.dto;
+package apigateway.dto.auth;
 
-public record LoginResponseDto(
+public record RefreshResponseDto(
         String accessToken,
         String refreshToken,
         long accessTokenMinutesTtl,
         long refreshTokenDaysTtl
 ) {
-
 }
