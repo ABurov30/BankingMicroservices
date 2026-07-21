@@ -1,30 +1,32 @@
 package authservice.service;
 
 import authservice.entity.AuthOutboxEventEntity;
-import authservice.enums.OutboxEventStatus;
 import authservice.repository.AuthOutboxEventRepository;
+import outboxsupport.KafkaOnSentHandler;
+import outboxsupport.OutboxEventStatus;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 @Service
-public class AuthOutboxPublisher {
+public class AuthOutboxPublisher implements KafkaOnSentHandler {
     private final AuthOutboxEventRepository authOutboxEventRepository;
-    private final KafkaTemplate<String, Map<String, Object>> kafkaTemplate;
+    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final ObjectMapper objectMapper;
 
     public AuthOutboxPublisher(
             AuthOutboxEventRepository authOutboxEventRepository,
-            KafkaTemplate kafkaTemplate
+            KafkaTemplate<String, String> kafkaTemplate,
+            ObjectMapper objectMapper
     ) {
         this.authOutboxEventRepository = authOutboxEventRepository;
         this.kafkaTemplate = kafkaTemplate;
+        this.objectMapper = objectMapper;
     }
 
     @Scheduled(fixedDelay = 5000)
@@ -33,42 +35,22 @@ public class AuthOutboxPublisher {
         List<AuthOutboxEventEntity> eventEntityList = authOutboxEventRepository.findTop50ByOutboxEventStatusOrderByCreatedAtAsc(OutboxEventStatus.PENDING);
 
         for (AuthOutboxEventEntity event : eventEntityList) {
-            kafkaTemplate.send(event.getTopic(), event.getEventKey(), event.getPayload())
+            String payload;
+            try {
+                payload = objectMapper.writeValueAsString(event.getPayload());
+            } catch (JacksonException e) {
+                onFailed(event.getId(), e, authOutboxEventRepository);
+                continue;
+            }
+
+            kafkaTemplate.send(event.getTopic(), event.getEventKey(), payload)
                     .whenComplete((result, ex) -> {
                         if (ex == null) {
-                            onPublish(event.getId());
+                            onPublish(event.getId(), authOutboxEventRepository);
                         } else {
-                            onFailed(event.getId(), ex);
+                            onFailed(event.getId(), ex, authOutboxEventRepository);
                         }
                     });
         }
-    }
-
-    @Transactional
-    private void onPublish(UUID eventId) {
-        AuthOutboxEventEntity event = authOutboxEventRepository.findById(eventId)
-                .orElseThrow(() -> new RuntimeException("Event not found"));
-        event.setOutboxEventStatus(OutboxEventStatus.PUBLISHED);
-        event.setSentAt(LocalDateTime.now());
-        event.setRetryCount(event.getRetryCount() + 1);
-        authOutboxEventRepository.save(event);
-    }
-
-    @Transactional
-    private void onFailed(UUID eventId, Throwable e) {
-        AuthOutboxEventEntity event = authOutboxEventRepository.findById(eventId)
-                .orElseThrow(() -> new RuntimeException("Event not found"));
-
-        int retryCount = event.getRetryCount() + 1;
-        event.setErrorMessage(e.getMessage());
-        event.setNextRetryAt(LocalDateTime.now().plus(Duration.ofMillis(5000)));
-        event.setRetryCount(retryCount);
-        if (retryCount >= 5) {
-            event.setOutboxEventStatus(OutboxEventStatus.FAILED);
-        } else {
-            event.setOutboxEventStatus(OutboxEventStatus.PENDING);
-        }
-
-        authOutboxEventRepository.save(event);
     }
 }

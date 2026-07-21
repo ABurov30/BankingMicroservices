@@ -35,8 +35,6 @@ public class AuthGatewayController {
                 (int) signupResponse.refreshTokenDaysTtl());
     }
 
-    ;
-
     @PostMapping("/login")
     public void Login(@Valid @RequestBody LoginRequestDto request, HttpServletResponse response) {
         LoginResponseDto loginResponse = authClient.login(request);
@@ -48,8 +46,6 @@ public class AuthGatewayController {
                 loginResponse.refreshToken(),
                 (int) loginResponse.refreshTokenDaysTtl());
     }
-
-    ;
 
     @DeleteMapping("/logout")
     public void Logout(HttpServletRequest request, HttpServletResponse response) {

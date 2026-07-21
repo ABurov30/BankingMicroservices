@@ -3,7 +3,7 @@ package authservice.service;
 import authservice.config.JwtConfig;
 import authservice.config.JwtProperties;
 import authservice.entity.AuthUserEntity;
-import authservice.enums.Roles;
+import enums.auth.Roles;
 import authservice.repository.AuthUserRepository;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -26,20 +26,18 @@ import java.util.UUID;
 public class TokenService {
     private final JwtEncoder encoder;
     private final JwtProperties jwtProperties;
-    private final AuthUserRepository authUserRepository;
     private final SecureRandom secureRandom = new SecureRandom();
 
-    public TokenService (JwtConfig jwtConfig,
-                         JwtProperties jwtProperties,
-                         AuthUserRepository authUserRepository) {
+    public TokenService(JwtConfig jwtConfig,
+                        JwtProperties jwtProperties
+                        ) {
         this.encoder = jwtConfig.jwtEncoder();
         this.jwtProperties = jwtProperties;
-        this.authUserRepository = authUserRepository;
     }
 
-    private JwtClaimsSet generateClaimsSet (AuthUserEntity userEntity, Roles roles) {
+    private JwtClaimsSet generateClaimsSet(AuthUserEntity userEntity, Roles roles) {
         Instant now = Instant.now();
-        JwtClaimsSet jwtClaimsSet  = JwtClaimsSet.builder()
+        JwtClaimsSet jwtClaimsSet = JwtClaimsSet.builder()
                 .issuer(jwtProperties.issuer())
                 .audience(List.of(jwtProperties.audience()))
                 .issuedAt(now)
@@ -51,17 +49,17 @@ public class TokenService {
         return jwtClaimsSet;
     }
 
-    public Jwt generateAccessToken (AuthUserEntity userEntity, Roles roles) {
+    public Jwt generateAccessToken(AuthUserEntity userEntity, Roles roles) {
         return encoder.encode(JwtEncoderParameters.from(generateClaimsSet(userEntity, roles)));
     }
 
-    public String generateRefreshToken () {
+    public String generateRefreshToken() {
         byte[] bytes = new byte[64];
         secureRandom.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 
-    public String hashToken (String token) {
+    public String hashToken(String token) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
@@ -71,7 +69,7 @@ public class TokenService {
         }
     }
 
-    public LocalDateTime refreshTokenExpiresAt () {
+    public LocalDateTime refreshTokenExpiresAt() {
         return LocalDateTime.now().plusDays(jwtProperties.refreshTokenTtlDays());
     }
 

@@ -1,7 +1,7 @@
 package authservice.repository;
 
 import authservice.entity.RoleEntity;
-import authservice.enums.Roles;
+import enums.auth.Roles;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

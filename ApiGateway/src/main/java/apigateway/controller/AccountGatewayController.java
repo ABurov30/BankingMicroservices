@@ -1,9 +1,10 @@
 package apigateway.controller;
 
 import apigateway.client.AccountGrpcClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import apigateway.dto.account.CreateAccountRequestDto;
+import apigateway.dto.account.CreateAccountResponseDto;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/account")
@@ -18,5 +19,10 @@ public class AccountGatewayController {
     @GetMapping("/health")
     public String getAccountHealth() {
         return accountClient.getAccountHealth();
+    }
+
+    @PostMapping("/create")
+    public CreateAccountResponseDto postCreateAccount(@Valid @RequestBody CreateAccountRequestDto request) {
+        return accountClient.createAccount(request);
     }
 }

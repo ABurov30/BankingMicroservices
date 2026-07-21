@@ -1,9 +1,9 @@
 package accountservice.entity;
 
 
-import accountservice.enums.AccountCurrency;
-import accountservice.enums.AccountStatus;
-import accountservice.enums.AccountType;
+import enums.account.AccountCurrency;
+import enums.account.AccountStatus;
+import enums.account.AccountType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

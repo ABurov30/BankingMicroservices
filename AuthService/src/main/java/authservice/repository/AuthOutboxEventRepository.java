@@ -1,7 +1,7 @@
 package authservice.repository;
 
 import authservice.entity.AuthOutboxEventEntity;
-import authservice.enums.OutboxEventStatus;
+import outboxsupport.OutboxEventStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

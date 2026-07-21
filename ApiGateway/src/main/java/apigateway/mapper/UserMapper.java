@@ -2,7 +2,7 @@ package apigateway.mapper;
 
 import apigateway.dto.user.GetUserInfoRequestDto;
 import apigateway.dto.user.GetUserInfoResponseDto;
-import apigateway.enums.UserProfileStatus;
+import enums.user.UserProfileStatus;
 import org.mapstruct.Mapper;
 import user.contract.v1.GetUserInfoGrpcRequest;
 import user.contract.v1.GetUserInfoGrpcResponse;

@@ -1,6 +1,7 @@
 package authservice.entity;
 
-import authservice.enums.Roles;
+
+import enums.auth.Roles;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

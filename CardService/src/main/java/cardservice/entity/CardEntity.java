@@ -1,6 +1,6 @@
 package cardservice.entity;
 
-import cardservice.enums.CardStatus;
+import enums.card.CardStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

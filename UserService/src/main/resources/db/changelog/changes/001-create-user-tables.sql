@@ -4,7 +4,7 @@
 create table user_profiles
 (
     id           uuid primary key,
-    auth_user_id uuid unique  not null unique,
+    auth_user_id uuid unique  not null,
     email        varchar(255) not null,
     first_name   varchar(55)  not null,
     last_name    varchar(55)  not null,

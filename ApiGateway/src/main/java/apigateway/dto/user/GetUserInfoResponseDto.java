@@ -1,6 +1,6 @@
 package apigateway.dto.user;
 
-import apigateway.enums.UserProfileStatus;
+import enums.user.UserProfileStatus;
 import jakarta.validation.constraints.NotBlank;
 
 import java.util.UUID;

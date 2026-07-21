@@ -24,7 +24,7 @@ create table accounts
     constraint chk_accounts_currency
         check ( currency in ('RUB', 'USD', 'EUR', 'CNY', 'GBP') )
 
-)
+);
 
 create table account_outbox_events
 (

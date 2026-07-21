@@ -1,6 +1,6 @@
 package userservice.dto;
 
-import userservice.enums.UserProfileStatus;
+import enums.user.UserProfileStatus;
 
 import java.util.UUID;
 

@@ -1,9 +1,10 @@
 package apigateway.controller;
 
 import apigateway.client.CardGrpcClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import apigateway.dto.card.CreateCardRequestDto;
+import apigateway.dto.card.CreateCardResponseDto;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/card")
@@ -18,5 +19,10 @@ public class CardGatewayController {
     @GetMapping("/health")
     public String getCardHealth() {
         return cardClient.getCardHealth();
+    }
+
+    @PostMapping("/create")
+    public CreateCardResponseDto createCard(@Valid @RequestBody CreateCardRequestDto request) {
+        return cardClient.createCard(request);
     }
 }

@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import userservice.enums.UserProfileStatus;
+import enums.user.UserProfileStatus;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

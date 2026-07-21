@@ -3,23 +3,22 @@ package authservice.service;
 import authservice.config.JwtProperties;
 import authservice.dto.*;
 import authservice.entity.*;
-import authservice.enums.AuthOutboxEvents;
-import authservice.enums.Roles;
+import enums.auth.Roles;
 import authservice.exception.EmailAlreadyExistsException;
 import authservice.exception.InvalidEmailOrPasswordException;
 import authservice.exception.RefreshTokenNotFoundException;
 import authservice.exception.RoleNotFoundException;
 import authservice.repository.*;
-import jakarta.persistence.LockModeType;
+import kafkacontracts.auth.AuthEventType;
+import kafkacontracts.auth.AuthUserCreatedEventPayload;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
-import java.util.Locale;
 import java.util.Map;
 
 @Service
@@ -32,6 +31,7 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtProperties jwtProperties;
     private final AuthOutboxEventRepository authOutboxEventRepository;
+    private final ObjectMapper objectMapper;
 
     public AuthService(
             AuthUserRepository authUserRepository,
@@ -41,7 +41,8 @@ public class AuthService {
             RoleRepository roleRepository,
             RefreshTokenRepository refreshTokenRepository,
             JwtProperties jwtProperties,
-            AuthOutboxEventRepository authOutboxEventRepository
+            AuthOutboxEventRepository authOutboxEventRepository,
+            ObjectMapper objectMapper
     ) {
         this.authUserRepository = authUserRepository;
         this.userRoleRepository = userRoleRepository;
@@ -51,6 +52,7 @@ public class AuthService {
         this.refreshTokenRepository = refreshTokenRepository;
         this.jwtProperties = jwtProperties;
         this.authOutboxEventRepository = authOutboxEventRepository;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional
@@ -93,16 +95,25 @@ public class AuthService {
         AuthOutboxEventEntity authOutboxEvent = new AuthOutboxEventEntity();
         authOutboxEvent.setAggregateType("AUTH_USER");
         authOutboxEvent.setAggregateId(savedUser.getId());
-        authOutboxEvent.setEventType(AuthOutboxEvents.AUTH_USER_CREATED);
-        authOutboxEvent.setTopic("auth.user.created");
+        authOutboxEvent.setEventType(AuthEventType.AUTH_USER_CREATED.name());
+        authOutboxEvent.setTopic(AuthEventType.AUTH_USER_CREATED.getTopic());
         authOutboxEvent.setEventKey(savedUser.getId().toString());
-        authOutboxEvent.setSchemaVersion("1");
-        authOutboxEvent.setPayload(Map.of(
-                "authUserId", savedUser.getId().toString(),
-                "email", savedUser.getEmail().toString(),
-                "firstName", signupCommand.firstName(),
-                "lastName", signupCommand.lastName()
-        ));
+        authOutboxEvent.setSchemaVersion(AuthEventType.AUTH_USER_CREATED.getVersion());
+
+        AuthUserCreatedEventPayload authUserCreatedEventPayload = new AuthUserCreatedEventPayload(
+                savedUser.getId(),
+                savedUser.getEmail().toString(),
+                signupCommand.firstName(),
+                signupCommand.lastName()
+        );
+
+        Map<String, Object> payload = objectMapper.convertValue(
+                authUserCreatedEventPayload,
+                new TypeReference<Map<String, Object>>() {}
+        );
+
+        authOutboxEvent.setPayload(payload);
+
         authOutboxEventRepository.save(authOutboxEvent);
 
         return new SignupResult(accessToken, refreshToken, jwtProperties.accessTokenTtlMinutes(), jwtProperties.refreshTokenTtlDays());

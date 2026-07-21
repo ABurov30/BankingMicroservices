@@ -1,6 +1,8 @@
 package accountservice.grpc;
 
 import account.contract.v1.AccountRpcServiceGrpc;
+import account.contract.v1.CreateAccountGrpcRequest;
+import account.contract.v1.CreateAccountGrpcResponse;
 import account.contract.v1.GetAccountHealthGrpcResponse;
 import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
@@ -17,5 +19,10 @@ public class AccountGrpcService extends AccountRpcServiceGrpc.AccountRpcServiceI
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();
+    }
+
+    @Override
+    public void createAccount(CreateAccountGrpcRequest request, StreamObserver<CreateAccountGrpcResponse> responseObserver) {
+
     }
 }
