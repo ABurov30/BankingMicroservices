@@ -13,9 +13,11 @@ import userservice.entity.UserOutboxEventEntity;
 import userservice.entity.UserProfileEntity;
 import userservice.exception.UserProfileAlreadyExist;
 import userservice.exception.UserProfileNotFoundException;
+import userservice.mapper.UserMapper;
 import userservice.repository.UserOutboxEventRepository;
 import userservice.repository.UserProfileRepository;
 
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -23,15 +25,18 @@ public class UserService {
     private final UserProfileRepository userProfileRepository;
     private final UserOutboxEventRepository userOutboxEventRepository;
     private final ObjectMapper objectMapper;
+    private final UserMapper userMapper;
 
     public UserService(
             UserProfileRepository userProfileRepository,
             UserOutboxEventRepository userOutboxEventRepository,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            UserMapper userMapper
     ) {
         this.userProfileRepository = userProfileRepository;
         this.userOutboxEventRepository = userOutboxEventRepository;
         this.objectMapper = objectMapper;
+        this.userMapper = userMapper;
     }
 
     @Transactional()
@@ -39,13 +44,7 @@ public class UserService {
         UserProfileEntity userProfileEntity = userProfileRepository.findByAuthUserId(getUserInfoCommand.authUserId())
                 .orElseThrow(() -> new UserProfileNotFoundException(getUserInfoCommand.authUserId()));
 
-        return new GetUserInfoResult(
-                userProfileEntity.getId(),
-                userProfileEntity.getEmail(),
-                userProfileEntity.getFirstName(),
-                userProfileEntity.getLastName(),
-                userProfileEntity.getStatus()
-        );
+        return userMapper.toGetUserInfoResult(userProfileEntity);
     }
 
     @Transactional
@@ -82,5 +81,10 @@ public class UserService {
 
         userOutboxEventRepository.save(userOutboxEventEntity);
 
+    }
+
+    public List<GetUserInfoResult> getAllUserInfo () {
+       List<UserProfileEntity> userProfileEntities = userProfileRepository.findAll();
+       return userProfileEntities.stream().map(userMapper::toGetUserInfoResult).toList();
     }
 }

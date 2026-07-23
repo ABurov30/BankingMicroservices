@@ -2,8 +2,11 @@ package accountservice.service;
 
 import accountservice.dto.CreateAccountCommand;
 import accountservice.dto.CreateAccountResult;
+import accountservice.dto.GetAccountResult;
+import accountservice.dto.GetAccountsByOwnerUserIdCommand;
 import accountservice.entity.AccountEntity;
 import accountservice.entity.AccountOutboxEventEntity;
+import accountservice.mapper.AccountMapper;
 import accountservice.repository.AccountOutboxEventRepository;
 import accountservice.repository.AccountRepository;
 import enums.account.AccountStatus;
@@ -16,6 +19,7 @@ import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -25,15 +29,18 @@ public class AccountService {
     private final AccountOutboxEventRepository accountOutboxEventRepository;
     private static final int TRY_TO_GENERATE_ACCOUNT_NUMBER = 10;
     private final ObjectMapper objectMapper;
+    private final AccountMapper accountMapper;
 
     public AccountService(
             AccountRepository accountRepository,
             AccountOutboxEventRepository accountOutboxEventRepository,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            AccountMapper accountMapper
     ) {
         this.accountRepository = accountRepository;
         this.accountOutboxEventRepository = accountOutboxEventRepository;
         this.objectMapper = objectMapper;
+        this.accountMapper = accountMapper;
     }
 
     private String generateUniqueAccountNumber() {
@@ -109,5 +116,22 @@ public class AccountService {
                 accountEntity.getReservedBalance(),
                 accountEntity.getCurrency()
         );
+    }
+
+    public List<GetAccountResult> getAccountsByOwnerUserId(GetAccountsByOwnerUserIdCommand command) {
+
+        List<AccountEntity> accountEntityList = accountRepository.findByOwnerUserId(command.ownerUserId())
+                .orElseThrow(() -> new IllegalArgumentException("Accounts not found by ownerUserId " + command.ownerUserId()));
+
+        return accountEntityList.stream()
+                .map(accountMapper::toGetAccountResult)
+                .toList();
+    }
+
+    public List<GetAccountResult> getAllAccounts() {
+        List<AccountEntity> accountEntityList = accountRepository.findAll();
+        return  accountEntityList.stream()
+                .map(accountMapper::toGetAccountResult)
+                .toList();
     }
 }

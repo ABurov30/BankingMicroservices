@@ -1,11 +1,11 @@
 package cardservice.grpc;
 
 import account.contract.v1.CreateAccountGrpcRequest;
-import card.contract.v1.CardRpcServiceGrpc;
-import card.contract.v1.CreateCardGrpcRequest;
-import card.contract.v1.CreateCardGrpcResponse;
-import card.contract.v1.GetCardHealthGrpcResponse;
+import card.contract.v1.*;
 import cardservice.dto.CreatedCardCommand;
+import cardservice.dto.GetCardResult;
+import cardservice.dto.GetCardsByAccountIdCommand;
+import cardservice.dto.UpdateCardCommand;
 import cardservice.mapper.CardMapper;
 import cardservice.service.CardService;
 import com.google.protobuf.Empty;
@@ -13,6 +13,7 @@ import io.grpc.stub.StreamObserver;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class CardGrpcService extends CardRpcServiceGrpc.CardRpcServiceImplBase {
@@ -41,6 +42,25 @@ public class CardGrpcService extends CardRpcServiceGrpc.CardRpcServiceImplBase {
         CreateCardGrpcResponse response = cardMapper.toCreateCardGrpcResponse(cardService.createCard(createdCardCommand));
 
         responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void updateCard(UpdateCardGrpcRequest request, StreamObserver<UpdateCardGrpcResponse> responseObserver) {
+        UpdateCardCommand updateCardCommand = cardMapper.toUpdateCardCommand(request);
+        UpdateCardGrpcResponse response = cardMapper.toUpdateCardGrpcResponse(cardService.updateCard(updateCardCommand));
+
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getCardsByAccountId (GetCardByAccountIdGrpcRequest request, StreamObserver<GetCardsGrpcResponse> responseObserver) {
+        GetCardsByAccountIdCommand command = cardMapper.toGetCardsByAccountIdCommand(request);
+        List<GetCardResult> results = cardService.getCardsByAccountId(command);
+        List<CardResponse> response = results.stream().map(cardMapper::toCardResponse).toList();
+
+        responseObserver.onNext(cardMapper.toGetCardsGrpcResponse(response));
         responseObserver.onCompleted();
     }
 }

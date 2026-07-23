@@ -4,6 +4,8 @@ import apigateway.dto.user.GetUserInfoRequestDto;
 import apigateway.dto.user.GetUserInfoResponseDto;
 import apigateway.mapper.UserMapper;
 import com.google.protobuf.Empty;
+
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.springframework.stereotype.Service;
 import user.contract.v1.*;
@@ -21,6 +23,12 @@ public class UserGrpcClient {
   public GetUserInfoResponseDto getUserInfo(GetUserInfoRequestDto getUserInfoRequest) {
     GetUserInfoGrpcRequest getUserInfoGrpcRequest = userMapper.toGetUserInfoGrpcRequest(getUserInfoRequest);
     return userMapper.toGetInfoResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).getUserInfo(getUserInfoGrpcRequest));
+  }
+
+  public List<GetUserInfoResponseDto> getAllUserInfo() {
+      return userMapper.toGetInfoResponseDtoList(
+          stub.withDeadlineAfter(2, TimeUnit.SECONDS).getAllUserInfo(Empty.getDefaultInstance())
+      );
   }
 
   public String getUserHealth() {

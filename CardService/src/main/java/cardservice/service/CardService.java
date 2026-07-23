@@ -1,16 +1,18 @@
 package cardservice.service;
 
-import cardservice.dto.CreateCardResult;
-import cardservice.dto.CreatedCardCommand;
+import cardservice.dto.*;
 import cardservice.entity.CardEntity;
 import cardservice.mapper.CardMapper;
 import enums.card.CardStatus;
 import cardservice.repository.CardRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
@@ -20,10 +22,10 @@ public class CardService {
     private static final int CARD_EXPIRATION_YEARS = 5;
     private static final String CARD_BIN = "400000";
     private static final int PAN_LENGTH = 16;
-    private static final int ATTEMPTS_TO_CREATE_CARD =10;
-    private static final int ATTEMPTS_TO_GENERATE_PAN =10;
+    private static final int ATTEMPTS_TO_CREATE_CARD = 10;
+    private static final int ATTEMPTS_TO_GENERATE_PAN = 10;
 
-    public CardService (
+    public CardService(
             CardRepository cardRepository,
             CardMapper cardMapper
     ) {
@@ -31,7 +33,7 @@ public class CardService {
         this.cardMapper = cardMapper;
     }
 
-    private String generateUniquePan () {
+    private String generateUniquePan() {
 
         for (int i = 0; i < ATTEMPTS_TO_GENERATE_PAN; i++) {
             String pan = generatePan();
@@ -77,8 +79,8 @@ public class CardService {
         return (10 - (sum % 10)) % 10;
     }
 
-    public CreateCardResult createCard (CreatedCardCommand createdCardCommand) {
-        for (int i = 0; i< ATTEMPTS_TO_CREATE_CARD; i++) {
+    public CreateCardResult createCard(CreatedCardCommand createdCardCommand) {
+        for (int i = 0; i < ATTEMPTS_TO_CREATE_CARD; i++) {
             try {
                 CardEntity cardEntity = new CardEntity();
                 cardEntity.setAccountId(createdCardCommand.accountId());
@@ -96,5 +98,56 @@ public class CardService {
         }
 
         throw new IllegalStateException("Failed to create card after retries");
+    }
+
+    private void changeCardStatus(CardEntity cardEntity, CardStatus cardStatus) {
+        cardEntity.setCardStatus(cardStatus);
+    }
+
+    private void changeCardDailyLimit(CardEntity cardEntity, BigDecimal dailyLimit) {
+        cardEntity.setDailyLimit(dailyLimit);
+    }
+
+    private void changeCardMonthlyLimit(CardEntity cardEntity, BigDecimal monthlyLimit) {
+        cardEntity.setMonthlyLimit(monthlyLimit);
+    }
+
+    @Transactional
+    public UpdateCardResult updateCard(UpdateCardCommand updateCardCommand) {
+        CardEntity cardEntity = cardRepository.findById(updateCardCommand.cardId())
+                .orElseThrow(() -> new IllegalArgumentException("Card not found"));
+
+        if (cardEntity.getCardStatus() == CardStatus.EXPIRED) {
+            throw new IllegalArgumentException("Card expired");
+        }
+
+        if (cardEntity.getCardStatus() == CardStatus.BLOCKED) {
+            throw new IllegalArgumentException("Card blocked");
+        }
+
+        if (updateCardCommand.status() != null) {
+            this.changeCardStatus(cardEntity, updateCardCommand.status());
+        }
+
+        if (updateCardCommand.dailyLimit() != null) {
+            this.changeCardDailyLimit(cardEntity, updateCardCommand.dailyLimit());
+        }
+
+        if (updateCardCommand.monthlyLimit() != null) {
+            this.changeCardMonthlyLimit(cardEntity, updateCardCommand.monthlyLimit());
+        }
+
+        CardEntity savedCard = cardRepository.save(cardEntity);
+
+        return cardMapper.toUpdateCardResult(savedCard);
+    }
+
+    public List<GetCardResult> getCardsByAccountId (GetCardsByAccountIdCommand command) {
+        List<CardEntity> cardEntityList = cardRepository.findByAccountId(command.accountId())
+                .orElseThrow(() -> new IllegalArgumentException("Cards not found by accountId " + command.accountId()));
+
+        return cardEntityList.stream()
+                .map(cardMapper::toGetCardResult)
+                .toList();
     }
 }

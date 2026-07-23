@@ -2,10 +2,15 @@ package apigateway.client;
 
 import apigateway.dto.card.CreateCardRequestDto;
 import apigateway.dto.card.CreateCardResponseDto;
+import apigateway.dto.card.GetCardByAccountIdResponseDto;
+import apigateway.dto.card.UpdateCardRequestDto;
+import apigateway.dto.card.UpdateCardResponseDto;
 import apigateway.mapper.CardMapper;
 import card.contract.v1.*;
 import com.google.protobuf.Empty;
 
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import org.springframework.stereotype.Service;
 
@@ -31,5 +36,22 @@ public class CardGrpcClient {
   public CreateCardResponseDto createCard (CreateCardRequestDto request) {
       CreateCardGrpcRequest grpcRequest = cardMapper.toCreateCardGrpcRequest(request);
       return cardMapper.toCreateCardResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).createCard(grpcRequest));
+  }
+
+  public UpdateCardResponseDto updateCard (UpdateCardRequestDto request) {
+        UpdateCardGrpcRequest grpcRequest = cardMapper.toUpdateCardGrpcRequest(request);
+        return cardMapper.toUpdateCardResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).updateCard(grpcRequest));
+  }
+
+  public List<GetCardByAccountIdResponseDto> getCardsByAccountId(UUID accountId) {
+      GetCardByAccountIdGrpcRequest request = GetCardByAccountIdGrpcRequest.newBuilder()
+              .setAccountId(accountId.toString())
+              .build();
+      GetCardsGrpcResponse response = stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+              .getCardsByAccountId(request);
+
+      return response.getCardsList().stream()
+              .map(cardMapper::toGetCardByAccountIdResponseDto)
+              .toList();
   }
 }

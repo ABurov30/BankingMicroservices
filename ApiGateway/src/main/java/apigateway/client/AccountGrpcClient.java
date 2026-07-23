@@ -3,9 +3,12 @@ package apigateway.client;
 import account.contract.v1.*;
 import apigateway.dto.account.CreateAccountRequestDto;
 import apigateway.dto.account.CreateAccountResponseDto;
+import apigateway.dto.account.GetAccountResponseDto;
 import apigateway.mapper.AccountMapper;
 import com.google.protobuf.Empty;
 
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import org.springframework.stereotype.Service;
 
@@ -32,5 +35,21 @@ public class AccountGrpcClient {
   public CreateAccountResponseDto createAccount(CreateAccountRequestDto request) {
       CreateAccountGrpcRequest grpcRequest = accountMapper.toCreateAccountGrpcRequest(request);
       return accountMapper.toCreateAccountResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).createAccount(grpcRequest));
+  }
+
+  public List<GetAccountResponseDto> getAccountsByOwnerId(UUID ownerUserId) {
+      GetAccountByOwnerUserIdGrpcRequest request = GetAccountByOwnerUserIdGrpcRequest.newBuilder()
+              .setOwnerUserId(ownerUserId.toString())
+              .build();
+      GetAccountsGrpcResponse response = stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+              .getAccountsByOwnerUserId(request);
+
+      return accountMapper.toListGetAccountResponseDto(response);
+  }
+
+  public List<GetAccountResponseDto> getAllAccounts() {
+      GetAccountsGrpcResponse response = stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+              .getAllAccounts(Empty.getDefaultInstance());
+      return accountMapper.toListGetAccountResponseDto(response);
   }
 }

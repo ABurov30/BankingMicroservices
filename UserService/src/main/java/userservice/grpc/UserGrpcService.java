@@ -10,6 +10,7 @@ import userservice.mapper.UserMapper;
 import userservice.service.UserService;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class UserGrpcService extends UserRpcServiceGrpc.UserRpcServiceImplBase {
@@ -35,6 +36,15 @@ public class UserGrpcService extends UserRpcServiceGrpc.UserRpcServiceImplBase {
         GetUserInfoGrpcResponse response = userMapper.toGetUserInfoGrpcResponse(userService.getUserInfo(getUserInfoCommand));
 
         responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getAllUserInfo (Empty request, StreamObserver<GetAllUserInfoGrpcResponse> responseObserver) {
+        List<GetUserInfoResult> resultList = userService.getAllUserInfo();
+        List<UserResponse> responses = resultList.stream().map(userMapper::toUserResponse).toList();
+
+        responseObserver.onNext(userMapper.toGetAllUserInfoGrpcResponse(responses));
         responseObserver.onCompleted();
     }
 }

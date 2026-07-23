@@ -1,40 +1,66 @@
 package cardservice.mapper;
 
-import card.contract.v1.CreateCardGrpcRequest;
-import card.contract.v1.CreateCardGrpcResponse;
-import cardservice.dto.CreateCardResult;
+import account.contract.v1.GetAccountsGrpcResponse;
+import card.contract.v1.*;
+import cardservice.dto.*;
 import cardservice.entity.CardEntity;
-import cardservice.dto.CreatedCardCommand;
+import enums.card.CardStatus;
 import kafkacontracts.account.AccountCreatedEventPayload;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+
+import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.UUID;
 
-@Mapper(componentModel = "spring"
-)
+@Mapper(componentModel = "spring")
 public interface CardMapper {
     CreatedCardCommand toCreateCardCommand(AccountCreatedEventPayload accountCreatedEventPayload);
 
-    default CreateCardResult toCreateCardResult(CardEntity cardEntity) {
-        return new CreateCardResult(
-                cardEntity.getId(),
-                cardEntity.getAccountId(),
-                cardEntity.getPan(),
-                cardEntity.getCardStatus(),
-                cardEntity.getDailyLimit(),
-                cardEntity.getMonthlyLimit(),
-                cardEntity.getExpiresAt()
-        );
-    }
+    @Mapping(target = "cardId", source = "id")
+    @Mapping(target = "status", source = "cardStatus")
+    CreateCardResult toCreateCardResult(CardEntity cardEntity);
+
+    @Mapping(target = "cardId", source = "id")
+    @Mapping(target = "status", source = "cardStatus")
+    UpdateCardResult toUpdateCardResult(CardEntity cardEntity);
+
+    @Mapping(target = "cardId", source = "id")
+    @Mapping(target = "status", source = "cardStatus")
+    GetCardResult toGetCardResult(CardEntity cardEntity);
 
     default CreatedCardCommand toCreateCardCommand(CreateCardGrpcRequest grpcRequest) {
-        return new  CreatedCardCommand (
-                UUID.fromString(grpcRequest.getAccountId())
-        );
+        return new CreatedCardCommand(UUID.fromString(grpcRequest.getAccountId()));
     }
 
     default CreateCardGrpcResponse toCreateCardGrpcResponse(CreateCardResult cardResult) {
         return CreateCardGrpcResponse.newBuilder()
+                .setCard(toCardResponse(cardResult))
+                .build();
+    }
+
+    default UpdateCardCommand toUpdateCardCommand(UpdateCardGrpcRequest grpcRequest) {
+        return new UpdateCardCommand(
+                UUID.fromString(grpcRequest.getCardId()),
+                CardStatus.valueOf(grpcRequest.getStatus()),
+                BigDecimal.valueOf(grpcRequest.getDailyLimit()),
+                BigDecimal.valueOf(grpcRequest.getMonthlyLimit())
+        );
+    }
+
+    default UpdateCardGrpcResponse toUpdateCardGrpcResponse(UpdateCardResult cardResult) {
+        return UpdateCardGrpcResponse.newBuilder()
+                .setCard(toCardResponse(cardResult))
+                .build();
+    }
+
+    default GetCardsByAccountIdCommand toGetCardsByAccountIdCommand(GetCardByAccountIdGrpcRequest grpcRequest) {
+        return new GetCardsByAccountIdCommand(UUID.fromString(grpcRequest.getAccountId()));
+    }
+
+    default CardResponse toCardResponse(CreateCardResult cardResult) {
+        return CardResponse.newBuilder()
                 .setCardId(cardResult.cardId().toString())
                 .setAccountId(cardResult.accountId().toString())
                 .setPan(cardResult.pan())
@@ -42,6 +68,36 @@ public interface CardMapper {
                 .setDailyLimit(cardResult.dailyLimit().longValue())
                 .setMonthlyLimit(cardResult.monthlyLimit().longValue())
                 .setExpiresAt(cardResult.expiresAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+                .build();
+    }
+
+    default CardResponse toCardResponse(UpdateCardResult cardResult) {
+        return CardResponse.newBuilder()
+                .setCardId(cardResult.cardId().toString())
+                .setAccountId(cardResult.accountId().toString())
+                .setPan(cardResult.pan())
+                .setStatus(cardResult.status().name())
+                .setDailyLimit(cardResult.dailyLimit().longValue())
+                .setMonthlyLimit(cardResult.monthlyLimit().longValue())
+                .setExpiresAt(cardResult.expiresAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+                .build();
+    }
+
+    default CardResponse toCardResponse(GetCardResult cardResult) {
+        return CardResponse.newBuilder()
+                .setCardId(cardResult.cardId().toString())
+                .setAccountId(cardResult.accountId().toString())
+                .setPan(cardResult.pan())
+                .setStatus(cardResult.status().name())
+                .setDailyLimit(cardResult.dailyLimit().longValue())
+                .setMonthlyLimit(cardResult.monthlyLimit().longValue())
+                .setExpiresAt(cardResult.expiresAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+                .build();
+    }
+
+    default GetCardsGrpcResponse toGetCardsGrpcResponse(List<CardResponse> cardResponseList) {
+        return GetCardsGrpcResponse.newBuilder()
+                .addAllCards(cardResponseList)
                 .build();
     }
 }

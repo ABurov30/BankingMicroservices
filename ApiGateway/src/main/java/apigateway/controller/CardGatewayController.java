@@ -3,6 +3,8 @@ package apigateway.controller;
 import apigateway.client.CardGrpcClient;
 import apigateway.dto.card.CreateCardRequestDto;
 import apigateway.dto.card.CreateCardResponseDto;
+import apigateway.dto.card.UpdateCardRequestDto;
+import apigateway.dto.card.UpdateCardResponseDto;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,5 +26,10 @@ public class CardGatewayController {
     @PostMapping("/create")
     public CreateCardResponseDto createCard(@Valid @RequestBody CreateCardRequestDto request) {
         return cardClient.createCard(request);
+    }
+
+    @PutMapping("/uptade")
+    public UpdateCardResponseDto updateCard(@Valid @RequestBody UpdateCardRequestDto request) {
+        return cardClient.updateCard(request);
     }
 }

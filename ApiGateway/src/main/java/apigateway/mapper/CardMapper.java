@@ -2,14 +2,19 @@ package apigateway.mapper;
 
 import apigateway.dto.card.CreateCardRequestDto;
 import apigateway.dto.card.CreateCardResponseDto;
+import apigateway.dto.card.GetCardByAccountIdResponseDto;
+import apigateway.dto.card.UpdateCardRequestDto;
+import apigateway.dto.card.UpdateCardResponseDto;
+import card.contract.v1.CardResponse;
 import card.contract.v1.CreateCardGrpcRequest;
 import card.contract.v1.CreateCardGrpcResponse;
+import card.contract.v1.UpdateCardGrpcRequest;
+import card.contract.v1.UpdateCardGrpcResponse;
 import enums.card.CardStatus;
 import org.mapstruct.Mapper;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Mapper(componentModel = "spring")
@@ -21,14 +26,51 @@ public interface CardMapper {
     }
 
     default CreateCardResponseDto toCreateCardResponseDto (CreateCardGrpcResponse response) {
+        CardResponse card = response.getCard();
+
         return new CreateCardResponseDto(
-                UUID.fromString(response.getCardId()),
-                UUID.fromString(response.getAccountId()),
-                response.getPan(),
-                CardStatus.valueOf(response.getStatus()),
-                BigDecimal.valueOf(response.getDailyLimit()),
-                BigDecimal.valueOf(response.getMonthlyLimit()),
-                LocalDate.parse(response.getExpiresAt()).atStartOfDay()
+                UUID.fromString(card.getCardId()),
+                UUID.fromString(card.getAccountId()),
+                card.getPan(),
+                CardStatus.valueOf(card.getStatus()),
+                BigDecimal.valueOf(card.getDailyLimit()),
+                BigDecimal.valueOf(card.getMonthlyLimit()),
+                LocalDate.parse(card.getExpiresAt()).atStartOfDay()
+        );
+    }
+
+    default UpdateCardGrpcRequest toUpdateCardGrpcRequest(UpdateCardRequestDto request) {
+        return UpdateCardGrpcRequest.newBuilder()
+                .setCardId(request.cardId().toString())
+                .setStatus(request.status().name())
+                .setDailyLimit(request.dailyLimit().longValue())
+                .setMonthlyLimit(request.monthlyLimit().longValue())
+                .build();
+    }
+
+    default UpdateCardResponseDto toUpdateCardResponseDto(UpdateCardGrpcResponse response) {
+        CardResponse card = response.getCard();
+
+        return new UpdateCardResponseDto(
+                UUID.fromString(card.getCardId()),
+                UUID.fromString(card.getAccountId()),
+                card.getPan(),
+                CardStatus.valueOf(card.getStatus()),
+                BigDecimal.valueOf(card.getDailyLimit()),
+                BigDecimal.valueOf(card.getMonthlyLimit()),
+                LocalDate.parse(card.getExpiresAt()).atStartOfDay()
+        );
+    }
+
+    default GetCardByAccountIdResponseDto toGetCardByAccountIdResponseDto(CardResponse card) {
+        return new GetCardByAccountIdResponseDto(
+                UUID.fromString(card.getCardId()),
+                UUID.fromString(card.getAccountId()),
+                card.getPan(),
+                CardStatus.valueOf(card.getStatus()),
+                BigDecimal.valueOf(card.getDailyLimit()),
+                BigDecimal.valueOf(card.getMonthlyLimit()),
+                LocalDate.parse(card.getExpiresAt()).atStartOfDay()
         );
     }
 }

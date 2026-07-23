@@ -20,10 +20,7 @@ public interface AuthMapper {
 
     default SignupAuthGrpcResponse toSignupGrpcResponse(SignupResult signupResult) {
         return SignupAuthGrpcResponse.newBuilder()
-                .setRefreshToken(signupResult.refreshToken())
-                .setAccessToken(signupResult.accessToken())
-                .setAccessTokenMinutesTtl((int) signupResult.accessTokenMinutesTtl())
-                .setRefreshTokenDaysTtl((int) signupResult.refreshTokenDaysTtl())
+                .setTokens(toAuthTokenResponse(signupResult))
                 .build();
     }
 
@@ -36,10 +33,7 @@ public interface AuthMapper {
 
     default LoginAuthGrpcResponse toLoginGrpcResponse(LoginResult loginResult) {
         return LoginAuthGrpcResponse.newBuilder()
-                .setRefreshToken(loginResult.refreshToken())
-                .setAccessToken(loginResult.accessToken())
-                .setAccessTokenMinutesTtl((int) loginResult.accessTokenMinutesTtl())
-                .setRefreshTokenDaysTtl((int) loginResult.refreshTokenDaysTtl())
+                .setTokens(toAuthTokenResponse(loginResult))
                 .build();
     }
 
@@ -57,6 +51,30 @@ public interface AuthMapper {
 
     default RefreshAuthGrpcResponse toRefreshGrpcResponse(RefreshResult refreshResult) {
         return RefreshAuthGrpcResponse.newBuilder()
+                .setTokens(toAuthTokenResponse(refreshResult))
+                .build();
+    }
+
+    private AuthTokenResponse toAuthTokenResponse(SignupResult signupResult) {
+        return AuthTokenResponse.newBuilder()
+                .setRefreshToken(signupResult.refreshToken())
+                .setAccessToken(signupResult.accessToken())
+                .setAccessTokenMinutesTtl((int) signupResult.accessTokenMinutesTtl())
+                .setRefreshTokenDaysTtl((int) signupResult.refreshTokenDaysTtl())
+                .build();
+    }
+
+    private AuthTokenResponse toAuthTokenResponse(LoginResult loginResult) {
+        return AuthTokenResponse.newBuilder()
+                .setRefreshToken(loginResult.refreshToken())
+                .setAccessToken(loginResult.accessToken())
+                .setAccessTokenMinutesTtl((int) loginResult.accessTokenMinutesTtl())
+                .setRefreshTokenDaysTtl((int) loginResult.refreshTokenDaysTtl())
+                .build();
+    }
+
+    private AuthTokenResponse toAuthTokenResponse(RefreshResult refreshResult) {
+        return AuthTokenResponse.newBuilder()
                 .setRefreshToken(refreshResult.refreshToken())
                 .setAccessToken(refreshResult.accessToken())
                 .setAccessTokenMinutesTtl((int) refreshResult.accessTokenMinutesTtl())

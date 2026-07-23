@@ -19,11 +19,13 @@ public interface AuthMapper {
     }
 
     default SignupResponseDto toSignupResponseDto(SignupAuthGrpcResponse authResponse) {
+        AuthTokenResponse tokens = authResponse.getTokens();
+
         return new SignupResponseDto(
-                authResponse.getAccessToken(),
-                authResponse.getRefreshToken(),
-                authResponse.getAccessTokenMinutesTtl(),
-                authResponse.getRefreshTokenDaysTtl()
+                tokens.getAccessToken(),
+                tokens.getRefreshToken(),
+                tokens.getAccessTokenMinutesTtl(),
+                tokens.getRefreshTokenDaysTtl()
         );
     }
 
@@ -35,11 +37,13 @@ public interface AuthMapper {
     }
 
     default LoginResponseDto toLoginResponseDto(LoginAuthGrpcResponse authResponse) {
+        AuthTokenResponse tokens = authResponse.getTokens();
+
         return new LoginResponseDto(
-                authResponse.getAccessToken(),
-                authResponse.getRefreshToken(),
-                authResponse.getAccessTokenMinutesTtl(),
-                authResponse.getRefreshTokenDaysTtl()
+                tokens.getAccessToken(),
+                tokens.getRefreshToken(),
+                tokens.getAccessTokenMinutesTtl(),
+                tokens.getRefreshTokenDaysTtl()
         );
     }
 
@@ -56,11 +60,13 @@ public interface AuthMapper {
     }
 
     default RefreshResponseDto toRefreshResponseDto (RefreshAuthGrpcResponse response) {
+        AuthTokenResponse tokens = response.getTokens();
+
         return new RefreshResponseDto(
-                response.getAccessToken(),
-                response.getRefreshToken(),
-                response.getAccessTokenMinutesTtl(),
-                response.getRefreshTokenDaysTtl()
+                tokens.getAccessToken(),
+                tokens.getRefreshToken(),
+                tokens.getAccessTokenMinutesTtl(),
+                tokens.getRefreshTokenDaysTtl()
         );
     }
 }
