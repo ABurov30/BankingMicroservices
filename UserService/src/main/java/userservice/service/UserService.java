@@ -122,4 +122,12 @@ public class UserService {
 
         userOutboxEventRepository.save(userOutboxEventEntity);
     }
+
+    public void verifyUser(VerifyUserCommand verifyUserCommand) {
+        UserProfileEntity userProfileEntity = userProfileRepository.findByAuthUserId(verifyUserCommand.authUserId())
+                .orElseThrow(() -> new UserProfileNotFoundException(verifyUserCommand.authUserId()));
+
+        userProfileEntity.setStatus(UserProfileStatus.ACTIVE);
+        userProfileRepository.save(userProfileEntity);
+    }
 }

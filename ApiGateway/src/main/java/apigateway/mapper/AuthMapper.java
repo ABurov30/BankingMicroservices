@@ -89,4 +89,15 @@ public interface AuthMapper {
                 .setAuthUserId(requestDto.authUserId().toString())
                 .build();
     }
+
+    default VerifyAuthGrpcRequest toVerifyAuthGrpcRequest(VerifyUserRequestDto requestDto) {
+        VerifyAuthGrpcRequest.Builder builder = VerifyAuthGrpcRequest.newBuilder()
+                .setAuthUserId(requestDto.authUserId().toString());
+
+        if (requestDto.role() != null && !requestDto.role().isBlank()) {
+            return builder.setRole(requestDto.role()).build();
+        }
+
+        return builder.setVerificationCode(requestDto.verificationCode()).build();
+    }
 }

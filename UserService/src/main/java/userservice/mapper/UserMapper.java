@@ -3,6 +3,7 @@ package userservice.mapper;
 import kafkacontracts.auth.AuthUserBlockedEventPayload;
 import kafkacontracts.auth.AuthUserCreatedEventPayload;
 import kafkacontracts.auth.AuthUserUnlockEventPayload;
+import kafkacontracts.auth.AuthUserVerifiedEventPayload;
 import kafkacontracts.user.UserProfileBlockedEventPayload;
 import kafkacontracts.user.UserProfileCreatedEventPayload;
 import kafkacontracts.user.UserProfileUnlockEventPayload;
@@ -68,6 +69,12 @@ public interface UserMapper {
 
     default UnlockUserCommand toUnlockUserCommand(AuthUserUnlockEventPayload payload) {
         return new UnlockUserCommand(
+                payload.getAuthUserId()
+        );
+    }
+
+    default VerifyUserCommand toVerifyUserCommand(AuthUserVerifiedEventPayload payload) {
+        return new VerifyUserCommand(
                 payload.getAuthUserId()
         );
     }

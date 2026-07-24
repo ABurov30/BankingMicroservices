@@ -32,6 +32,9 @@ public class AuthUserEntity {
     @Column(name = "email_verified", nullable = false)
     private boolean emailVerified = false;
 
+    @Column(name = "verification_code_hash", nullable = false)
+    private String verificationCodeHash;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

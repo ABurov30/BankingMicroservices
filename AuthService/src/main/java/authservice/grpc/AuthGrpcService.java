@@ -90,4 +90,13 @@ public class AuthGrpcService extends AuthRpcServiceGrpc.AuthRpcServiceImplBase {
         responseObserver.onNext(Empty.getDefaultInstance());
         responseObserver.onCompleted();
     }
+
+    @Override
+    public void verifyAuthUser(VerifyAuthGrpcRequest request, StreamObserver<Empty> responseObserver) {
+        VerifyAuthUserCommand verifyAuthUserCommand = authMapper.toVerifyAuthUserCommand(request);
+        authService.verifyUser(verifyAuthUserCommand);
+
+        responseObserver.onNext(Empty.getDefaultInstance());
+        responseObserver.onCompleted();
+    }
 }

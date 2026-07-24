@@ -5,16 +5,17 @@ create extension if not exists pgcrypto;
 
 create table auth_users
 (
-    id             uuid primary key,
-    password_hash  varchar(255) not null,
-    status         varchar(50)  not null,
-    email          varchar(255) not null unique,
-    email_verified boolean      not null default false,
-    created_at     timestamp    not null,
-    updated_at     timestamp    not null,
+    id                     uuid primary key,
+    password_hash          varchar(255) not null,
+    status                 varchar(50)  not null,
+    email                  varchar(255) not null unique,
+    email_verified         boolean      not null default false,
+    verification_code_hash varchar(255) not null,
+    created_at             timestamp    not null,
+    updated_at             timestamp    not null,
 
-        constraint chk_auth_users_status
-            check ( status in ('ACTIVE', 'BLOCKED', 'PENDING') )
+    constraint chk_auth_users_status
+        check ( status in ('ACTIVE', 'BLOCKED', 'PENDING') )
 );
 
 create table refresh_tokens
@@ -36,8 +37,8 @@ create table roles
     id   uuid primary key,
     name varchar(255) not null unique,
 
-        constraint chk_roles_name
-            check (name in ('USER', 'MANAGER', 'ADMIN'))
+    constraint chk_roles_name
+        check (name in ('USER', 'MANAGER', 'ADMIN'))
 );
 
 insert into roles (id, name)
@@ -83,7 +84,7 @@ create table auth_outbox_events
     correlation_id uuid,
 
     constraint chk_auth_outbox_event_type
-        check (event_type in ('AUTH_USER_CREATED')),
+        check (event_type in ('AUTH_USER_CREATED', 'AUTH_USER_BLOCKED', 'AUTH_USER_UNLOCK', 'AUTH_USER_VERIFIED')),
 
     constraint chk_auth_outbox_status
         check (status in ('PENDING', 'PUBLISHED', 'FAILED'))

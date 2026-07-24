@@ -59,4 +59,9 @@ public class AuthGrpcClient {
         UnlockAuthGrpcRequest grpcRequest = authMapper.toUnlockUserGrpcRequest(request);
         stub.withDeadlineAfter(2, TimeUnit.SECONDS).unlockAuthUser(grpcRequest);
     }
+
+    public void verifyUser(VerifyUserRequestDto request) {
+        VerifyAuthGrpcRequest grpcRequest = authMapper.toVerifyAuthGrpcRequest(request);
+        stub.withDeadlineAfter(2, TimeUnit.SECONDS).verifyAuthUser(grpcRequest);
+    }
 }

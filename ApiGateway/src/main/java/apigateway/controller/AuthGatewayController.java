@@ -3,12 +3,18 @@ package apigateway.controller;
 import apigateway.client.AuthGrpcClient;
 import apigateway.config.CookieConfig;
 import apigateway.dto.auth.*;
+import apigateway.exception.InvalidAccessTokenException;
+import apigateway.exception.MissingAccessTokenException;
 import apigateway.exception.MissingRefreshTokenException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/auth")
@@ -16,10 +22,17 @@ public class AuthGatewayController {
 
     private final AuthGrpcClient authClient;
     private final CookieConfig cookieConfig;
+    private final JwtDecoder jwtDecoder;
 
-    public AuthGatewayController(AuthGrpcClient authClient, CookieConfig cookieConfig) {
+
+    public AuthGatewayController(
+            AuthGrpcClient authClient,
+            CookieConfig cookieConfig,
+            JwtDecoder jwtDecoder
+    ) {
         this.cookieConfig = cookieConfig;
         this.authClient = authClient;
+        this.jwtDecoder = jwtDecoder;
     }
 
     @ResponseStatus(HttpStatus.OK)
@@ -82,18 +95,67 @@ public class AuthGatewayController {
         authClient.changePassword(request);
     }
 
+    @PutMapping("/verify-user")
+    public void VerifyUserByManager(@Valid @RequestBody VerifyUserRequestDto request, HttpServletRequest httpRequest){
+        Jwt jwt = getAccessTokenJwt(httpRequest);
+        VerifyUserRequestDto verifyUserRequestDto = new VerifyUserRequestDto(
+                UUID.fromString(jwt.getSubject()),
+                request.verificationCode(),
+                null
+        );
+        authClient.verifyUser(verifyUserRequestDto);
+    }
+
+
     @GetMapping("/health")
     public String getAuthHealth() {
         return authClient.getAuthHealth();
     }
 
     @PutMapping("/manager/block-user")
-    public void BlockUser(@Valid @RequestBody BlockAuthUserRequestDto request) {
+    public void BlockUserByManager(@Valid @RequestBody BlockAuthUserRequestDto request) {
         authClient.blockUser(request);
     }
 
     @PutMapping("/manager/unlock-user")
-    public void UnlockUser(@Valid @RequestBody UnlockAuthUserRequestDto request) {
+    public void UnlockUserByManager(@Valid @RequestBody UnlockAuthUserRequestDto request) {
         authClient.unlockUser(request);
+    }
+
+    @PutMapping("/manager/verify-user/{authUserId}")
+    public void VerifyUserByManager(@PathVariable UUID authUserId, HttpServletRequest httpRequest){
+        Jwt jwt = getAccessTokenJwt(httpRequest);
+        VerifyUserRequestDto verifyUserRequestDto = new VerifyUserRequestDto(
+                authUserId,
+                null,
+                extractRole(jwt)
+        );
+        authClient.verifyUser(verifyUserRequestDto);
+    }
+
+    private Jwt getAccessTokenJwt(HttpServletRequest request) {
+        String accessToken = cookieConfig.getCookieByKey(request, "at");
+
+        if (accessToken == null || accessToken.isBlank()) {
+            throw new MissingAccessTokenException();
+        }
+
+        Jwt jwt = jwtDecoder.decode(accessToken);
+        try {
+            UUID.fromString(jwt.getSubject());
+        } catch (IllegalArgumentException exception) {
+            throw new InvalidAccessTokenException();
+        }
+
+        return jwt;
+    }
+
+    private String extractRole(Jwt jwt) {
+        java.util.List<String> roles = jwt.getClaimAsStringList("roles");
+        if (roles != null && !roles.isEmpty()) {
+            return roles.get(0);
+        }
+
+        return jwt.getClaimAsString("role");
     }
 }

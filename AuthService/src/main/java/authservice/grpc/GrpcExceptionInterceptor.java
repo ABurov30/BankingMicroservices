@@ -1,7 +1,10 @@
 package authservice.grpc;
 
+import authservice.exception.AuthUserAlreadyVerifiedException;
+import authservice.exception.AuthUserNotFoundException;
 import authservice.exception.EmailAlreadyExistsException;
 import authservice.exception.InvalidEmailOrPasswordException;
+import authservice.exception.InvalidVerificationCodeException;
 import authservice.exception.RefreshTokenAlreadyExpiredException;
 import authservice.exception.RefreshTokenAlreadyRevokedException;
 import authservice.exception.RefreshTokenNotFoundException;
@@ -49,16 +52,22 @@ public class GrpcExceptionInterceptor implements ServerInterceptor {
 
         if (
                 exception instanceof RefreshTokenNotFoundException ||
-                        exception instanceof RoleNotFoundException
+                        exception instanceof RoleNotFoundException ||
+                        exception instanceof AuthUserNotFoundException
         ) {
             return Status.NOT_FOUND;
         }
 
         if (
                 exception instanceof RefreshTokenAlreadyExpiredException ||
-                        exception instanceof RefreshTokenAlreadyRevokedException
+                        exception instanceof RefreshTokenAlreadyRevokedException ||
+                        exception instanceof AuthUserAlreadyVerifiedException
         ) {
             return Status.FAILED_PRECONDITION;
+        }
+
+        if (exception instanceof InvalidVerificationCodeException) {
+            return Status.INVALID_ARGUMENT;
         }
 
         if (exception instanceof IllegalArgumentException) {

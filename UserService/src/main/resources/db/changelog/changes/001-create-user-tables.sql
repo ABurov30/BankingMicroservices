@@ -37,7 +37,7 @@ create table user_outbox_events
     correlation_id uuid,
 
     constraint chk_auth_outbox_event_type
-        check (event_type in ('USER_PROFILE_CREATED')),
+        check (event_type in ('USER_PROFILE_CREATED', 'USER_PROFILE_BLOCKED', 'USER_PROFILE_UNLOCK')),
 
     constraint chk_auth_outbox_status
         check (status in ('PENDING', 'PUBLISHED', 'FAILED'))

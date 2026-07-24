@@ -62,6 +62,7 @@ public class AuthOutboxPublisher implements KafkaOnSentHandler {
             case AUTH_USER_CREATED -> authMapper.toAuthUserCreatedEventPayload(payload);
             case AUTH_USER_BLOCKED -> authMapper.toAuthUserBlockedEventPayload(payload);
             case AUTH_USER_UNLOCK -> authMapper.toAuthUserUnlockEventPayload(payload);
+            case AUTH_USER_VERIFIED -> authMapper.toAuthUserVerifiedEventPayload(payload);
         };
     }
 }

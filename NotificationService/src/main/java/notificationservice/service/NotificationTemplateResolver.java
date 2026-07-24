@@ -1,0 +1,28 @@
+package notificationservice.service;
+
+import notificationservice.enums.NotificationType;
+import org.springframework.stereotype.Service;
+
+
+
+@Service
+public class NotificationTemplateResolver {
+
+    public String resolveTemplate(NotificationType type) {
+        return switch (type) {
+            case AUTH_USER_BLOCKED -> "email/auth-user-blocked";
+            case AUTH_USER_UNLOCKED -> "email/auth-user-unlocked";
+            case AUTH_USER_CREATED -> "email/auth-user-created";
+            case AUTH_USER_VERIFIED -> "email/auth-user-verified";
+        };
+    }
+
+    public String resolveSubject(NotificationType type) {
+        return switch (type) {
+            case AUTH_USER_CREATED -> "Добро пожаловать";
+            case AUTH_USER_BLOCKED -> "Аккаунт заблокирован";
+            case AUTH_USER_UNLOCKED -> "Аккаунт разблокирован";
+            case AUTH_USER_VERIFIED -> "Email подтвержден";
+        };
+    }
+}

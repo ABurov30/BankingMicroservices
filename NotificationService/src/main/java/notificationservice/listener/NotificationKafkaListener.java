@@ -1,52 +1,55 @@
-package userservice.listener;
+package notificationservice.listener;
+
+
+import kafkacontracts.account.AccountCreatedEventPayload;
 import kafkacontracts.auth.AuthUserBlockedEventPayload;
 import kafkacontracts.auth.AuthUserCreatedEventPayload;
 import kafkacontracts.auth.AuthUserUnlockEventPayload;
 import kafkacontracts.auth.AuthUserVerifiedEventPayload;
+import notificationservice.mapper.NotificationMapper;
+import notificationservice.service.NotificationService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
-import userservice.mapper.UserMapper;
-import userservice.service.UserService;
 
 @Component
-public class UserKafkaListener {
+public class NotificationKafkaListener {
+    private final NotificationService notificationService;
+    private final NotificationMapper notificationMapper;
 
-    private final UserService userService;
-    private final UserMapper userMapper;
 
-    public UserKafkaListener(
-           UserService userService,
-           UserMapper userMapper
-    ) {
-        this.userService = userService;
-        this.userMapper = userMapper;
-    }
+   public NotificationKafkaListener  (
+           NotificationService notificationService,
+           NotificationMapper notificationMapper
+   ) {
+       this.notificationService = notificationService;
+       this.notificationMapper = notificationMapper;
+   }
 
     @KafkaListener(
             topics = "#{T(kafkacontracts.auth.AuthEventType).AUTH_USER_CREATED.getTopic()}"
     )
     public void handleAuthUserCreated(AuthUserCreatedEventPayload payload) {
-        userService.createUser(userMapper.toCreateUserCommand(payload));
+        notificationService.createEmailNotification(notificationMapper.toCreateEmailNotificationCommand(payload));
     }
 
     @KafkaListener(
             topics = "#{T(kafkacontracts.auth.AuthEventType).AUTH_USER_BLOCKED.getTopic()}"
     )
     public void handleAuthUserBlocked(AuthUserBlockedEventPayload payload) {
-        userService.blockUser(userMapper.toBlockedUserCommand(payload));
+        notificationService.createEmailNotification(notificationMapper.toCreateEmailNotificationCommand(payload));
     }
 
     @KafkaListener(
             topics = "#{T(kafkacontracts.auth.AuthEventType).AUTH_USER_UNLOCK.getTopic()}"
     )
     public void handleAuthUserUnlock(AuthUserUnlockEventPayload payload) {
-        userService.unlockUser(userMapper.toUnlockUserCommand(payload));
+        notificationService.createEmailNotification(notificationMapper.toCreateEmailNotificationCommand(payload));
     }
 
     @KafkaListener(
             topics = "#{T(kafkacontracts.auth.AuthEventType).AUTH_USER_VERIFIED.getTopic()}"
     )
     public void handleAuthUserVerified(AuthUserVerifiedEventPayload payload) {
-        userService.verifyUser(userMapper.toVerifyUserCommand(payload));
+        notificationService.createEmailNotification(notificationMapper.toCreateEmailNotificationCommand(payload));
     }
 }

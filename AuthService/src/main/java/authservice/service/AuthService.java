@@ -3,10 +3,13 @@ package authservice.service;
 import authservice.config.JwtProperties;
 import authservice.dto.*;
 import authservice.entity.*;
+import authservice.exception.AuthUserAlreadyVerifiedException;
+import authservice.exception.AuthUserNotFoundException;
 import enums.auth.AuthUserStatus;
 import enums.auth.Roles;
 import authservice.exception.EmailAlreadyExistsException;
 import authservice.exception.InvalidEmailOrPasswordException;
+import authservice.exception.InvalidVerificationCodeException;
 import authservice.exception.RefreshTokenAlreadyExpiredException;
 import authservice.exception.RefreshTokenAlreadyRevokedException;
 import authservice.exception.RefreshTokenNotFoundException;
@@ -18,6 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Map;
 
@@ -31,6 +35,7 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtProperties jwtProperties;
     private final AuthOutboxEventRepository authOutboxEventRepository;
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     public AuthService(
             AuthUserRepository authUserRepository,
@@ -52,6 +57,11 @@ public class AuthService {
         this.authOutboxEventRepository = authOutboxEventRepository;
     }
 
+    private String generateVerificationCode() {
+        int code = SECURE_RANDOM.nextInt(1_000_000);
+        return String.format("%06d", code);
+    }
+
     @Transactional
     public SignupResult signup(SignupCommand signupCommand) {
         if (authUserRepository.existsByEmail(signupCommand.email())) {
@@ -61,6 +71,8 @@ public class AuthService {
 
         AuthUserEntity userEntity = new AuthUserEntity();
         userEntity.setEmail(signupCommand.email());
+        String verificationCode = generateVerificationCode();
+        userEntity.setVerificationCodeHash(passwordEncoder.encode(verificationCode));
         userEntity.setPasswordHash(passwordEncoder.encode(signupCommand.password()));
 
         AuthUserEntity savedUser;
@@ -101,7 +113,8 @@ public class AuthService {
                 "authUserId", savedUser.getId(),
                 "email", signupCommand.email(),
                 "firstName", signupCommand.firstName(),
-                "lastName", signupCommand.lastName()
+                "lastName", signupCommand.lastName(),
+                "verificationCode", verificationCode
         ));
 
         authOutboxEventRepository.save(authOutboxEvent);
@@ -232,11 +245,12 @@ public class AuthService {
         authOutboxEvent.setAggregateId(authUser.getId());
         authOutboxEvent.setEventType(AuthEventType.AUTH_USER_BLOCKED.name());
         authOutboxEvent.setTopic(AuthEventType.AUTH_USER_BLOCKED.getTopic());
-        authOutboxEvent.setEventKey(authUser.getId().toString());
+        authOutboxEvent.setEventKey(authUser.getId() + ":" + AuthEventType.AUTH_USER_BLOCKED.name());
         authOutboxEvent.setSchemaVersion(AuthEventType.AUTH_USER_BLOCKED.getVersion());
 
         authOutboxEvent.setPayload(Map.of(
-                "authUserId", authUser.getId()
+                "authUserId", authUser.getId(),
+                "email", authUser.getEmail()
         ));
 
         authOutboxEventRepository.save(authOutboxEvent);
@@ -258,14 +272,57 @@ public class AuthService {
         authOutboxEvent.setAggregateId(authUser.getId());
         authOutboxEvent.setEventType(AuthEventType.AUTH_USER_UNLOCK.name());
         authOutboxEvent.setTopic(AuthEventType.AUTH_USER_UNLOCK.getTopic());
-        authOutboxEvent.setEventKey(authUser.getId().toString());
+        authOutboxEvent.setEventKey(authUser.getId() + ":" + AuthEventType.AUTH_USER_UNLOCK.name());
         authOutboxEvent.setSchemaVersion(AuthEventType.AUTH_USER_UNLOCK.getVersion());
 
         authOutboxEvent.setPayload(Map.of(
-                "authUserId", authUser.getId()
+                "authUserId", authUser.getId(),
+                "email", authUser.getEmail()
         ));
 
         authOutboxEventRepository.save(authOutboxEvent);
+    }
+
+    @Transactional
+    public void verifyUser(VerifyAuthUserCommand verifyAuthUserCommand) {
+        AuthUserEntity authUser = authUserRepository.findById(verifyAuthUserCommand.authUserId())
+                .orElseThrow(() -> new AuthUserNotFoundException(verifyAuthUserCommand.authUserId()));
+
+        if (authUser.isEmailVerified()) {
+            throw new AuthUserAlreadyVerifiedException();
+        }
+
+        if (!canVerifyWithoutCode(verifyAuthUserCommand.role())) {
+            if (
+                    verifyAuthUserCommand.verificationCode() == null ||
+                            !passwordEncoder.matches(verifyAuthUserCommand.verificationCode(), authUser.getVerificationCodeHash())
+            ) {
+                throw new InvalidVerificationCodeException();
+            }
+        }
+
+        authUser.setEmailVerified(true);
+        authUser.setStatus(AuthUserStatus.ACTIVE);
+        authUserRepository.save(authUser);
+
+        AuthOutboxEventEntity authOutboxEvent = new AuthOutboxEventEntity();
+        authOutboxEvent.setAggregateType("AUTH_USER");
+        authOutboxEvent.setAggregateId(authUser.getId());
+        authOutboxEvent.setEventType(AuthEventType.AUTH_USER_VERIFIED.name());
+        authOutboxEvent.setTopic(AuthEventType.AUTH_USER_VERIFIED.getTopic());
+        authOutboxEvent.setEventKey(authUser.getId() + ":" + AuthEventType.AUTH_USER_VERIFIED.name());
+        authOutboxEvent.setSchemaVersion(AuthEventType.AUTH_USER_VERIFIED.getVersion());
+
+        authOutboxEvent.setPayload(Map.of(
+                "authUserId", authUser.getId(),
+                "email", authUser.getEmail()
+        ));
+
+        authOutboxEventRepository.save(authOutboxEvent);
+    }
+
+    private boolean canVerifyWithoutCode(String role) {
+        return Roles.ADMIN.name().equals(role) || Roles.MANAGER.name().equals(role);
     }
 
 }

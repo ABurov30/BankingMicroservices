@@ -5,6 +5,7 @@ import authservice.dto.*;
 import kafkacontracts.auth.AuthUserBlockedEventPayload;
 import kafkacontracts.auth.AuthUserCreatedEventPayload;
 import kafkacontracts.auth.AuthUserUnlockEventPayload;
+import kafkacontracts.auth.AuthUserVerifiedEventPayload;
 import org.mapstruct.Mapper;
 
 import java.util.Locale;
@@ -92,18 +93,28 @@ public interface AuthMapper {
                 .setEmail(payload.get("email").toString())
                 .setFirstName(payload.get("firstName").toString())
                 .setLastName(payload.get("lastName").toString())
+                .setVerificationCode(payload.get("verificationCode").toString())
                 .build();
     }
 
     default AuthUserBlockedEventPayload toAuthUserBlockedEventPayload(Map<String, Object> payload) {
         return AuthUserBlockedEventPayload.newBuilder()
                 .setAuthUserId(UUID.fromString(payload.get("authUserId").toString()))
+                .setEmail(payload.get("email").toString())
                 .build();
     }
 
     default AuthUserUnlockEventPayload toAuthUserUnlockEventPayload(Map<String, Object> payload) {
         return AuthUserUnlockEventPayload.newBuilder()
                 .setAuthUserId(UUID.fromString(payload.get("authUserId").toString()))
+                .setEmail(payload.get("email").toString())
+                .build();
+    }
+
+    default AuthUserVerifiedEventPayload toAuthUserVerifiedEventPayload(Map<String, Object> payload) {
+        return AuthUserVerifiedEventPayload.newBuilder()
+                .setAuthUserId(UUID.fromString(payload.get("authUserId").toString()))
+                .setEmail(payload.get("email").toString())
                 .build();
     }
 
@@ -121,5 +132,13 @@ public interface AuthMapper {
 
     default UnlockAuthUserCommand toUnlockAuthUserCommand(UnlockAuthGrpcRequest request) {
         return new UnlockAuthUserCommand(UUID.fromString(request.getAuthUserId()));
+    }
+
+    default VerifyAuthUserCommand toVerifyAuthUserCommand(VerifyAuthGrpcRequest request) {
+        return new VerifyAuthUserCommand(
+                UUID.fromString(request.getAuthUserId()),
+                request.hasVerificationCode() ? request.getVerificationCode() : null,
+                request.hasRole() ? request.getRole() : null
+        );
     }
 }
