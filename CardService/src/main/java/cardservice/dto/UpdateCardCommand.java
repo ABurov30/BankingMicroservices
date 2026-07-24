@@ -9,6 +9,8 @@ public record UpdateCardCommand(
         UUID cardId,
         CardStatus status,
         BigDecimal dailyLimit,
-        BigDecimal monthlyLimit
+        BigDecimal monthlyLimit,
+        UUID authUserId,
+        String role
 ) {
 }

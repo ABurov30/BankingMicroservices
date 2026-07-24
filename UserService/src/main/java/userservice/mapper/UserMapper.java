@@ -75,6 +75,7 @@ public interface UserMapper {
     default UserProfileCreatedEventPayload toUserProfileCreatedEventPayload(Map<String, Object> payload) {
         return UserProfileCreatedEventPayload.newBuilder()
                 .setUserId(UUID.fromString(payload.get("userId").toString()))
+                .setAuthUserId(UUID.fromString(payload.get("authUserId").toString()))
                 .build();
     }
 

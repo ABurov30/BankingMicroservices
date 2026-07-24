@@ -33,13 +33,13 @@ public class CardGrpcClient {
     return response.getMessage();
   }
 
-  public CreateCardResponseDto createCard (CreateCardRequestDto request) {
-      CreateCardGrpcRequest grpcRequest = cardMapper.toCreateCardGrpcRequest(request);
+  public CreateCardResponseDto createCard (CreateCardRequestDto request, UUID authUserId, String role) {
+      CreateCardGrpcRequest grpcRequest = cardMapper.toCreateCardGrpcRequest(request, authUserId, role);
       return cardMapper.toCreateCardResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).createCard(grpcRequest));
   }
 
-  public UpdateCardResponseDto updateCard (UpdateCardRequestDto request) {
-        UpdateCardGrpcRequest grpcRequest = cardMapper.toUpdateCardGrpcRequest(request);
+  public UpdateCardResponseDto updateCard (UpdateCardRequestDto request, UUID authUserId, String role) {
+        UpdateCardGrpcRequest grpcRequest = cardMapper.toUpdateCardGrpcRequest(request, authUserId, role);
         return cardMapper.toUpdateCardResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).updateCard(grpcRequest));
   }
 

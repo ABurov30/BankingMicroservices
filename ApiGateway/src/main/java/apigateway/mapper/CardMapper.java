@@ -19,9 +19,15 @@ import java.util.UUID;
 
 @Mapper(componentModel = "spring")
 public interface CardMapper {
-    default CreateCardGrpcRequest toCreateCardGrpcRequest (CreateCardRequestDto createCardRequestDto) {
+    default CreateCardGrpcRequest toCreateCardGrpcRequest (
+            CreateCardRequestDto createCardRequestDto,
+            UUID authUserId,
+            String role
+    ) {
         return  CreateCardGrpcRequest.newBuilder()
                 .setAccountId(createCardRequestDto.accountId().toString())
+                .setAuthUserId(authUserId.toString())
+                .setRole(role == null ? "" : role)
                 .build();
     }
 
@@ -39,12 +45,18 @@ public interface CardMapper {
         );
     }
 
-    default UpdateCardGrpcRequest toUpdateCardGrpcRequest(UpdateCardRequestDto request) {
+    default UpdateCardGrpcRequest toUpdateCardGrpcRequest(
+            UpdateCardRequestDto request,
+            UUID authUserId,
+            String role
+    ) {
         return UpdateCardGrpcRequest.newBuilder()
                 .setCardId(request.cardId().toString())
                 .setStatus(request.status().name())
                 .setDailyLimit(request.dailyLimit().longValue())
                 .setMonthlyLimit(request.monthlyLimit().longValue())
+                .setAuthUserId(authUserId.toString())
+                .setRole(role == null ? "" : role)
                 .build();
     }
 

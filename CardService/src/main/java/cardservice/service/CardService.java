@@ -1,6 +1,7 @@
 package cardservice.service;
 
 import cardservice.dto.*;
+import cardservice.entity.AccountOwnershipProjectionEntity;
 import cardservice.entity.CardEntity;
 import cardservice.exception.CardBlockedException;
 import cardservice.exception.CardExpiredException;
@@ -8,6 +9,7 @@ import cardservice.exception.CardGenerationFailedException;
 import cardservice.exception.CardNotFoundException;
 import cardservice.exception.CardsNotFoundException;
 import cardservice.mapper.CardMapper;
+import cardservice.repository.AccountOwnershipProjectionRepository;
 import enums.card.CardStatus;
 import cardservice.repository.CardRepository;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -23,6 +25,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @Service
 public class CardService {
     private final CardRepository cardRepository;
+    private final AccountOwnershipProjectionRepository accountOwnershipProjectionRepository;
     private final CardMapper cardMapper;
     private static final int CARD_EXPIRATION_YEARS = 5;
     private static final String CARD_BIN = "400000";
@@ -32,9 +35,11 @@ public class CardService {
 
     public CardService(
             CardRepository cardRepository,
+            AccountOwnershipProjectionRepository accountOwnershipProjectionRepository,
             CardMapper cardMapper
     ) {
         this.cardRepository = cardRepository;
+        this.accountOwnershipProjectionRepository = accountOwnershipProjectionRepository;
         this.cardMapper = cardMapper;
     }
 
@@ -87,6 +92,13 @@ public class CardService {
     public CreateCardResult createCard(CreatedCardCommand createdCardCommand) {
         for (int i = 0; i < ATTEMPTS_TO_CREATE_CARD; i++) {
             try {
+                if (
+                        createdCardCommand.role() != null &&
+                                !canAccessAccount(createdCardCommand.accountId(), createdCardCommand.authUserId(), createdCardCommand.role())
+                ) {
+                    throw new CardsNotFoundException(createdCardCommand.accountId());
+                }
+
                 CardEntity cardEntity = new CardEntity();
                 cardEntity.setAccountId(createdCardCommand.accountId());
                 cardEntity.setPan(generateUniquePan());
@@ -95,6 +107,13 @@ public class CardService {
                 cardEntity.setMonthlyLimit(BigDecimal.ZERO);
                 cardEntity.setExpiresAt(LocalDateTime.now().plusYears(CARD_EXPIRATION_YEARS));
                 CardEntity savedCard = cardRepository.save(cardEntity);
+
+                if (createdCardCommand.authUserId() != null) {
+                    AccountOwnershipProjectionEntity accountOwnershipProjectionEntity = new AccountOwnershipProjectionEntity();
+                    accountOwnershipProjectionEntity.setOwnerAuthUserId(createdCardCommand.authUserId());
+                    accountOwnershipProjectionEntity.setAccountId(createdCardCommand.accountId());
+                    accountOwnershipProjectionRepository.save(accountOwnershipProjectionEntity);
+                }
 
                 return cardMapper.toCreateCardResult(savedCard);
             } catch (DataIntegrityViolationException e) {
@@ -132,6 +151,10 @@ public class CardService {
         CardEntity cardEntity = cardRepository.findById(updateCardCommand.cardId())
                 .orElseThrow(() -> new CardNotFoundException(updateCardCommand.cardId()));
 
+        if (!canAccessAccount(cardEntity.getAccountId(), updateCardCommand.authUserId(), updateCardCommand.role())) {
+            throw new CardNotFoundException(updateCardCommand.cardId());
+        }
+
         if (cardEntity.getCardStatus() == CardStatus.EXPIRED) {
             throw new CardExpiredException(cardEntity.getId());
         }
@@ -164,5 +187,23 @@ public class CardService {
         return cardEntityList.stream()
                 .map(cardMapper::toGetCardResult)
                 .toList();
+    }
+
+    private boolean canAccessAccount(UUID accountId, UUID authUserId, String role) {
+        if (authUserId == null) {
+            return true;
+        }
+
+        if (isPrivileged(role)) {
+            return true;
+        }
+
+        return accountOwnershipProjectionRepository.findById(accountId)
+                .map(projection -> projection.getOwnerAuthUserId().equals(authUserId))
+                .orElse(false);
+    }
+
+    private boolean isPrivileged(String role) {
+        return "ADMIN".equals(role) || "MANAGER".equals(role);
     }
 }

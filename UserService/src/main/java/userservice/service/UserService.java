@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import userservice.dto.*;
 import userservice.entity.UserOutboxEventEntity;
 import userservice.entity.UserProfileEntity;
-import userservice.exception.UserProfileAlreadyExist;
 import userservice.exception.UserProfileNotFoundException;
 import userservice.mapper.UserMapper;
 import userservice.repository.UserOutboxEventRepository;
@@ -63,7 +62,10 @@ public class UserService {
         userOutboxEventEntity.setEventKey(userProfileEntity.getId().toString());
         userOutboxEventEntity.setSchemaVersion(UserEventType.USER_PROFILE_CREATED.getVersion());
 
-        userOutboxEventEntity.setPayload(Map.of("userId", userProfileEntity.getId()));
+        userOutboxEventEntity.setPayload(Map.of(
+                "userId", userProfileEntity.getId(),
+                "authUserId", userProfileEntity.getAuthUserId()
+        ));
 
         userOutboxEventRepository.save(userOutboxEventEntity);
     }

@@ -64,6 +64,7 @@ public class AccountService {
                 accountEntity.setAccountStatus(AccountStatus.ACTIVE);
                 accountEntity.setCurrency(createAccountCommand.currency());
                 accountEntity.setOwnerUserId(createAccountCommand.userId());
+                accountEntity.setOwnerAuthUserId(createAccountCommand.authUserId());
                 accountEntity.setAccountNumber(generateUniqueAccountNumber());
                 accountEntity.setAvailableBalance(BigDecimal.ZERO);
                 accountEntity.setReservedBalance(BigDecimal.ZERO);
@@ -88,7 +89,10 @@ public class AccountService {
         accountOutboxEventEntity.setEventKey(accountEntity.getId().toString());
         accountOutboxEventEntity.setSchemaVersion(AccountEventType.ACCOUNT_CREATED.getVersion());
 
-        accountOutboxEventEntity.setPayload(Map.of("accountId", accountEntity.getId()));
+        accountOutboxEventEntity.setPayload(Map.of(
+                "accountId", accountEntity.getId(),
+                "authUserId", accountEntity.getOwnerAuthUserId()
+        ));
 
         accountOutboxEventRepository.save(accountOutboxEventEntity);
 
@@ -126,8 +130,8 @@ public class AccountService {
         List<AccountEntity> accountEntityList = accountRepository.findAllByOwnerUserId(command.userId())
                 .orElseThrow(() ->new AccountsNotFoundException(command.userId()));
 
-        accountEntityList.stream().forEach((account) -> {
-            FreezeAccountCommand freezeAccountCommand = new FreezeAccountCommand(account.getId());
+        accountEntityList.forEach((account) -> {
+            FreezeAccountCommand freezeAccountCommand = new FreezeAccountCommand(account.getId(), null, null);
             this.freezeAccount(freezeAccountCommand);
         });
     }
@@ -135,6 +139,10 @@ public class AccountService {
     public void freezeAccount(FreezeAccountCommand command) {
         AccountEntity account = accountRepository.findById(command.accountId())
                 .orElseThrow(() -> new AccountNotFoundException(command.accountId()));
+
+        if (!canAccessAccount(account, command)) {
+            throw new AccountNotFoundException(command.accountId());
+        }
 
         if (account.getAccountStatus() == AccountStatus.CLOSED) {
             throw new AccountClosedException(account.getId());
@@ -157,5 +165,21 @@ public class AccountService {
         accountOutboxEventEntity.setPayload(Map.of("accountId", account.getId()));
 
         accountOutboxEventRepository.save(accountOutboxEventEntity);
+    }
+
+    private boolean canAccessAccount(AccountEntity account, FreezeAccountCommand command) {
+        if (command.authUserId() == null) {
+            return true;
+        }
+
+        if (isPrivileged(command.role())) {
+            return true;
+        }
+
+        return account.getOwnerAuthUserId().equals(command.authUserId());
+    }
+
+    private boolean isPrivileged(String role) {
+        return "ADMIN".equals(role) || "MANAGER".equals(role);
     }
 }

@@ -29,6 +29,7 @@ public interface AccountMapper {
     default CreateAccountCommand toCreateAccountCommand(UserProfileCreatedEventPayload payload) {
         return new CreateAccountCommand(
                 payload.getUserId(),
+                payload.getAuthUserId(),
                 AccountType.CHECKING,
                 AccountCurrency.RUB
         );
@@ -37,6 +38,7 @@ public interface AccountMapper {
     default AccountCreatedEventPayload toAccountCreatedEventPayload(Map<String, Object> payload) {
         return AccountCreatedEventPayload.newBuilder()
                 .setAccountId(UUID.fromString(payload.get("accountId").toString()))
+                .setAuthUserId(UUID.fromString(payload.get("authUserId").toString()))
                 .build();
     }
 
@@ -75,6 +77,7 @@ public interface AccountMapper {
     default CreateAccountCommand toCreateAccountCommand(CreateAccountGrpcRequest createAccountGrpcRequest) {
         return new CreateAccountCommand(
                 UUID.fromString(createAccountGrpcRequest.getOwnerUserId()),
+                UUID.fromString(createAccountGrpcRequest.getAuthUserId()),
                 AccountType.valueOf(createAccountGrpcRequest.getType()),
                 AccountCurrency.valueOf(createAccountGrpcRequest.getCurrency())
         );
@@ -100,7 +103,11 @@ public interface AccountMapper {
     GetAccountResult toGetAccountResult (AccountEntity accountEntity);
 
     default FreezeAccountCommand toFreezeAccountCommand (FreezeAccountGrpcRequest grpcRequest) {
-        return new FreezeAccountCommand(UUID.fromString(grpcRequest.getAccountId()));
+        return new FreezeAccountCommand(
+                UUID.fromString(grpcRequest.getAccountId()),
+                UUID.fromString(grpcRequest.getAuthUserId()),
+                grpcRequest.getRole()
+        );
     }
 
     default FreezeAccountsByUserIdCommand toFreezeAccountsByUserIdCommand (UserProfileBlockedEventPayload grpcRequest) {

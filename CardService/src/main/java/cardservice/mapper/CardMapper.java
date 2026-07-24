@@ -18,7 +18,11 @@ import java.util.UUID;
 @Mapper(componentModel = "spring")
 public interface CardMapper {
     default CreatedCardCommand toCreateCardCommand(AccountCreatedEventPayload payload) {
-        return new CreatedCardCommand(payload.getAccountId());
+        return new CreatedCardCommand(
+                payload.getAccountId(),
+                payload.getAuthUserId(),
+                null
+        );
     }
 
     default FreezeCardsCommand toFreezeCardsCommand(AccountFrozenEventPayload payload) {
@@ -38,7 +42,11 @@ public interface CardMapper {
     GetCardResult toGetCardResult(CardEntity cardEntity);
 
     default CreatedCardCommand toCreateCardCommand(CreateCardGrpcRequest grpcRequest) {
-        return new CreatedCardCommand(UUID.fromString(grpcRequest.getAccountId()));
+        return new CreatedCardCommand(
+                UUID.fromString(grpcRequest.getAccountId()),
+                UUID.fromString(grpcRequest.getAuthUserId()),
+                grpcRequest.getRole()
+        );
     }
 
     default CreateCardGrpcResponse toCreateCardGrpcResponse(CreateCardResult cardResult) {
@@ -52,7 +60,9 @@ public interface CardMapper {
                 UUID.fromString(grpcRequest.getCardId()),
                 CardStatus.valueOf(grpcRequest.getStatus()),
                 BigDecimal.valueOf(grpcRequest.getDailyLimit()),
-                BigDecimal.valueOf(grpcRequest.getMonthlyLimit())
+                BigDecimal.valueOf(grpcRequest.getMonthlyLimit()),
+                UUID.fromString(grpcRequest.getAuthUserId()),
+                grpcRequest.getRole()
         );
     }
 

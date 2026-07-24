@@ -53,9 +53,11 @@ public class AccountGrpcClient {
       return accountMapper.toListGetAccountResponseDto(response);
   }
 
-  public void freezeAccount(UUID accountId) {
+  public void freezeAccount(UUID accountId, UUID authUserId, String role) {
         FreezeAccountGrpcRequest request = FreezeAccountGrpcRequest.newBuilder()
                 .setAccountId(accountId.toString())
+                .setAuthUserId(authUserId.toString())
+                .setRole(role == null ? "" : role)
                 .build();
         stub.withDeadlineAfter(2, TimeUnit.SECONDS)
               .freezeAccount(request);

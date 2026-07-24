@@ -3,17 +3,18 @@
 
 create table accounts
 (
-    id                uuid primary key,
-    owner_user_id     uuid        not null,
-    account_number    varchar(55) not null unique,
-    type              varchar(55) not null default 'CHECKING',
-    status            varchar(55) not null default 'ACTIVE',
-    available_balance decimal     not null default 0,
-    reserved_balance  decimal     not null default 0,
-    version           integer     not null default 0,
-    currency          varchar(55) not null default 'RUB',
-    created_at        timestamp   not null,
-    updated_at        timestamp   not null,
+    id                 uuid primary key,
+    owner_user_id      uuid        not null,
+    owner_auth_user_id uuid        not null,
+    account_number     varchar(55) not null unique,
+    type               varchar(55) not null default 'CHECKING',
+    status             varchar(55) not null default 'ACTIVE',
+    available_balance  decimal     not null default 0,
+    reserved_balance   decimal     not null default 0,
+    version            integer     not null default 0,
+    currency           varchar(55) not null default 'RUB',
+    created_at         timestamp   not null,
+    updated_at         timestamp   not null,
 
     constraint chk_accounts_type
         check ( type in ('CHECKING', 'SAVINGS', 'CREDIT') ),

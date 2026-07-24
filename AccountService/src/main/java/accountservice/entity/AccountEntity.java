@@ -26,6 +26,9 @@ public class AccountEntity {
     @Column(name = "owner_user_id", nullable = false)
     private UUID ownerUserId;
 
+    @Column(name = "owner_auth_user_id", nullable = false)
+    private UUID ownerAuthUserId;
+
     @Column(name = "account_number", nullable = false)
     private String accountNumber;
 
