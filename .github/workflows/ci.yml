@@ -139,6 +139,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
 
+          KAFKA_BOOTSTRAP_SERVERS: localhost:${{ vars.KAFKA_LOCAL_PORT }}
+          SCHEMA_REGISTRY_URL: http://localhost:${{ vars.SCHEMA_REGISTRY_PORT }}
+
           API_GATEWAY_NAME: ${{ vars.API_GATEWAY_NAME }}
           API_GATEWAY_PORT: ${{ vars.API_GATEWAY_PORT }}
 
@@ -246,6 +249,9 @@ jobs:
           KAFKA_LOCAL_PORT: ${{ vars.KAFKA_LOCAL_PORT }}
           KAFKA_CONTROLLER_PORT: ${{ vars.KAFKA_CONTROLLER_PORT }}
           KAFKA_UI_PORT: ${{ vars.KAFKA_UI_PORT }}
+          KAFKA_BOOTSTRAP_SERVERS: kafka:${{ vars.KAFKA_CONTAINER_PORT }}
+          SCHEMA_REGISTRY_PORT: ${{ vars.SCHEMA_REGISTRY_PORT }}
+          SCHEMA_REGISTRY_URL: http://schema-registry:8081
 
           API_GATEWAY_NAME: ${{ vars.API_GATEWAY_NAME }}
           API_GATEWAY_PORT: ${{ vars.API_GATEWAY_PORT }}
@@ -332,6 +338,9 @@ jobs:
           KAFKA_LOCAL_PORT: ${{ vars.KAFKA_LOCAL_PORT }}
           KAFKA_CONTROLLER_PORT: ${{ vars.KAFKA_CONTROLLER_PORT }}
           KAFKA_UI_PORT: ${{ vars.KAFKA_UI_PORT }}
+          KAFKA_BOOTSTRAP_SERVERS: kafka:${{ vars.KAFKA_CONTAINER_PORT }}
+          SCHEMA_REGISTRY_PORT: ${{ vars.SCHEMA_REGISTRY_PORT }}
+          SCHEMA_REGISTRY_URL: http://schema-registry:8081
 
           API_GATEWAY_NAME: ${{ vars.API_GATEWAY_NAME }}
           API_GATEWAY_PORT: ${{ vars.API_GATEWAY_PORT }}
@@ -419,6 +428,9 @@ jobs:
           KAFKA_LOCAL_PORT: ${{ vars.KAFKA_LOCAL_PORT }}
           KAFKA_CONTROLLER_PORT: ${{ vars.KAFKA_CONTROLLER_PORT }}
           KAFKA_UI_PORT: ${{ vars.KAFKA_UI_PORT }}
+          KAFKA_BOOTSTRAP_SERVERS: kafka:${{ vars.KAFKA_CONTAINER_PORT }}
+          SCHEMA_REGISTRY_PORT: ${{ vars.SCHEMA_REGISTRY_PORT }}
+          SCHEMA_REGISTRY_URL: http://schema-registry:8081
 
           API_GATEWAY_NAME: ${{ vars.API_GATEWAY_NAME }}
           API_GATEWAY_PORT: ${{ vars.API_GATEWAY_PORT }}

@@ -1,5 +1,6 @@
 package apigateway.config;
 
+import enums.auth.Roles;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,6 +36,10 @@ public class SecurityConfig {
                                 "/actuator/health"
                         )
                         .permitAll()
+
+                        .requestMatchers("/**/manager/**")
+                        .hasAnyRole(Roles.ADMIN.name(), Roles.MANAGER.name())
+
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth -> oauth

@@ -1,22 +1,21 @@
 package accountservice.service;
 
-import accountservice.dto.CreateAccountCommand;
-import accountservice.dto.CreateAccountResult;
-import accountservice.dto.GetAccountResult;
-import accountservice.dto.GetAccountsByOwnerUserIdCommand;
+import accountservice.dto.*;
 import accountservice.entity.AccountEntity;
 import accountservice.entity.AccountOutboxEventEntity;
+import accountservice.exception.AccountAlreadyFrozenException;
+import accountservice.exception.AccountClosedException;
+import accountservice.exception.AccountGenerationFailedException;
+import accountservice.exception.AccountNotFoundException;
+import accountservice.exception.AccountsNotFoundException;
 import accountservice.mapper.AccountMapper;
 import accountservice.repository.AccountOutboxEventRepository;
 import accountservice.repository.AccountRepository;
 import enums.account.AccountStatus;
 import jakarta.transaction.Transactional;
-import kafkacontracts.account.AccountCreatedEventPayload;
 import kafkacontracts.account.AccountEventType;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -28,18 +27,15 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final AccountOutboxEventRepository accountOutboxEventRepository;
     private static final int TRY_TO_GENERATE_ACCOUNT_NUMBER = 10;
-    private final ObjectMapper objectMapper;
     private final AccountMapper accountMapper;
 
     public AccountService(
             AccountRepository accountRepository,
             AccountOutboxEventRepository accountOutboxEventRepository,
-            ObjectMapper objectMapper,
             AccountMapper accountMapper
     ) {
         this.accountRepository = accountRepository;
         this.accountOutboxEventRepository = accountOutboxEventRepository;
-        this.objectMapper = objectMapper;
         this.accountMapper = accountMapper;
     }
 
@@ -52,7 +48,7 @@ public class AccountService {
             }
         }
 
-        throw new IllegalStateException("Failed to generate unique account number");
+        throw new AccountGenerationFailedException("Failed to generate unique account number");
     }
 
     private String generateAccountNumber() {
@@ -77,7 +73,7 @@ public class AccountService {
                 // account_number collision, retry
             }
         }
-        throw new IllegalStateException("Failed to create account with unique account number");
+        throw new AccountGenerationFailedException("Failed to create account with unique account number");
     }
 
     @Transactional
@@ -92,17 +88,7 @@ public class AccountService {
         accountOutboxEventEntity.setEventKey(accountEntity.getId().toString());
         accountOutboxEventEntity.setSchemaVersion(AccountEventType.ACCOUNT_CREATED.getVersion());
 
-        AccountCreatedEventPayload accountCreatedEventPayload = new AccountCreatedEventPayload(
-                accountEntity.getId()
-        );
-
-        Map<String, Object> payload = objectMapper.convertValue(
-                accountCreatedEventPayload,
-                new TypeReference<Map<String, Object>>() {
-                }
-        );
-
-        accountOutboxEventEntity.setPayload(payload);
+        accountOutboxEventEntity.setPayload(Map.of("accountId", accountEntity.getId()));
 
         accountOutboxEventRepository.save(accountOutboxEventEntity);
 
@@ -121,7 +107,7 @@ public class AccountService {
     public List<GetAccountResult> getAccountsByOwnerUserId(GetAccountsByOwnerUserIdCommand command) {
 
         List<AccountEntity> accountEntityList = accountRepository.findByOwnerUserId(command.ownerUserId())
-                .orElseThrow(() -> new IllegalArgumentException("Accounts not found by ownerUserId " + command.ownerUserId()));
+                .orElseThrow(() -> new AccountsNotFoundException(command.ownerUserId()));
 
         return accountEntityList.stream()
                 .map(accountMapper::toGetAccountResult)
@@ -133,5 +119,43 @@ public class AccountService {
         return  accountEntityList.stream()
                 .map(accountMapper::toGetAccountResult)
                 .toList();
+    }
+
+    @Transactional
+    public void freezeAccountByUserId(FreezeAccountsByUserIdCommand command) {
+        List<AccountEntity> accountEntityList = accountRepository.findAllByOwnerUserId(command.userId())
+                .orElseThrow(() ->new AccountsNotFoundException(command.userId()));
+
+        accountEntityList.stream().forEach((account) -> {
+            FreezeAccountCommand freezeAccountCommand = new FreezeAccountCommand(account.getId());
+            this.freezeAccount(freezeAccountCommand);
+        });
+    }
+
+    public void freezeAccount(FreezeAccountCommand command) {
+        AccountEntity account = accountRepository.findById(command.accountId())
+                .orElseThrow(() -> new AccountNotFoundException(command.accountId()));
+
+        if (account.getAccountStatus() == AccountStatus.CLOSED) {
+            throw new AccountClosedException(account.getId());
+        }
+
+        if (account.getAccountStatus() == AccountStatus.FROZEN) {
+            throw new AccountAlreadyFrozenException(account.getId());
+        }
+
+        account.setAccountStatus(AccountStatus.FROZEN);
+
+        AccountOutboxEventEntity accountOutboxEventEntity = new AccountOutboxEventEntity();
+        accountOutboxEventEntity.setAggregateType("ACCOUNT_TYPE");
+        accountOutboxEventEntity.setAggregateId(account.getId());
+        accountOutboxEventEntity.setEventType(AccountEventType.ACCOUNT_FROZEN.name());
+        accountOutboxEventEntity.setTopic(AccountEventType.ACCOUNT_FROZEN.getTopic());
+        accountOutboxEventEntity.setEventKey(account.getId().toString());
+        accountOutboxEventEntity.setSchemaVersion(AccountEventType.ACCOUNT_FROZEN.getVersion());
+
+        accountOutboxEventEntity.setPayload(Map.of("accountId", account.getId()));
+
+        accountOutboxEventRepository.save(accountOutboxEventEntity);
     }
 }

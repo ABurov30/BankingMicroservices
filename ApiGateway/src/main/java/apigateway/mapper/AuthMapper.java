@@ -69,4 +69,24 @@ public interface AuthMapper {
                 tokens.getRefreshTokenDaysTtl()
         );
     }
+
+    default ChangePasswordGrpcRequest toChangePasswordGrpcRequest (ChangePasswordRequestDto requestDto) {
+        return ChangePasswordGrpcRequest.newBuilder()
+                .setAuthUserId(requestDto.authUserId())
+                .setNewPassword(requestDto.newPassword())
+                .setOldPassword(requestDto.oldPassword())
+                .build();
+    }
+
+    default BlockAuthGrpcRequest toBlockUserGrpcRequest (BlockAuthUserRequestDto requestDto) {
+        return BlockAuthGrpcRequest.newBuilder()
+                .setAuthUserId(requestDto.authUserId().toString())
+                .build();
+    }
+
+    default UnlockAuthGrpcRequest toUnlockUserGrpcRequest (UnlockAuthUserRequestDto requestDto) {
+        return UnlockAuthGrpcRequest.newBuilder()
+                .setAuthUserId(requestDto.authUserId().toString())
+                .build();
+    }
 }

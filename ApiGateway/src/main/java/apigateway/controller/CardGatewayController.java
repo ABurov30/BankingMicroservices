@@ -28,7 +28,7 @@ public class CardGatewayController {
         return cardClient.createCard(request);
     }
 
-    @PutMapping("/uptade")
+    @PutMapping("/update")
     public UpdateCardResponseDto updateCard(@Valid @RequestBody UpdateCardRequestDto request) {
         return cardClient.updateCard(request);
     }

@@ -36,13 +36,18 @@ public class AccountGatewayController {
         return accountClient.createAccount(request);
     }
 
-    @GetMapping("/all-accounts")
-    public List<GetAccountWithCardsResponseDto> getAllAccountsWithCards () {
-        return accountOverviewQueryHandler.getAllAccountsWithCards();
-    }
-
     @GetMapping("/accounts/{ownerUserId}")
     public List<GetAccountWithCardsResponseDto> getAccountsWithCardsByOwnerId (@PathVariable UUID ownerUserId) {
         return accountOverviewQueryHandler.getAccountsWithCardsByOwnerId(ownerUserId);
+    }
+
+    @PutMapping("/freeze/{accountId}")
+    public void freezeAccount (@PathVariable UUID accountId) {
+        accountClient.freezeAccount(accountId);
+    }
+
+    @GetMapping("/manager/all-accounts")
+    public List<GetAccountWithCardsResponseDto> getAllAccountsWithCards () {
+        return accountOverviewQueryHandler.getAllAccountsWithCards();
     }
 }

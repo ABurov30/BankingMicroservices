@@ -6,6 +6,7 @@ import cardservice.dto.*;
 import cardservice.entity.CardEntity;
 import enums.card.CardStatus;
 import kafkacontracts.account.AccountCreatedEventPayload;
+import kafkacontracts.account.AccountFrozenEventPayload;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -16,7 +17,13 @@ import java.util.UUID;
 
 @Mapper(componentModel = "spring")
 public interface CardMapper {
-    CreatedCardCommand toCreateCardCommand(AccountCreatedEventPayload accountCreatedEventPayload);
+    default CreatedCardCommand toCreateCardCommand(AccountCreatedEventPayload payload) {
+        return new CreatedCardCommand(payload.getAccountId());
+    }
+
+    default FreezeCardsCommand toFreezeCardsCommand(AccountFrozenEventPayload payload) {
+        return new FreezeCardsCommand(payload.getAccountId());
+    }
 
     @Mapping(target = "cardId", source = "id")
     @Mapping(target = "status", source = "cardStatus")

@@ -6,6 +6,7 @@ import cardservice.dto.CreatedCardCommand;
 import cardservice.dto.GetCardResult;
 import cardservice.dto.GetCardsByAccountIdCommand;
 import cardservice.dto.UpdateCardCommand;
+import cardservice.entity.CardEntity;
 import cardservice.mapper.CardMapper;
 import cardservice.service.CardService;
 import com.google.protobuf.Empty;

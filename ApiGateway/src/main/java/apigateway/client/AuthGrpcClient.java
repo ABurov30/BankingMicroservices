@@ -44,4 +44,19 @@ public class AuthGrpcClient {
         RefreshAuthGrpcRequest grpcRequest = authMapper.toRefreshAuthGrpcRequest(request);
         return authMapper.toRefreshResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).refresh(grpcRequest));
     }
+
+    public void changePassword (ChangePasswordRequestDto request) {
+        ChangePasswordGrpcRequest grpcRequest = authMapper.toChangePasswordGrpcRequest(request);
+        stub.withDeadlineAfter(2,TimeUnit.SECONDS).changePassword(grpcRequest);
+    }
+
+    public void blockUser (BlockAuthUserRequestDto request) {
+        BlockAuthGrpcRequest grpcRequest = authMapper.toBlockUserGrpcRequest(request);
+        stub.withDeadlineAfter(2, TimeUnit.SECONDS).blockAuthUser(grpcRequest);
+    }
+
+    public void unlockUser (UnlockAuthUserRequestDto request) {
+        UnlockAuthGrpcRequest grpcRequest = authMapper.toUnlockUserGrpcRequest(request);
+        stub.withDeadlineAfter(2, TimeUnit.SECONDS).unlockAuthUser(grpcRequest);
+    }
 }

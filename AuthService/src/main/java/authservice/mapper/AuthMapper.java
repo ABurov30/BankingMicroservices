@@ -2,9 +2,13 @@ package authservice.mapper;
 
 import auth.contract.v1.*;
 import authservice.dto.*;
+import kafkacontracts.auth.AuthUserBlockedEventPayload;
+import kafkacontracts.auth.AuthUserCreatedEventPayload;
+import kafkacontracts.auth.AuthUserUnlockEventPayload;
 import org.mapstruct.Mapper;
 
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 
 @Mapper(componentModel = "spring")
@@ -80,5 +84,42 @@ public interface AuthMapper {
                 .setAccessTokenMinutesTtl((int) refreshResult.accessTokenMinutesTtl())
                 .setRefreshTokenDaysTtl((int) refreshResult.refreshTokenDaysTtl())
                 .build();
+    }
+
+    default AuthUserCreatedEventPayload toAuthUserCreatedEventPayload(Map<String, Object> payload) {
+        return AuthUserCreatedEventPayload.newBuilder()
+                .setAuthUserId(UUID.fromString(payload.get("authUserId").toString()))
+                .setEmail(payload.get("email").toString())
+                .setFirstName(payload.get("firstName").toString())
+                .setLastName(payload.get("lastName").toString())
+                .build();
+    }
+
+    default AuthUserBlockedEventPayload toAuthUserBlockedEventPayload(Map<String, Object> payload) {
+        return AuthUserBlockedEventPayload.newBuilder()
+                .setAuthUserId(UUID.fromString(payload.get("authUserId").toString()))
+                .build();
+    }
+
+    default AuthUserUnlockEventPayload toAuthUserUnlockEventPayload(Map<String, Object> payload) {
+        return AuthUserUnlockEventPayload.newBuilder()
+                .setAuthUserId(UUID.fromString(payload.get("authUserId").toString()))
+                .build();
+    }
+
+    default ChangePasswordCommand toChangePasswordCommand(ChangePasswordGrpcRequest request) {
+        return new ChangePasswordCommand(
+                UUID.fromString(request.getAuthUserId()),
+                request.getOldPassword(),
+                request.getNewPassword()
+        );
+    }
+
+    default BlockAuthUserCommand toBlockAuthUserCommand(BlockAuthGrpcRequest request) {
+        return new BlockAuthUserCommand(UUID.fromString(request.getAuthUserId()));
+    }
+
+    default UnlockAuthUserCommand toUnlockAuthUserCommand(UnlockAuthGrpcRequest request) {
+        return new UnlockAuthUserCommand(UUID.fromString(request.getAuthUserId()));
     }
 }

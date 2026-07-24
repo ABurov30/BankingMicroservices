@@ -57,10 +57,37 @@ public class AuthGrpcService extends AuthRpcServiceGrpc.AuthRpcServiceImplBase {
 
     @Override
     public void refresh(RefreshAuthGrpcRequest request, StreamObserver<RefreshAuthGrpcResponse> responseObserver) {
-       RefreshCommand refreshCommand = authMapper.toRefreshCommand(request);
+        RefreshCommand refreshCommand = authMapper.toRefreshCommand(request);
         RefreshAuthGrpcResponse refreshAuthGrpcResponse = authMapper.toRefreshGrpcResponse(authService.refresh(refreshCommand));
 
         responseObserver.onNext(refreshAuthGrpcResponse);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void changePassword (ChangePasswordGrpcRequest request, StreamObserver<Empty> responseObserver) {
+        ChangePasswordCommand changePasswordCommand = authMapper.toChangePasswordCommand(request);
+        authService.changePassword(changePasswordCommand);
+
+        responseObserver.onNext(Empty.getDefaultInstance());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void blockAuthUser (BlockAuthGrpcRequest request, StreamObserver<Empty> responseObserver) {
+        BlockAuthUserCommand blockAuthUserCommand = authMapper.toBlockAuthUserCommand(request);
+        authService.blockUser(blockAuthUserCommand);
+
+        responseObserver.onNext(Empty.getDefaultInstance());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void unlockAuthUser (UnlockAuthGrpcRequest request, StreamObserver<Empty> responseObserver) {
+        UnlockAuthUserCommand unlockAuthUserCommand = authMapper.toUnlockAuthUserCommand(request);
+        authService.unlockUser(unlockAuthUserCommand);
+
+        responseObserver.onNext(Empty.getDefaultInstance());
         responseObserver.onCompleted();
     }
 }

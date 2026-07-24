@@ -7,6 +7,7 @@ import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.grpc.Status;
 import org.springframework.stereotype.Component;
+import userservice.exception.UserProfileAlreadyExist;
 import userservice.exception.UserProfileNotFoundException;
 
 @Component
@@ -34,6 +35,10 @@ public class GrpcExceptionInterceptor implements ServerInterceptor {
     }
 
     private Status mapException(Exception exception) {
+        if (exception instanceof UserProfileAlreadyExist) {
+            return Status.ALREADY_EXISTS;
+        }
+
         if (exception instanceof UserProfileNotFoundException) {
             return Status.NOT_FOUND;
         }

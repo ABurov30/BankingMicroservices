@@ -56,13 +56,13 @@ public class UserGatewayController {
         return userClient.getUserInfo(new GetUserInfoRequestDto(authUserId));
     }
 
-    @GetMapping("/all-userinfo")
-    public List<GetUserInfoResponseDto> getAllUserInfo() {
-        return userClient.getAllUserInfo();
-    }
-
     @GetMapping("/health")
     public String getUserHealth() {
         return userClient.getUserHealth();
+    }
+
+    @GetMapping("/manager/all-userinfo")
+    public List<GetUserInfoResponseDto> getAllUserInfo() {
+        return userClient.getAllUserInfo();
     }
 }

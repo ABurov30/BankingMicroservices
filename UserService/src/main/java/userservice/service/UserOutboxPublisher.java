@@ -1,32 +1,34 @@
 package userservice.service;
 
+import org.apache.avro.specific.SpecificRecord;
 import outboxsupport.KafkaOnSentHandler;
 import outboxsupport.OutboxEventStatus;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 import userservice.entity.UserOutboxEventEntity;
+import userservice.mapper.UserMapper;
 import userservice.repository.UserOutboxEventRepository;
+import kafkacontracts.user.UserEventType;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class UserOutboxPublisher implements KafkaOnSentHandler {
     private final UserOutboxEventRepository userOutboxEventRepository;
-    private final KafkaTemplate<String, String> kafkaTemplate;
-    private final ObjectMapper objectMapper;
+    private final KafkaTemplate<String, SpecificRecord> kafkaTemplate;
+    private final UserMapper userMapper;
 
     public UserOutboxPublisher(
             UserOutboxEventRepository userOutboxEventRepository,
-            KafkaTemplate<String, String> kafkaTemplate,
-            ObjectMapper objectMapper
+            KafkaTemplate<String, SpecificRecord> kafkaTemplate,
+            UserMapper userMapper
     ) {
         this.userOutboxEventRepository = userOutboxEventRepository;
         this.kafkaTemplate = kafkaTemplate;
-        this.objectMapper = objectMapper;
+        this.userMapper = userMapper;
     }
 
     @Scheduled(fixedDelay = 5000)
@@ -35,22 +37,31 @@ public class UserOutboxPublisher implements KafkaOnSentHandler {
         List<UserOutboxEventEntity> eventEntityList = userOutboxEventRepository.findTop50ByOutboxEventStatusOrderByCreatedAtAsc(OutboxEventStatus.PENDING);
 
         for (UserOutboxEventEntity event : eventEntityList) {
-            String payload;
             try {
-                payload = objectMapper.writeValueAsString(event.getPayload());
-            } catch (JacksonException e) {
-                onFailed(event.getId(), e, userOutboxEventRepository);
-                continue;
-            }
+                SpecificRecord payload = extractPayload(
+                        UserEventType.valueOf(event.getEventType()),
+                        event.getPayload()
+                );
 
-            kafkaTemplate.send(event.getTopic(), event.getEventKey(), payload)
-                    .whenComplete((result, ex) -> {
-                        if (ex == null) {
-                            onPublish(event.getId(), userOutboxEventRepository);
-                        } else {
-                            onFailed(event.getId(), ex, userOutboxEventRepository);
-                        }
-                    });
+                kafkaTemplate.send(event.getTopic(), event.getEventKey(), payload)
+                        .whenComplete((result, ex) -> {
+                            if (ex == null) {
+                                onPublish(event.getId(), userOutboxEventRepository);
+                            } else {
+                                onFailed(event.getId(), ex, userOutboxEventRepository);
+                            }
+                        });
+            } catch (Exception e) {
+                onFailed(event.getId(), e, userOutboxEventRepository);
+            }
         }
+    }
+
+    private SpecificRecord extractPayload(UserEventType eventType, Map<String, Object> payload) {
+        return switch (eventType) {
+            case USER_PROFILE_CREATED -> userMapper.toUserProfileCreatedEventPayload(payload);
+            case USER_PROFILE_BLOCKED -> userMapper.toUserProfileBlockedEventPayload(payload);
+            case USER_PROFILE_UNLOCK -> userMapper.toUserProfileUnlockEventPayload(payload);
+        };
     }
 }

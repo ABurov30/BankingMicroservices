@@ -33,7 +33,7 @@ create table account_outbox_events
     aggregate_id   uuid         not null,
     event_type     varchar(100) not null,
     payload        jsonb        not null,
-    status         varchar(50)  not null default 'ACTIVE',
+    status         varchar(50)  not null default 'PENDING',
     retry_count    integer      not null default 0,
     error_message  text,
     created_at     timestamp    not null,
@@ -47,7 +47,7 @@ create table account_outbox_events
     correlation_id uuid,
 
     constraint chk_auth_outbox_event_type
-        check (event_type in ('ACCOUNT_CREATED')),
+        check (event_type in ('ACCOUNT_CREATED', 'ACCOUNT_FROZEN')),
 
     constraint chk_auth_outbox_status
         check (status in ('PENDING', 'PUBLISHED', 'FAILED'))

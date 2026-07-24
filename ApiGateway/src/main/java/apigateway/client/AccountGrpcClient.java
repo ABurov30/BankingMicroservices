@@ -52,4 +52,12 @@ public class AccountGrpcClient {
               .getAllAccounts(Empty.getDefaultInstance());
       return accountMapper.toListGetAccountResponseDto(response);
   }
+
+  public void freezeAccount(UUID accountId) {
+        FreezeAccountGrpcRequest request = FreezeAccountGrpcRequest.newBuilder()
+                .setAccountId(accountId.toString())
+                .build();
+        stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+              .freezeAccount(request);
+  }
 }

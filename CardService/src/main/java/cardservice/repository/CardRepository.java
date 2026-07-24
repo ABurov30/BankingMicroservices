@@ -11,4 +11,5 @@ public interface CardRepository extends JpaRepository<CardEntity, UUID> {
     boolean existsByPan(String pan);
 
     Optional<List<CardEntity>> findByAccountId(UUID accountId);
+    Optional<List<CardEntity>> findAllByAccountId(UUID accountId);
 }

@@ -1,20 +1,19 @@
 package accountservice.mapper;
 
 import account.contract.v1.*;
-import accountservice.dto.CreateAccountCommand;
-import accountservice.dto.CreateAccountResult;
-import accountservice.dto.GetAccountResult;
-import accountservice.dto.GetAccountsByOwnerUserIdCommand;
+import accountservice.dto.*;
 import accountservice.entity.AccountEntity;
-import accountservice.grpc.AccountGrpcService;
 import enums.account.AccountCurrency;
 import enums.account.AccountStatus;
 import enums.account.AccountType;
+import kafkacontracts.account.AccountCreatedEventPayload;
+import kafkacontracts.account.AccountFrozenEventPayload;
+import kafkacontracts.user.UserProfileBlockedEventPayload;
 import kafkacontracts.user.UserProfileCreatedEventPayload;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Mapper(
@@ -27,10 +26,25 @@ import java.util.UUID;
 )
 public interface AccountMapper {
 
-    @Mapping(target = "type", expression = "java(AccountType.CHECKING)")
-    @Mapping(target = "status", expression = "java(AccountStatus.ACTIVE)")
-    @Mapping(target = "currency", expression = "java(AccountCurrency.RUB)")
-    CreateAccountCommand toCreateAccountCommand(UserProfileCreatedEventPayload userProfileCreatedEventPayload);
+    default CreateAccountCommand toCreateAccountCommand(UserProfileCreatedEventPayload payload) {
+        return new CreateAccountCommand(
+                payload.getUserId(),
+                AccountType.CHECKING,
+                AccountCurrency.RUB
+        );
+    }
+
+    default AccountCreatedEventPayload toAccountCreatedEventPayload(Map<String, Object> payload) {
+        return AccountCreatedEventPayload.newBuilder()
+                .setAccountId(UUID.fromString(payload.get("accountId").toString()))
+                .build();
+    }
+
+    default AccountFrozenEventPayload toAccountFrozenEventPayload(Map<String, Object> payload) {
+        return AccountFrozenEventPayload.newBuilder()
+                .setAccountId(UUID.fromString(payload.get("accountId").toString()))
+                .build();
+    }
 
     default AccountResponse toAccountResponse (GetAccountResult getAccountResult) {
         return  AccountResponse.newBuilder()
@@ -84,4 +98,12 @@ public interface AccountMapper {
     }
 
     GetAccountResult toGetAccountResult (AccountEntity accountEntity);
+
+    default FreezeAccountCommand toFreezeAccountCommand (FreezeAccountGrpcRequest grpcRequest) {
+        return new FreezeAccountCommand(UUID.fromString(grpcRequest.getAccountId()));
+    }
+
+    default FreezeAccountsByUserIdCommand toFreezeAccountsByUserIdCommand (UserProfileBlockedEventPayload grpcRequest) {
+        return new FreezeAccountsByUserIdCommand(grpcRequest.getUserId());
+    }
 }

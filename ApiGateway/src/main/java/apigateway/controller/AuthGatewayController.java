@@ -77,8 +77,23 @@ public class AuthGatewayController {
                 (int) refreshResponse.refreshTokenDaysTtl());
     }
 
+    @PutMapping("/change-password")
+    public void ChangePassword(@Valid @RequestBody ChangePasswordRequestDto request) {
+        authClient.changePassword(request);
+    }
+
     @GetMapping("/health")
     public String getAuthHealth() {
         return authClient.getAuthHealth();
+    }
+
+    @PutMapping("/manager/block-user")
+    public void BlockUser(@Valid @RequestBody BlockAuthUserRequestDto request) {
+        authClient.blockUser(request);
+    }
+
+    @PutMapping("/manager/unlock-user")
+    public void UnlockUser(@Valid @RequestBody UnlockAuthUserRequestDto request) {
+        authClient.unlockUser(request);
     }
 }

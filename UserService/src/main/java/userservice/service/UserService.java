@@ -1,14 +1,10 @@
 package userservice.service;
 
+import enums.user.UserProfileStatus;
 import jakarta.transaction.Transactional;
 import kafkacontracts.user.UserEventType;
-import kafkacontracts.user.UserProfileCreatedEventPayload;
 import org.springframework.stereotype.Service;
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.ObjectMapper;
-import userservice.dto.CreateUserCommand;
-import userservice.dto.GetUserInfoCommand;
-import userservice.dto.GetUserInfoResult;
+import userservice.dto.*;
 import userservice.entity.UserOutboxEventEntity;
 import userservice.entity.UserProfileEntity;
 import userservice.exception.UserProfileAlreadyExist;
@@ -24,18 +20,15 @@ import java.util.Map;
 public class UserService {
     private final UserProfileRepository userProfileRepository;
     private final UserOutboxEventRepository userOutboxEventRepository;
-    private final ObjectMapper objectMapper;
     private final UserMapper userMapper;
 
     public UserService(
             UserProfileRepository userProfileRepository,
             UserOutboxEventRepository userOutboxEventRepository,
-            ObjectMapper objectMapper,
             UserMapper userMapper
     ) {
         this.userProfileRepository = userProfileRepository;
         this.userOutboxEventRepository = userOutboxEventRepository;
-        this.objectMapper = objectMapper;
         this.userMapper = userMapper;
     }
 
@@ -70,21 +63,61 @@ public class UserService {
         userOutboxEventEntity.setEventKey(userProfileEntity.getId().toString());
         userOutboxEventEntity.setSchemaVersion(UserEventType.USER_PROFILE_CREATED.getVersion());
 
-        UserProfileCreatedEventPayload userProfileCreatedEventPayload = new UserProfileCreatedEventPayload(userProfileEntity.getId());
-
-        Map<String, Object> payload = objectMapper.convertValue(
-                userProfileCreatedEventPayload,
-                new TypeReference<Map<String, Object>>() {}
-        );
-
-        userOutboxEventEntity.setPayload(payload);
+        userOutboxEventEntity.setPayload(Map.of("userId", userProfileEntity.getId()));
 
         userOutboxEventRepository.save(userOutboxEventEntity);
-
     }
 
     public List<GetUserInfoResult> getAllUserInfo () {
        List<UserProfileEntity> userProfileEntities = userProfileRepository.findAll();
        return userProfileEntities.stream().map(userMapper::toGetUserInfoResult).toList();
+    }
+
+    public void blockUser(BlockedUserCommand blockedUserCommand) {
+        UserProfileEntity userProfileEntity = userProfileRepository.findByAuthUserId(blockedUserCommand.authUserId())
+                .orElseThrow(() -> new UserProfileNotFoundException(blockedUserCommand.authUserId()));
+
+        if (userProfileEntity.getStatus() == UserProfileStatus.BLOCKED) {
+            throw new IllegalArgumentException("User profile already blocked");
+        }
+
+        userProfileEntity.setStatus(UserProfileStatus.BLOCKED);
+        userProfileRepository.save(userProfileEntity);
+
+        UserOutboxEventEntity userOutboxEventEntity = new UserOutboxEventEntity();
+        userOutboxEventEntity.setAggregateType("USER_PROFILE");
+        userOutboxEventEntity.setAggregateId(userProfileEntity.getId());
+        userOutboxEventEntity.setEventType(UserEventType.USER_PROFILE_BLOCKED.name());
+        userOutboxEventEntity.setTopic(UserEventType.USER_PROFILE_BLOCKED.getTopic());
+        userOutboxEventEntity.setEventKey(userProfileEntity.getId().toString());
+        userOutboxEventEntity.setSchemaVersion(UserEventType.USER_PROFILE_BLOCKED.getVersion());
+
+        userOutboxEventEntity.setPayload(Map.of("userId", userProfileEntity.getId()));
+
+        userOutboxEventRepository.save(userOutboxEventEntity);
+    }
+
+    public void unlockUser(UnlockUserCommand unlockUserCommand) {
+        UserProfileEntity userProfileEntity = userProfileRepository.findByAuthUserId(unlockUserCommand.authUserId())
+                .orElseThrow(() -> new UserProfileNotFoundException(unlockUserCommand.authUserId()));
+
+        if (userProfileEntity.getStatus() == UserProfileStatus.ACTIVE) {
+            throw new IllegalArgumentException("User profile already active");
+        }
+
+        userProfileEntity.setStatus(UserProfileStatus.ACTIVE);
+        userProfileRepository.save(userProfileEntity);
+
+        UserOutboxEventEntity userOutboxEventEntity = new UserOutboxEventEntity();
+        userOutboxEventEntity.setAggregateType("USER_PROFILE");
+        userOutboxEventEntity.setAggregateId(userProfileEntity.getId());
+        userOutboxEventEntity.setEventType(UserEventType.USER_PROFILE_UNLOCK.name());
+        userOutboxEventEntity.setTopic(UserEventType.USER_PROFILE_UNLOCK.getTopic());
+        userOutboxEventEntity.setEventKey(userProfileEntity.getId().toString());
+        userOutboxEventEntity.setSchemaVersion(UserEventType.USER_PROFILE_UNLOCK.getVersion());
+
+        userOutboxEventEntity.setPayload(Map.of("userId", userProfileEntity.getId()));
+
+        userOutboxEventRepository.save(userOutboxEventEntity);
     }
 }

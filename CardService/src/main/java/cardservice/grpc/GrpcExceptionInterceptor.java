@@ -1,5 +1,10 @@
 package cardservice.grpc;
 
+import cardservice.exception.CardBlockedException;
+import cardservice.exception.CardExpiredException;
+import cardservice.exception.CardGenerationFailedException;
+import cardservice.exception.CardNotFoundException;
+import cardservice.exception.CardsNotFoundException;
 import io.grpc.ForwardingServerCallListener;
 import io.grpc.Metadata;
 import io.grpc.ServerCall;
@@ -33,6 +38,21 @@ public class GrpcExceptionInterceptor implements ServerInterceptor {
     }
 
     private Status mapException(Exception exception) {
+        if (
+                exception instanceof CardNotFoundException ||
+                        exception instanceof CardsNotFoundException
+        ) {
+            return Status.NOT_FOUND;
+        }
+
+        if (
+                exception instanceof CardBlockedException ||
+                        exception instanceof CardExpiredException ||
+                        exception instanceof CardGenerationFailedException
+        ) {
+            return Status.FAILED_PRECONDITION;
+        }
+
         if (exception instanceof IllegalArgumentException) {
             return Status.INVALID_ARGUMENT;
         }

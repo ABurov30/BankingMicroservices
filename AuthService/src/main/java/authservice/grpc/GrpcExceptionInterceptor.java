@@ -2,6 +2,8 @@ package authservice.grpc;
 
 import authservice.exception.EmailAlreadyExistsException;
 import authservice.exception.InvalidEmailOrPasswordException;
+import authservice.exception.RefreshTokenAlreadyExpiredException;
+import authservice.exception.RefreshTokenAlreadyRevokedException;
 import authservice.exception.RefreshTokenNotFoundException;
 import authservice.exception.RoleNotFoundException;
 import io.grpc.ForwardingServerCallListener;
@@ -52,6 +54,13 @@ public class GrpcExceptionInterceptor implements ServerInterceptor {
             return Status.NOT_FOUND;
         }
 
+        if (
+                exception instanceof RefreshTokenAlreadyExpiredException ||
+                        exception instanceof RefreshTokenAlreadyRevokedException
+        ) {
+            return Status.FAILED_PRECONDITION;
+        }
+
         if (exception instanceof IllegalArgumentException) {
             return Status.INVALID_ARGUMENT;
         }
@@ -59,11 +68,6 @@ public class GrpcExceptionInterceptor implements ServerInterceptor {
         if (exception instanceof IllegalStateException) {
             return Status.FAILED_PRECONDITION;
         }
-
-        if (exception instanceof EmailAlreadyExistsException) {
-            return Status.ALREADY_EXISTS;
-        }
-
 
         return Status.INTERNAL;
     }

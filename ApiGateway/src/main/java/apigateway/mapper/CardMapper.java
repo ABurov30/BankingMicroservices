@@ -14,7 +14,7 @@ import enums.card.CardStatus;
 import org.mapstruct.Mapper;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Mapper(componentModel = "spring")
@@ -35,7 +35,7 @@ public interface CardMapper {
                 CardStatus.valueOf(card.getStatus()),
                 BigDecimal.valueOf(card.getDailyLimit()),
                 BigDecimal.valueOf(card.getMonthlyLimit()),
-                LocalDate.parse(card.getExpiresAt()).atStartOfDay()
+                LocalDateTime.parse(card.getExpiresAt())
         );
     }
 
@@ -58,7 +58,7 @@ public interface CardMapper {
                 CardStatus.valueOf(card.getStatus()),
                 BigDecimal.valueOf(card.getDailyLimit()),
                 BigDecimal.valueOf(card.getMonthlyLimit()),
-                LocalDate.parse(card.getExpiresAt()).atStartOfDay()
+                LocalDateTime.parse(card.getExpiresAt())
         );
     }
 
@@ -70,7 +70,7 @@ public interface CardMapper {
                 CardStatus.valueOf(card.getStatus()),
                 BigDecimal.valueOf(card.getDailyLimit()),
                 BigDecimal.valueOf(card.getMonthlyLimit()),
-                LocalDate.parse(card.getExpiresAt()).atStartOfDay()
+                LocalDateTime.parse(card.getExpiresAt())
         );
     }
 }

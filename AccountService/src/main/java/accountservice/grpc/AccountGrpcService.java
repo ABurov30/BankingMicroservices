@@ -67,4 +67,9 @@ public class AccountGrpcService extends AccountRpcServiceGrpc.AccountRpcServiceI
         responseObserver.onNext(accountMapper.toGetAccountsGrpcResponse(accountResponseList));
         responseObserver.onCompleted();
     }
+
+    @Override
+    public void freezeAccount(FreezeAccountGrpcRequest request, StreamObserver<Empty> responseObserver) {
+        accountService.freezeAccount(accountMapper.toFreezeAccountCommand(request));
+    }
 }

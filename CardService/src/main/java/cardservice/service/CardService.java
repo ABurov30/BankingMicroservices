@@ -2,6 +2,11 @@ package cardservice.service;
 
 import cardservice.dto.*;
 import cardservice.entity.CardEntity;
+import cardservice.exception.CardBlockedException;
+import cardservice.exception.CardExpiredException;
+import cardservice.exception.CardGenerationFailedException;
+import cardservice.exception.CardNotFoundException;
+import cardservice.exception.CardsNotFoundException;
 import cardservice.mapper.CardMapper;
 import enums.card.CardStatus;
 import cardservice.repository.CardRepository;
@@ -42,7 +47,7 @@ public class CardService {
             }
         }
 
-        throw new IllegalStateException("Failed to generate unique pan");
+        throw new CardGenerationFailedException("Failed to generate unique pan");
     }
 
     private String generatePan() {
@@ -97,7 +102,7 @@ public class CardService {
             }
         }
 
-        throw new IllegalStateException("Failed to create card after retries");
+        throw new CardGenerationFailedException("Failed to create card after retries");
     }
 
     private void changeCardStatus(CardEntity cardEntity, CardStatus cardStatus) {
@@ -113,16 +118,26 @@ public class CardService {
     }
 
     @Transactional
+    public void freezeCards(FreezeCardsCommand freezeCardsCommand) {
+        List<CardEntity> cardEntityList = cardRepository.findAllByAccountId(freezeCardsCommand.accountId())
+                .orElseThrow(() -> new CardsNotFoundException(freezeCardsCommand.accountId()));
+
+        cardEntityList.forEach(card -> changeCardStatus(card, CardStatus.FROZEN));
+
+        cardRepository.saveAll(cardEntityList);
+    }
+
+    @Transactional
     public UpdateCardResult updateCard(UpdateCardCommand updateCardCommand) {
         CardEntity cardEntity = cardRepository.findById(updateCardCommand.cardId())
-                .orElseThrow(() -> new IllegalArgumentException("Card not found"));
+                .orElseThrow(() -> new CardNotFoundException(updateCardCommand.cardId()));
 
         if (cardEntity.getCardStatus() == CardStatus.EXPIRED) {
-            throw new IllegalArgumentException("Card expired");
+            throw new CardExpiredException(cardEntity.getId());
         }
 
         if (cardEntity.getCardStatus() == CardStatus.BLOCKED) {
-            throw new IllegalArgumentException("Card blocked");
+            throw new CardBlockedException(cardEntity.getId());
         }
 
         if (updateCardCommand.status() != null) {
@@ -144,7 +159,7 @@ public class CardService {
 
     public List<GetCardResult> getCardsByAccountId (GetCardsByAccountIdCommand command) {
         List<CardEntity> cardEntityList = cardRepository.findByAccountId(command.accountId())
-                .orElseThrow(() -> new IllegalArgumentException("Cards not found by accountId " + command.accountId()));
+                .orElseThrow(() -> new CardsNotFoundException(command.accountId()));
 
         return cardEntityList.stream()
                 .map(cardMapper::toGetCardResult)

@@ -1,5 +1,10 @@
 package accountservice.grpc;
 
+import accountservice.exception.AccountAlreadyFrozenException;
+import accountservice.exception.AccountClosedException;
+import accountservice.exception.AccountGenerationFailedException;
+import accountservice.exception.AccountNotFoundException;
+import accountservice.exception.AccountsNotFoundException;
 import io.grpc.ForwardingServerCallListener;
 import io.grpc.Metadata;
 import io.grpc.ServerCall;
@@ -33,6 +38,21 @@ public class GrpcExceptionInterceptor implements ServerInterceptor {
     }
 
     private Status mapException(Exception exception) {
+        if (
+                exception instanceof AccountNotFoundException ||
+                        exception instanceof AccountsNotFoundException
+        ) {
+            return Status.NOT_FOUND;
+        }
+
+        if (
+                exception instanceof AccountAlreadyFrozenException ||
+                        exception instanceof AccountClosedException ||
+                        exception instanceof AccountGenerationFailedException
+        ) {
+            return Status.FAILED_PRECONDITION;
+        }
+
         if (exception instanceof IllegalArgumentException) {
             return Status.INVALID_ARGUMENT;
         }

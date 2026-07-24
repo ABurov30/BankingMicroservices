@@ -37,7 +37,6 @@ public class CardEntity {
     @Column(name = "monthly_limit")
     private BigDecimal monthlyLimit;
 
-    @UpdateTimestamp
     @Column(name = "expires_at", nullable = false, updatable = false)
     private LocalDateTime expiresAt;
 
