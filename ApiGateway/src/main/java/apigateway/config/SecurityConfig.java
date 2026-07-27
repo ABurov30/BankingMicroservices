@@ -74,20 +74,14 @@ public class SecurityConfig {
     }
 
     private boolean isActive(Authentication authentication) {
-        Jwt jwt = ((JwtAuthenticationToken) authentication).getToken();
+        if (!(authentication instanceof JwtAuthenticationToken jwtAuthenticationToken)) {
+            return false;
+        }
+
+        Jwt jwt = jwtAuthenticationToken.getToken();
         String status = jwt.getClaimAsString("status");
 
         return AuthUserStatus.ACTIVE.name().equals(status);
-    }
-
-    private boolean hasAnyRole(Authentication authentication, Roles... roles) {
-        for (Roles role : roles) {
-            if (hasRole(authentication, role)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private boolean hasRole(Authentication authentication, Roles role) {
