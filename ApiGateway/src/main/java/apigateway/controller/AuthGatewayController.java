@@ -3,15 +3,13 @@ package apigateway.controller;
 import apigateway.client.AuthGrpcClient;
 import apigateway.config.CookieConfig;
 import apigateway.dto.auth.*;
-import apigateway.exception.InvalidAccessTokenException;
-import apigateway.exception.MissingAccessTokenException;
 import apigateway.exception.MissingRefreshTokenException;
+import enums.auth.Roles;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -22,30 +20,20 @@ public class AuthGatewayController {
 
     private final AuthGrpcClient authClient;
     private final CookieConfig cookieConfig;
-    private final JwtDecoder jwtDecoder;
 
 
     public AuthGatewayController(
             AuthGrpcClient authClient,
-            CookieConfig cookieConfig,
-            JwtDecoder jwtDecoder
+            CookieConfig cookieConfig
     ) {
         this.cookieConfig = cookieConfig;
         this.authClient = authClient;
-        this.jwtDecoder = jwtDecoder;
     }
 
     @ResponseStatus(HttpStatus.OK)
     @PostMapping("/signup")
-    public void Signup(@Valid @RequestBody SignupRequestDto request, HttpServletResponse response) {
-        SignupResponseDto signupResponse = authClient.signup(request);
-
-        cookieConfig.setCookieTokens(
-                response,
-                signupResponse.accessToken(),
-                (int) signupResponse.accessTokenMinutesTtl(),
-                signupResponse.refreshToken(),
-                (int) signupResponse.refreshTokenDaysTtl());
+    public void Signup(@Valid @RequestBody SignupRequestDto request) {
+        authClient.signup(request);
     }
 
     @PostMapping("/login")
@@ -96,14 +84,15 @@ public class AuthGatewayController {
     }
 
     @PutMapping("/verify-user")
-    public void VerifyUserByManager(@Valid @RequestBody VerifyUserRequestDto request, HttpServletRequest httpRequest){
-        Jwt jwt = getAccessTokenJwt(httpRequest);
-        VerifyUserRequestDto verifyUserRequestDto = new VerifyUserRequestDto(
-                UUID.fromString(jwt.getSubject()),
-                request.verificationCode(),
-                null
-        );
-        authClient.verifyUser(verifyUserRequestDto);
+    public void VerifyUser(@Valid @RequestBody VerifyAuthUserByCodeRequestDto request, HttpServletResponse response){
+        VerifyAuthUserByCodeResponseDto verifyResponse = authClient.verifyByCode(request);
+
+        cookieConfig.setCookieTokens(
+                response,
+                verifyResponse.accessToken(),
+                (int) verifyResponse.accessTokenMinutesTtl(),
+                verifyResponse.refreshToken(),
+                (int) verifyResponse.refreshTokenDaysTtl());
     }
 
 
@@ -124,38 +113,17 @@ public class AuthGatewayController {
 
     @PutMapping("/manager/verify-user/{authUserId}")
     public void VerifyUserByManager(@PathVariable UUID authUserId, HttpServletRequest httpRequest){
-        Jwt jwt = getAccessTokenJwt(httpRequest);
-        VerifyUserRequestDto verifyUserRequestDto = new VerifyUserRequestDto(
+        Jwt jwt = cookieConfig.getAccessTokenJwt(httpRequest);
+       VerifyAuthUserByPrivilegeRoleRequestDto request = new VerifyAuthUserByPrivilegeRoleRequestDto(
                 authUserId,
-                null,
-                extractRole(jwt)
+                Roles.valueOf(cookieConfig.extractRole(jwt))
         );
-        authClient.verifyUser(verifyUserRequestDto);
+
+        authClient.verifyByPrivilegedRole(request);
     }
 
-    private Jwt getAccessTokenJwt(HttpServletRequest request) {
-        String accessToken = cookieConfig.getCookieByKey(request, "at");
-
-        if (accessToken == null || accessToken.isBlank()) {
-            throw new MissingAccessTokenException();
-        }
-
-        Jwt jwt = jwtDecoder.decode(accessToken);
-        try {
-            UUID.fromString(jwt.getSubject());
-        } catch (IllegalArgumentException exception) {
-            throw new InvalidAccessTokenException();
-        }
-
-        return jwt;
-    }
-
-    private String extractRole(Jwt jwt) {
-        java.util.List<String> roles = jwt.getClaimAsStringList("roles");
-        if (roles != null && !roles.isEmpty()) {
-            return roles.get(0);
-        }
-
-        return jwt.getClaimAsString("role");
+    @PutMapping("/admin/change-auth-user-role")
+    public void ChangeAuthUserRole(@Valid @RequestBody ChangeAuthUserRoleRequestDto request) {
+        authClient.changeAuthUserRole(request);
     }
 }

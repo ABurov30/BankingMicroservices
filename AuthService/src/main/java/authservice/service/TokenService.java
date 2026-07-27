@@ -43,6 +43,7 @@ public class TokenService {
                 .issuedAt(now)
                 .id(UUID.randomUUID().toString())
                 .subject(userEntity.getId().toString())
+                .claim("status", userEntity.getStatus().name())
                 .claim("roles", List.of(roles))
                 .expiresAt(now.plus(jwtProperties.accessTokenTtlMinutes(), ChronoUnit.MINUTES))
                 .build();

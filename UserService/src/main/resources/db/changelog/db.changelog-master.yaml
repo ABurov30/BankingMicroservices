@@ -3,3 +3,5 @@ databaseChangeLog:
       file: db/changelog/changes/001-create-user-tables.sql
   - include:
       file: db/changelog/changes/002-update-user-outbox-event-types.sql
+  - include:
+      file: db/changelog/changes/003-add-user-profile-role.sql

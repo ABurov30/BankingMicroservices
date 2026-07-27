@@ -2,8 +2,10 @@ package authservice.mapper;
 
 import auth.contract.v1.*;
 import authservice.dto.*;
+import enums.auth.Roles;
 import kafkacontracts.auth.AuthUserBlockedEventPayload;
 import kafkacontracts.auth.AuthUserCreatedEventPayload;
+import kafkacontracts.auth.AuthUserRoleChangedEventPayload;
 import kafkacontracts.auth.AuthUserUnlockEventPayload;
 import kafkacontracts.auth.AuthUserVerifiedEventPayload;
 import org.mapstruct.Mapper;
@@ -21,12 +23,6 @@ public interface AuthMapper {
                 signupAuthGrpcRequest.getFirstName(),
                 signupAuthGrpcRequest.getLastName()
         );
-    }
-
-    default SignupAuthGrpcResponse toSignupGrpcResponse(SignupResult signupResult) {
-        return SignupAuthGrpcResponse.newBuilder()
-                .setTokens(toAuthTokenResponse(signupResult))
-                .build();
     }
 
     default LoginCommand toLoginCommand(LoginAuthGrpcRequest loginAuthGrpcRequest) {
@@ -60,7 +56,7 @@ public interface AuthMapper {
                 .build();
     }
 
-    private AuthTokenResponse toAuthTokenResponse(SignupResult signupResult) {
+    private AuthTokenResponse toAuthTokenResponse(VerifyAuthUserByCodeResult signupResult) {
         return AuthTokenResponse.newBuilder()
                 .setRefreshToken(signupResult.refreshToken())
                 .setAccessToken(signupResult.accessToken())
@@ -118,6 +114,13 @@ public interface AuthMapper {
                 .build();
     }
 
+    default AuthUserRoleChangedEventPayload toAuthUserRoleChangedEventPayload(Map<String, Object> payload) {
+        return AuthUserRoleChangedEventPayload.newBuilder()
+                .setAuthUserId(UUID.fromString(payload.get("authUserId").toString()))
+                .setRole(payload.get("role").toString())
+                .build();
+    }
+
     default ChangePasswordCommand toChangePasswordCommand(ChangePasswordGrpcRequest request) {
         return new ChangePasswordCommand(
                 UUID.fromString(request.getAuthUserId()),
@@ -134,11 +137,30 @@ public interface AuthMapper {
         return new UnlockAuthUserCommand(UUID.fromString(request.getAuthUserId()));
     }
 
-    default VerifyAuthUserCommand toVerifyAuthUserCommand(VerifyAuthGrpcRequest request) {
-        return new VerifyAuthUserCommand(
+    default VerifyAuthUserByCodeCommand toVerifyAuthUserByCodeCommand(VerifyAuthUserByCodeGrpcRequest request) {
+        return new VerifyAuthUserByCodeCommand(
                 UUID.fromString(request.getAuthUserId()),
-                request.hasVerificationCode() ? request.getVerificationCode() : null,
-                request.hasRole() ? request.getRole() : null
+                request.getVerificationCode()
+        );
+    }
+
+    default VerifyAuthUserByCodeGrpcResponse toVerifyAuthUserByCodeGrpcResponse(VerifyAuthUserByCodeResult signupResult) {
+        return VerifyAuthUserByCodeGrpcResponse.newBuilder()
+                .setTokens(toAuthTokenResponse(signupResult))
+                .build();
+    }
+
+    default VerifyAuthUserByPrivilegeRoleCommand toVerifyAuthUserByPrivilegeRoleCommand(VerifyAuthUserByPrivilegeRoleGrpcRequest request) {
+        return new VerifyAuthUserByPrivilegeRoleCommand(
+                UUID.fromString(request.getAuthUserId()),
+                Roles.valueOf(request.getRole())
+        );
+    }
+
+    default ChangeAuthUserRoleCommand toChangeAuthUserRoleCommand(ChangeAuthUserRoleGrpcRequest request) {
+        return new ChangeAuthUserRoleCommand(
+                UUID.fromString(request.getAuthUserId()),
+                enums.auth.Roles.valueOf(request.getRole())
         );
     }
 }

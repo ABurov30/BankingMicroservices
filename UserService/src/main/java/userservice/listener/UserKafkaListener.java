@@ -1,8 +1,10 @@
 package userservice.listener;
 import kafkacontracts.auth.AuthUserBlockedEventPayload;
 import kafkacontracts.auth.AuthUserCreatedEventPayload;
+import kafkacontracts.auth.AuthUserRoleChangedEventPayload;
 import kafkacontracts.auth.AuthUserUnlockEventPayload;
 import kafkacontracts.auth.AuthUserVerifiedEventPayload;
+import kafkacontracts.common.KafkaTopics;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import userservice.mapper.UserMapper;
@@ -48,5 +50,12 @@ public class UserKafkaListener {
     )
     public void handleAuthUserVerified(AuthUserVerifiedEventPayload payload) {
         userService.verifyUser(userMapper.toVerifyUserCommand(payload));
+    }
+
+    @KafkaListener(
+            topics = KafkaTopics.AUTH_USER_ROLE_CHANGED
+    )
+    public void handleAuthUserRoleChanged(AuthUserRoleChangedEventPayload payload) {
+        userService.changeUserRole(userMapper.toChangeUserRoleCommand(payload));
     }
 }

@@ -25,9 +25,9 @@ public class AuthGrpcClient {
         return response.getMessage();
     }
 
-    public SignupResponseDto signup(SignupRequestDto request) {
+    public void signup(SignupRequestDto request) {
         SignupAuthGrpcRequest grpcRequest = authMapper.toSignupAuthGrpcRequest(request);
-        return authMapper.toSignupResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).signup(grpcRequest));
+        stub.withDeadlineAfter(2, TimeUnit.SECONDS).signup(grpcRequest);
     }
 
     public LoginResponseDto login(LoginRequestDto request) {
@@ -60,8 +60,18 @@ public class AuthGrpcClient {
         stub.withDeadlineAfter(2, TimeUnit.SECONDS).unlockAuthUser(grpcRequest);
     }
 
-    public void verifyUser(VerifyUserRequestDto request) {
-        VerifyAuthGrpcRequest grpcRequest = authMapper.toVerifyAuthGrpcRequest(request);
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS).verifyAuthUser(grpcRequest);
+    public VerifyAuthUserByCodeResponseDto verifyByCode(VerifyAuthUserByCodeRequestDto request) {
+        VerifyAuthUserByCodeGrpcRequest grpcRequest = authMapper.toVerifyAuthUserByCodeGrpcRequest(request);
+        return authMapper.toVerifyAuthUserByCodeResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).verifyAuthUserByCode(grpcRequest));
+    }
+
+    public void verifyByPrivilegedRole(VerifyAuthUserByPrivilegeRoleRequestDto request) {
+        VerifyAuthUserByPrivilegeRoleGrpcRequest grpcRequest = authMapper.toVerifyAuthUserByPrivilegeRoleGrpcRequest(request);
+        stub.withDeadlineAfter(2, TimeUnit.SECONDS).verifyAuthUserByPrivilegeRole(grpcRequest);
+    }
+
+    public void changeAuthUserRole (ChangeAuthUserRoleRequestDto request) {
+        ChangeAuthUserRoleGrpcRequest grpcRequest = authMapper.toChangeAuthUserRoleGrpcRequest(request);
+        stub.withDeadlineAfter(2, TimeUnit.SECONDS).changeAuthUserRole(grpcRequest);
     }
 }

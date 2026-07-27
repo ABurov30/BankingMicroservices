@@ -29,11 +29,11 @@ public class AuthGrpcService extends AuthRpcServiceGrpc.AuthRpcServiceImplBase {
     }
 
     @Override
-    public void signup(SignupAuthGrpcRequest request, StreamObserver<SignupAuthGrpcResponse> responseObserver) {
+    public void signup(SignupAuthGrpcRequest request, StreamObserver<Empty> responseObserver) {
         SignupCommand signupCommand = authMapper.toSignupCommand(request);
-        SignupAuthGrpcResponse response = authMapper.toSignupGrpcResponse(authService.signup(signupCommand));
+        authService.signup(signupCommand);
 
-        responseObserver.onNext(response);
+        responseObserver.onNext(Empty.getDefaultInstance());
         responseObserver.onCompleted();
     }
 
@@ -92,9 +92,26 @@ public class AuthGrpcService extends AuthRpcServiceGrpc.AuthRpcServiceImplBase {
     }
 
     @Override
-    public void verifyAuthUser(VerifyAuthGrpcRequest request, StreamObserver<Empty> responseObserver) {
-        VerifyAuthUserCommand verifyAuthUserCommand = authMapper.toVerifyAuthUserCommand(request);
-        authService.verifyUser(verifyAuthUserCommand);
+    public void verifyAuthUserByPrivilegeRole(VerifyAuthUserByPrivilegeRoleGrpcRequest request, StreamObserver<Empty> responseObserver) {
+        VerifyAuthUserByPrivilegeRoleCommand verifyAuthUserByPrivilegeRoleCommand = authMapper.toVerifyAuthUserByPrivilegeRoleCommand(request);
+        authService.verifyByPrivilegedRole(verifyAuthUserByPrivilegeRoleCommand);
+
+        responseObserver.onNext(Empty.getDefaultInstance());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void verifyAuthUserByCode(VerifyAuthUserByCodeGrpcRequest request, StreamObserver<VerifyAuthUserByCodeGrpcResponse> responseObserver) {
+        VerifyAuthUserByCodeCommand verifyAuthUserByCodeCommand = authMapper.toVerifyAuthUserByCodeCommand(request);
+        VerifyAuthUserByCodeGrpcResponse response = authMapper.toVerifyAuthUserByCodeGrpcResponse(authService.verifyByCode(verifyAuthUserByCodeCommand));
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void changeAuthUserRole(ChangeAuthUserRoleGrpcRequest request, StreamObserver<Empty> responseObserver) {
+        ChangeAuthUserRoleCommand changeAuthUserRoleCommand = authMapper.toChangeAuthUserRoleCommand(request);
+        authService.changeAuthUserRole(changeAuthUserRoleCommand);
 
         responseObserver.onNext(Empty.getDefaultInstance());
         responseObserver.onCompleted();

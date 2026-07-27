@@ -16,6 +16,7 @@ import authservice.exception.RefreshTokenNotFoundException;
 import authservice.exception.RoleNotFoundException;
 import authservice.repository.*;
 import kafkacontracts.auth.AuthEventType;
+import kafkacontracts.common.KafkaTopics;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -63,7 +65,7 @@ public class AuthService {
     }
 
     @Transactional
-    public SignupResult signup(SignupCommand signupCommand) {
+    public VerifyAuthUserByCodeResult signup(SignupCommand signupCommand) {
         if (authUserRepository.existsByEmail(signupCommand.email())) {
             throw new EmailAlreadyExistsException(signupCommand.email());
         }
@@ -119,7 +121,7 @@ public class AuthService {
 
         authOutboxEventRepository.save(authOutboxEvent);
 
-        return new SignupResult(accessToken, refreshToken, jwtProperties.accessTokenTtlMinutes(), jwtProperties.refreshTokenTtlDays());
+        return new VerifyAuthUserByCodeResult(accessToken, refreshToken, jwtProperties.accessTokenTtlMinutes(), jwtProperties.refreshTokenTtlDays());
     }
 
     @Transactional
@@ -216,7 +218,7 @@ public class AuthService {
         );
     }
 
-    public void changePassword (ChangePasswordCommand changePasswordCommand) {
+    public void changePassword(ChangePasswordCommand changePasswordCommand) {
 
         AuthUserEntity authUser = authUserRepository.findById(changePasswordCommand.authUserId())
                 .orElseThrow(() -> new IllegalArgumentException("Auth user not found by id " + changePasswordCommand.authUserId()));
@@ -229,7 +231,7 @@ public class AuthService {
         authUserRepository.save(authUser);
     }
 
-    public void blockUser (BlockAuthUserCommand blockAuthUserCommand) {
+    public void blockUser(BlockAuthUserCommand blockAuthUserCommand) {
         AuthUserEntity authUser = authUserRepository.findById(blockAuthUserCommand.authUserId())
                 .orElseThrow(() -> new IllegalArgumentException("Auth user not found by id " + blockAuthUserCommand.authUserId()));
 
@@ -256,7 +258,7 @@ public class AuthService {
         authOutboxEventRepository.save(authOutboxEvent);
     }
 
-    public void unlockUser (UnlockAuthUserCommand unlockAuthUserCommand) {
+    public void unlockUser(UnlockAuthUserCommand unlockAuthUserCommand) {
         AuthUserEntity authUser = authUserRepository.findById(unlockAuthUserCommand.authUserId())
                 .orElseThrow(() -> new IllegalArgumentException("Auth user not found by id " + unlockAuthUserCommand.authUserId()));
 
@@ -284,27 +286,102 @@ public class AuthService {
     }
 
     @Transactional
-    public void verifyUser(VerifyAuthUserCommand verifyAuthUserCommand) {
-        AuthUserEntity authUser = authUserRepository.findById(verifyAuthUserCommand.authUserId())
-                .orElseThrow(() -> new AuthUserNotFoundException(verifyAuthUserCommand.authUserId()));
+    public void changeAuthUserRole(ChangeAuthUserRoleCommand changeAuthUserRoleCommand) {
+        UserRoleEntity userRole = userRoleRepository
+                .findByAuthUserId(changeAuthUserRoleCommand.authUserId())
+                .orElseThrow(() -> new RoleNotFoundException());
+
+        RoleEntity role = roleRepository
+                .findByName(changeAuthUserRoleCommand.role())
+                .orElseThrow(() -> new RoleNotFoundException());
+
+        if (userRole.getRole().getName() == role.getName()) {
+            return;
+        }
+
+        userRole.setRole(role);
+        userRoleRepository.save(userRole);
+
+        AuthOutboxEventEntity authOutboxEvent = new AuthOutboxEventEntity();
+        authOutboxEvent.setAggregateType("AUTH_USER");
+        authOutboxEvent.setAggregateId(changeAuthUserRoleCommand.authUserId());
+        authOutboxEvent.setEventType(AuthEventType.AUTH_USER_ROLE_CHANGED.name());
+        authOutboxEvent.setTopic(KafkaTopics.AUTH_USER_ROLE_CHANGED);
+        authOutboxEvent.setEventKey(changeAuthUserRoleCommand.authUserId() + ":" + AuthEventType.AUTH_USER_ROLE_CHANGED.name() + ":" + UUID.randomUUID());
+        authOutboxEvent.setSchemaVersion(AuthEventType.AUTH_USER_ROLE_CHANGED.getVersion());
+
+        authOutboxEvent.setPayload(Map.of(
+                "authUserId", changeAuthUserRoleCommand.authUserId(),
+                "role", role.getName().name()
+        ));
+
+        authOutboxEventRepository.save(authOutboxEvent);
+    }
+
+    @Transactional
+    public VerifyAuthUserByCodeResult verifyByCode(VerifyAuthUserByCodeCommand verifyAuthUserCommand) {
+        AuthUserEntity authUser = getNotVerifiedAuthUser(verifyAuthUserCommand.authUserId());
+
+        if (
+                verifyAuthUserCommand.verificationCode() == null ||
+                        verifyAuthUserCommand.verificationCode().isBlank() ||
+                        !passwordEncoder.matches(verifyAuthUserCommand.verificationCode(), authUser.getVerificationCodeHash())
+        ) {
+            throw new InvalidVerificationCodeException();
+        }
+
+        activateVerifiedAuthUser(authUser);
+        saveAuthUserVerifiedOutboxEvent(authUser);
+
+        UserRoleEntity userRole = userRoleRepository.findByAuthUserId(authUser.getId())
+                .orElseThrow(() -> new RoleNotFoundException());
+
+        String accessToken = tokenService.generateAccessToken(authUser, userRole.getRole().getName()).getTokenValue();
+        String refreshToken = tokenService.generateRefreshToken();
+
+        RefreshTokenEntity refreshTokenEntity = new RefreshTokenEntity();
+        refreshTokenEntity.setAuthUser(authUser);
+        refreshTokenEntity.setTokenHash(tokenService.hashToken(refreshToken));
+        refreshTokenEntity.setExpiresAt(tokenService.refreshTokenExpiresAt());
+        refreshTokenRepository.save(refreshTokenEntity);
+
+        return new VerifyAuthUserByCodeResult(
+                accessToken,
+                refreshToken,
+                jwtProperties.accessTokenTtlMinutes(),
+                jwtProperties.refreshTokenTtlDays()
+        );
+    }
+
+    @Transactional
+    public void verifyByPrivilegedRole(VerifyAuthUserByPrivilegeRoleCommand verifyAuthUserCommand) {
+        if (!canVerifyWithoutCode(verifyAuthUserCommand.role().name())) {
+            throw new IllegalArgumentException("Only admin or manager can verify user without code");
+        }
+
+        AuthUserEntity authUser = getNotVerifiedAuthUser(verifyAuthUserCommand.authUserId());
+        activateVerifiedAuthUser(authUser);
+        saveAuthUserVerifiedOutboxEvent(authUser);
+    }
+
+    private AuthUserEntity getNotVerifiedAuthUser(UUID authUserId) {
+        AuthUserEntity authUser = authUserRepository.findById(authUserId)
+                .orElseThrow(() -> new AuthUserNotFoundException(authUserId));
 
         if (authUser.isEmailVerified()) {
             throw new AuthUserAlreadyVerifiedException();
         }
 
-        if (!canVerifyWithoutCode(verifyAuthUserCommand.role())) {
-            if (
-                    verifyAuthUserCommand.verificationCode() == null ||
-                            !passwordEncoder.matches(verifyAuthUserCommand.verificationCode(), authUser.getVerificationCodeHash())
-            ) {
-                throw new InvalidVerificationCodeException();
-            }
-        }
+        return authUser;
+    }
 
+    private void activateVerifiedAuthUser(AuthUserEntity authUser) {
         authUser.setEmailVerified(true);
         authUser.setStatus(AuthUserStatus.ACTIVE);
         authUserRepository.save(authUser);
+    }
 
+    private void saveAuthUserVerifiedOutboxEvent(AuthUserEntity authUser) {
         AuthOutboxEventEntity authOutboxEvent = new AuthOutboxEventEntity();
         authOutboxEvent.setAggregateType("AUTH_USER");
         authOutboxEvent.setAggregateId(authUser.getId());
@@ -324,5 +401,4 @@ public class AuthService {
     private boolean canVerifyWithoutCode(String role) {
         return Roles.ADMIN.name().equals(role) || Roles.MANAGER.name().equals(role);
     }
-
 }

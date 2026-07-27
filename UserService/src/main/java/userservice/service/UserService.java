@@ -51,6 +51,7 @@ public class UserService {
         userProfileEntity.setEmail(createUserCommand.email());
         userProfileEntity.setFirstName(createUserCommand.firstName());
         userProfileEntity.setLastName(createUserCommand.lastName());
+        userProfileEntity.setRole("USER");
 
         userProfileRepository.save(userProfileEntity);
 
@@ -128,6 +129,15 @@ public class UserService {
                 .orElseThrow(() -> new UserProfileNotFoundException(verifyUserCommand.authUserId()));
 
         userProfileEntity.setStatus(UserProfileStatus.ACTIVE);
+        userProfileRepository.save(userProfileEntity);
+    }
+
+    @Transactional
+    public void changeUserRole(ChangeUserRoleCommand changeUserRoleCommand) {
+        UserProfileEntity userProfileEntity = userProfileRepository.findByAuthUserId(changeUserRoleCommand.authUserId())
+                .orElseThrow(() -> new UserProfileNotFoundException(changeUserRoleCommand.authUserId()));
+
+        userProfileEntity.setRole(changeUserRoleCommand.role());
         userProfileRepository.save(userProfileEntity);
     }
 }

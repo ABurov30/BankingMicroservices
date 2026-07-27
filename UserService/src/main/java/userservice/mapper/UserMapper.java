@@ -2,6 +2,7 @@ package userservice.mapper;
 
 import kafkacontracts.auth.AuthUserBlockedEventPayload;
 import kafkacontracts.auth.AuthUserCreatedEventPayload;
+import kafkacontracts.auth.AuthUserRoleChangedEventPayload;
 import kafkacontracts.auth.AuthUserUnlockEventPayload;
 import kafkacontracts.auth.AuthUserVerifiedEventPayload;
 import kafkacontracts.user.UserProfileBlockedEventPayload;
@@ -76,6 +77,13 @@ public interface UserMapper {
     default VerifyUserCommand toVerifyUserCommand(AuthUserVerifiedEventPayload payload) {
         return new VerifyUserCommand(
                 payload.getAuthUserId()
+        );
+    }
+
+    default ChangeUserRoleCommand toChangeUserRoleCommand(AuthUserRoleChangedEventPayload payload) {
+        return new ChangeUserRoleCommand(
+                payload.getAuthUserId(),
+                payload.getRole()
         );
     }
 

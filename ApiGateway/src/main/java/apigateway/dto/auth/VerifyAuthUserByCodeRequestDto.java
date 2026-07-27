@@ -4,8 +4,10 @@ import jakarta.validation.constraints.NotBlank;
 
 import java.util.UUID;
 
-public record UnlockAuthUserRequestDto(
+public record VerifyAuthUserByCodeRequestDto(
         @NotBlank
-        UUID authUserId
+        UUID authUserId,
+        @NotBlank
+        String verificationCode
 ) {
 }

@@ -1,6 +1,6 @@
 package authservice.dto;
 
-public record SignupResult(
+public record VerifyAuthUserByCodeResult(
         String accessToken,
         String refreshToken,
         long accessTokenMinutesTtl,

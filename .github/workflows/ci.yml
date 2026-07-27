@@ -208,6 +208,10 @@ jobs:
           NOTIFICATION_MONGO_DB: ${{ vars.NOTIFICATION_MONGO_DB }}
           NOTIFICATION_MONGO_USER: ${{ vars.NOTIFICATION_MONGO_USER }}
           NOTIFICATION_MONGO_PASSWORD: ${{ secrets.NOTIFICATION_MONGO_PASSWORD }}
+          MAIL_HOST: ${{ vars.MAIL_HOST }}
+          MAIL_PORT: ${{ vars.MAIL_PORT }}
+          MAIL_USERNAME: ${{ vars.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
 
           JWT_PRIVATE_KEY_PATH: ${{ github.workspace }}/Infra${{ vars.JWT_PRIVATE_KEY_PATH }}
           JWT_PUBLIC_KEY_PATH: ${{ github.workspace }}/Infra${{ vars.JWT_PUBLIC_KEY_PATH }}
@@ -324,6 +328,10 @@ jobs:
           NOTIFICATION_MONGO_DB: ${{ vars.NOTIFICATION_MONGO_DB }}
           NOTIFICATION_MONGO_USER: ${{ vars.NOTIFICATION_MONGO_USER }}
           NOTIFICATION_MONGO_PASSWORD: ${{ secrets.NOTIFICATION_MONGO_PASSWORD }}
+          MAIL_HOST: ${{ vars.MAIL_HOST }}
+          MAIL_PORT: ${{ vars.MAIL_PORT }}
+          MAIL_USERNAME: ${{ vars.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
 
           JWT_PRIVATE_KEY_PATH: ${{ vars.JWT_PRIVATE_KEY_PATH }}
           JWT_PUBLIC_KEY_PATH: ${{ vars.JWT_PUBLIC_KEY_PATH }}
@@ -413,6 +421,10 @@ jobs:
           NOTIFICATION_MONGO_DB: ${{ vars.NOTIFICATION_MONGO_DB }}
           NOTIFICATION_MONGO_USER: ${{ vars.NOTIFICATION_MONGO_USER }}
           NOTIFICATION_MONGO_PASSWORD: ${{ secrets.NOTIFICATION_MONGO_PASSWORD }}
+          MAIL_HOST: ${{ vars.MAIL_HOST }}
+          MAIL_PORT: ${{ vars.MAIL_PORT }}
+          MAIL_USERNAME: ${{ vars.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
 
           JWT_PRIVATE_KEY_PATH: ${{ vars.JWT_PRIVATE_KEY_PATH }}
           JWT_PUBLIC_KEY_PATH: ${{ vars.JWT_PUBLIC_KEY_PATH }}
@@ -504,6 +516,10 @@ jobs:
           NOTIFICATION_MONGO_USER: ${{ vars.NOTIFICATION_MONGO_USER }}
           NOTIFICATION_MONGO_URI: ${{ vars.NOTIFICATION_MONGO_URI }}
           NOTIFICATION_MONGO_PASSWORD: ${{ secrets.NOTIFICATION_MONGO_PASSWORD }}
+          MAIL_HOST: ${{ vars.MAIL_HOST }}
+          MAIL_PORT: ${{ vars.MAIL_PORT }}
+          MAIL_USERNAME: ${{ vars.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
 
           JWT_PRIVATE_KEY_PATH: ${{ vars.JWT_PRIVATE_KEY_PATH }}
           JWT_PUBLIC_KEY_PATH: ${{ vars.JWT_PUBLIC_KEY_PATH }}

@@ -18,10 +18,10 @@ public interface AuthMapper {
                 .build();
     }
 
-    default SignupResponseDto toSignupResponseDto(SignupAuthGrpcResponse authResponse) {
+    default VerifyAuthUserByCodeResponseDto toVerifyAuthUserByCodeResponseDto(VerifyAuthUserByCodeGrpcResponse authResponse) {
         AuthTokenResponse tokens = authResponse.getTokens();
 
-        return new SignupResponseDto(
+        return new VerifyAuthUserByCodeResponseDto(
                 tokens.getAccessToken(),
                 tokens.getRefreshToken(),
                 tokens.getAccessTokenMinutesTtl(),
@@ -90,14 +90,24 @@ public interface AuthMapper {
                 .build();
     }
 
-    default VerifyAuthGrpcRequest toVerifyAuthGrpcRequest(VerifyUserRequestDto requestDto) {
-        VerifyAuthGrpcRequest.Builder builder = VerifyAuthGrpcRequest.newBuilder()
-                .setAuthUserId(requestDto.authUserId().toString());
+    default ChangeAuthUserRoleGrpcRequest toChangeAuthUserRoleGrpcRequest(ChangeAuthUserRoleRequestDto requestDto) {
+        return ChangeAuthUserRoleGrpcRequest.newBuilder()
+                .setAuthUserId(requestDto.authUserId().toString())
+                .setRole(requestDto.role().name())
+                .build();
+    }
 
-        if (requestDto.role() != null && !requestDto.role().isBlank()) {
-            return builder.setRole(requestDto.role()).build();
-        }
+    default VerifyAuthUserByCodeGrpcRequest toVerifyAuthUserByCodeGrpcRequest(VerifyAuthUserByCodeRequestDto request) {
+        return VerifyAuthUserByCodeGrpcRequest.newBuilder()
+                .setAuthUserId(request.authUserId().toString())
+                .setVerificationCode(request.verificationCode())
+                .build();
+    }
 
-        return builder.setVerificationCode(requestDto.verificationCode()).build();
+    default VerifyAuthUserByPrivilegeRoleGrpcRequest toVerifyAuthUserByPrivilegeRoleGrpcRequest (VerifyAuthUserByPrivilegeRoleRequestDto request) {
+        return VerifyAuthUserByPrivilegeRoleGrpcRequest.newBuilder()
+                .setAuthUserId(request.authUserId().toString())
+                .setRole(request.roles().name())
+                .build();
     }
 }
