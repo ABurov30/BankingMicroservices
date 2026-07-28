@@ -49,6 +49,22 @@ spec:
               value: {{ .Values.services.transaction.name | quote }}
             - name: TRANSACTION_GRPC_PORT
               value: {{ .Values.services.transaction.grpcPort | quote }}
+
+            - name: NOTIFICATION_GRPC_HOST
+              value: {{ .Values.services.notification.name | quote }}
+            - name: NOTIFICATION_GRPC_PORT
+              value: {{ .Values.services.notification.grpcPort | quote }}
+
+            - name: JWT_PUBLIC_KEY_PATH
+              value: {{ .Values.jwt.publicKeyPath | quote }}
+          volumeMounts:
+            - name: jwt-keys
+              mountPath: /secrets
+              readOnly: true
+      volumes:
+        - name: jwt-keys
+          secret:
+            secretName: {{ .Values.jwt.secretName }}
 ---
 apiVersion: v1
 kind: Service

@@ -85,7 +85,7 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
-              containerPort: {{ .Values.kafka.ui.port }}
+              containerPort: {{ .Values.kafka.ui.containerPort }}
           env:
             - name: KAFKA_CLUSTERS_0_NAME
               value: local
@@ -105,5 +105,53 @@ spec:
   ports:
     - name: http
       port: {{ .Values.kafka.ui.port }}
+      targetPort: http
+{{- end }}
+{{- if .Values.kafka.schemaRegistry.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: schema-registry
+  labels:
+    app: schema-registry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: schema-registry
+  template:
+    metadata:
+      labels:
+        app: schema-registry
+    spec:
+      containers:
+        - name: schema-registry
+          image: {{ .Values.kafka.schemaRegistry.image | quote }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: {{ .Values.kafka.schemaRegistry.port }}
+          env:
+            - name: SCHEMA_REGISTRY_HOST_NAME
+              value: schema-registry
+            - name: SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS
+              value: "PLAINTEXT://kafka:{{ .Values.kafka.containerPort }}"
+            - name: SCHEMA_REGISTRY_LISTENERS
+              value: "http://0.0.0.0:{{ .Values.kafka.schemaRegistry.port }}"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: schema-registry
+  labels:
+    app: schema-registry
+spec:
+  type: ClusterIP
+  selector:
+    app: schema-registry
+  ports:
+    - name: http
+      port: {{ .Values.kafka.schemaRegistry.port }}
       targetPort: http
 {{- end }}

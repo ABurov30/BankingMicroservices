@@ -30,6 +30,10 @@ spec:
               value: {{ $svc.port | quote }}
             - name: {{ upper $key }}_GRPC_PORT
               value: {{ $svc.grpcPort | quote }}
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: {{ $.Values.kafka.bootstrapServers | quote }}
+            - name: SCHEMA_REGISTRY_URL
+              value: {{ $.Values.kafka.schemaRegistry.url | quote }}
 {{- if $svc.postgres }}
             - name: SPRING_DATASOURCE_URL
               value: "jdbc:postgresql://{{ $svc.postgres.host }}:5432/{{ $svc.postgres.db }}"
@@ -38,17 +42,39 @@ spec:
             - name: SPRING_DATASOURCE_PASSWORD
               value: {{ $svc.postgres.password | quote }}
 {{- end }}
+{{- if eq $key "auth" }}
+            - name: JWT_PRIVATE_KEY_PATH
+              value: {{ $.Values.jwt.privateKeyPath | quote }}
+            - name: JWT_PUBLIC_KEY_PATH
+              value: {{ $.Values.jwt.publicKeyPath | quote }}
+{{- end }}
 {{- if $svc.mongo }}
-            - name: NOTIFICATION_MONGO_HOST
-              value: {{ $svc.mongo.host | quote }}
-            - name: NOTIFICATION_MONGO_PORT
-              value: {{ $svc.mongo.port | quote }}
-            - name: NOTIFICATION_MONGO_DB
-              value: {{ $svc.mongo.db | quote }}
-            - name: NOTIFICATION_MONGO_USER
-              value: {{ $svc.mongo.user | quote }}
-            - name: NOTIFICATION_MONGO_PASSWORD
-              value: {{ $svc.mongo.password | quote }}
+            - name: NOTIFICATION_MONGO_URI
+{{- if $svc.mongo.uri }}
+              value: {{ $svc.mongo.uri | quote }}
+{{- else }}
+              value: "mongodb://{{ $svc.mongo.user }}:{{ $svc.mongo.password }}@{{ $svc.mongo.host }}:{{ $svc.mongo.port }}/{{ $svc.mongo.db }}?authSource=admin"
+{{- end }}
+            - name: MAIL_HOST
+              value: {{ $svc.mail.host | quote }}
+            - name: MAIL_PORT
+              value: {{ $svc.mail.port | quote }}
+            - name: MAIL_USERNAME
+              value: {{ $svc.mail.username | quote }}
+            - name: MAIL_PASSWORD
+              value: {{ $svc.mail.password | quote }}
+{{- end }}
+{{- if eq $key "auth" }}
+          volumeMounts:
+            - name: jwt-keys
+              mountPath: /secrets
+              readOnly: true
+{{- end }}
+{{- if eq $key "auth" }}
+      volumes:
+        - name: jwt-keys
+          secret:
+            secretName: {{ $.Values.jwt.secretName }}
 {{- end }}
 ---
 apiVersion: v1

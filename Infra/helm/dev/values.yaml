@@ -15,10 +15,24 @@ kafka:
   image: apache/kafka:3.7.0
   containerPort: 9092
   controllerPort: 9093
+  bootstrapServers: kafka:9092
   ui:
     enabled: true
     image: provectuslabs/kafka-ui:latest
-    port: 8080
+    containerPort: 8080
+    port: 8079
+  schemaRegistry:
+    enabled: true
+    image: confluentinc/cp-schema-registry:7.7.10
+    port: 8081
+    url: http://schema-registry:8081
+
+jwt:
+  secretName: jwt-keys
+  privateKeyPath: /secrets/private.pem
+  publicKeyPath: /secrets/public.pem
+  privateKey: ""
+  publicKey: ""
 
 postgres:
   image: postgres:16
@@ -88,6 +102,12 @@ services:
       port: 27017
       db: notification_db
       user: notification_user
+      password: ""
+      uri: ""
+    mail:
+      host: smtp.mailgun.org
+      port: 587
+      username: postmaster@YOUR_DOMAIN
       password: ""
 
 apiGateway:
