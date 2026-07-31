@@ -5,6 +5,7 @@ import cardservice.exception.CardExpiredException;
 import cardservice.exception.CardGenerationFailedException;
 import cardservice.exception.CardNotFoundException;
 import cardservice.exception.CardsNotFoundException;
+import cardservice.exception.InvalidCardLimitException;
 import io.grpc.ForwardingServerCallListener;
 import io.grpc.Metadata;
 import io.grpc.ServerCall;
@@ -57,7 +58,8 @@ public class GrpcExceptionInterceptor implements ServerInterceptor {
         if (
                 exception instanceof CardBlockedException ||
                         exception instanceof CardExpiredException ||
-                        exception instanceof CardGenerationFailedException
+                        exception instanceof CardGenerationFailedException ||
+                        exception instanceof InvalidCardLimitException
         ) {
             return Status.FAILED_PRECONDITION;
         }

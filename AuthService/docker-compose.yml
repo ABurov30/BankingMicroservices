@@ -21,6 +21,7 @@ services:
     container_name: auth-service
     ports:
       - "${AUTH_PORT}:${AUTH_PORT}"
+      - "${AUTH_GRPC_PORT}:${AUTH_GRPC_PORT}"
     depends_on:
       - auth-postgres
     environment:

@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-public class AccountOverviewQueryHandler {
+public class AccountQueryHandler {
     private final AccountGrpcClient accountGrpcClient;
     private final CardGrpcClient cardGrpcClient;
 
-    public AccountOverviewQueryHandler (
+    public AccountQueryHandler(
             AccountGrpcClient accountGrpcClient,
             CardGrpcClient cardGrpcClient
     ) {

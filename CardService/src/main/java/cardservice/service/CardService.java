@@ -6,6 +6,7 @@ import cardservice.entity.CardEntity;
 import cardservice.exception.CardBlockedException;
 import cardservice.exception.CardExpiredException;
 import cardservice.exception.CardGenerationFailedException;
+import cardservice.exception.InvalidCardLimitException;
 import cardservice.exception.CardNotFoundException;
 import cardservice.exception.CardsNotFoundException;
 import cardservice.mapper.result.CardResultMapper;
@@ -128,12 +129,18 @@ public class CardService {
         cardEntity.setCardStatus(cardStatus);
     }
 
-    private void changeCardDailyLimit(CardEntity cardEntity, BigDecimal dailyLimit) {
-        cardEntity.setDailyLimit(dailyLimit);
+    private void changeCardDailyLimit(CardEntity cardEntity, BigDecimal newDailyLimit, BigDecimal newMonthlyLimit) {
+        BigDecimal monthlyLimit = newMonthlyLimit != null ? newMonthlyLimit : cardEntity.getMonthlyLimit();
+
+        if (newDailyLimit.compareTo(monthlyLimit) > 0) {
+            throw new InvalidCardLimitException("Daily limit should be less or equals monthly limit");
+        }
+
+        cardEntity.setDailyLimit(newDailyLimit);
     }
 
-    private void changeCardMonthlyLimit(CardEntity cardEntity, BigDecimal monthlyLimit) {
-        cardEntity.setMonthlyLimit(monthlyLimit);
+    private void changeCardMonthlyLimit(CardEntity cardEntity, BigDecimal newMonthlyLimit) {
+        cardEntity.setMonthlyLimit(newMonthlyLimit);
     }
 
     @Transactional
@@ -141,7 +148,27 @@ public class CardService {
         List<CardEntity> cardEntityList = cardRepository.findAllByAccountId(freezeCardsCommand.accountId())
                 .orElseThrow(() -> new CardsNotFoundException(freezeCardsCommand.accountId()));
 
-        cardEntityList.forEach(card -> changeCardStatus(card, CardStatus.FROZEN));
+        cardEntityList.forEach(card -> {
+                    if (card.getCardStatus() != CardStatus.BLOCKED) {
+                        changeCardStatus(card, CardStatus.FROZEN);
+                    }
+                }
+        );
+
+        cardRepository.saveAll(cardEntityList);
+    }
+
+    @Transactional
+    public void unfreezeCards(UnfreezeCardsCommand unfreezeCardsCommand) {
+        List<CardEntity> cardEntityList = cardRepository.findAllByAccountId(unfreezeCardsCommand.accountId())
+                .orElseThrow(() -> new CardsNotFoundException(unfreezeCardsCommand.accountId()));
+
+        cardEntityList.forEach(card -> {
+                    if (card.getCardStatus() == CardStatus.FROZEN) {
+                        changeCardStatus(card, CardStatus.ACTIVE);
+                    }
+                }
+        );
 
         cardRepository.saveAll(cardEntityList);
     }
@@ -168,7 +195,7 @@ public class CardService {
         }
 
         if (updateCardCommand.dailyLimit() != null) {
-            this.changeCardDailyLimit(cardEntity, updateCardCommand.dailyLimit());
+            this.changeCardDailyLimit(cardEntity, updateCardCommand.dailyLimit(), updateCardCommand.monthlyLimit());
         }
 
         if (updateCardCommand.monthlyLimit() != null) {
@@ -180,7 +207,7 @@ public class CardService {
         return resultMapper.toUpdateCardResult(savedCard);
     }
 
-    public List<GetCardResult> getCardsByAccountId (GetCardsByAccountIdCommand command) {
+    public List<GetCardResult> getCardsByAccountId(GetCardsByAccountIdCommand command) {
         List<CardEntity> cardEntityList = cardRepository.findByAccountId(command.accountId())
                 .orElseThrow(() -> new CardsNotFoundException(command.accountId()));
 

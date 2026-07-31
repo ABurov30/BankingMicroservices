@@ -80,8 +80,8 @@ public class AuthGrpcClient {
         stub.withDeadlineAfter(2, TimeUnit.SECONDS).changeAuthUserRole(grpcRequest);
     }
 
-    public GetRoleByAuthUserIdResponseDto getRoleByAuthUserId (GetRoleByAuthUserIdRequestDto request) {
-        GetRoleByAuthUserIdGrpcRequest grpcRequest = grpcMapper.toGetRoleByAuthUserIdGrpcRequest(request);
+    public GetRoleByAuthUserIdResponseDto getAuthUserById (GetRoleByAuthUserIdRequestDto request) {
+        GetAuthUserByIdGrpcRequest grpcRequest = grpcMapper.toGetRoleByAuthUserIdGrpcRequest(request);
         return dtoMapper.toGetRoleByAuthUserIdResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).getRoleByAuthUserId(grpcRequest));
     }
 

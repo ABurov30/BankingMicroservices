@@ -2,13 +2,14 @@ package apigateway.dto.auth;
 
 import enums.auth.Roles;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.UUID;
 
 public record ChangeAuthUserRoleRequestDto(
-        @NotBlank
+        @NotNull
         UUID authUserId,
-        @NotBlank
+        @NotNull
         Roles role
 ) {
 }

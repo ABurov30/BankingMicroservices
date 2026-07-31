@@ -46,7 +46,7 @@ services:
   auth:
     name: auth-service
     port: 8081
-    grpcPort: 9090
+    grpcPort: 8090
     postgres:
       host: auth-postgres
       db: auth_db
@@ -56,7 +56,7 @@ services:
   user:
     name: user-service
     port: 8082
-    grpcPort: 9091
+    grpcPort: 8091
     postgres:
       host: user-postgres
       db: user_db
@@ -66,7 +66,7 @@ services:
   account:
     name: account-service
     port: 8083
-    grpcPort: 9092
+    grpcPort: 8092
     postgres:
       host: account-postgres
       db: account_db
@@ -76,7 +76,7 @@ services:
   card:
     name: card-service
     port: 8084
-    grpcPort: 9093
+    grpcPort: 8093
     postgres:
       host: card-postgres
       db: card_db
@@ -86,7 +86,7 @@ services:
   transaction:
     name: transaction-service
     port: 8085
-    grpcPort: 9094
+    grpcPort: 8094
     postgres:
       host: transaction-postgres
       db: transaction_db
@@ -96,7 +96,7 @@ services:
   notification:
     name: notification-service
     port: 8086
-    grpcPort: 9095
+    grpcPort: 8095
     siteUrl: http://localhost:8080
     mongo:
       host: notification-mongodb

@@ -61,6 +61,7 @@ public class AccountOutboxPublisher implements KafkaOnSentHandler {
         return switch (eventType) {
             case ACCOUNT_CREATED -> eventPayloadMapper.toAccountCreatedEventPayload(payload);
             case ACCOUNT_FROZEN -> eventPayloadMapper.toAccountFrozenEventPayload(payload);
+            case ACCOUNT_UNFROZEN -> eventPayloadMapper.toAccountUnfrozenEventPayload(payload);
         };
     }
 }

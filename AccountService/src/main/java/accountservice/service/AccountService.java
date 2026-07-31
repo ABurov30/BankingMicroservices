@@ -7,6 +7,7 @@ import accountservice.exception.AccountAlreadyFrozenException;
 import accountservice.exception.AccountClosedException;
 import accountservice.exception.AccountGenerationFailedException;
 import accountservice.exception.AccountNotFoundException;
+import accountservice.exception.AccountNotFrozenException;
 import accountservice.exception.AccountsNotFoundException;
 import accountservice.mapper.result.AccountResultMapper;
 import accountservice.repository.AccountOutboxEventRepository;
@@ -136,6 +137,7 @@ public class AccountService {
         });
     }
 
+    @Transactional
     public void freezeAccount(FreezeAccountCommand command) {
         AccountEntity account = accountRepository.findById(command.accountId())
                 .orElseThrow(() -> new AccountNotFoundException(command.accountId()));
@@ -153,6 +155,7 @@ public class AccountService {
         }
 
         account.setAccountStatus(AccountStatus.FROZEN);
+        accountRepository.save(account);
 
         AccountOutboxEventEntity accountOutboxEventEntity = new AccountOutboxEventEntity();
         accountOutboxEventEntity.setAggregateType("ACCOUNT_TYPE");
@@ -167,19 +170,63 @@ public class AccountService {
         accountOutboxEventRepository.save(accountOutboxEventEntity);
     }
 
+    @Transactional
+    public void unfreezeAccount(UnfreezeAccountCommand command) {
+        AccountEntity account = accountRepository.findById(command.accountId())
+                .orElseThrow(() -> new AccountNotFoundException(command.accountId()));
+
+        if (!canAccessAccount(account, command.authUserId(), command.role())) {
+            throw new AccountNotFoundException(command.accountId());
+        }
+
+        if (account.getAccountStatus() == AccountStatus.CLOSED) {
+            throw new AccountClosedException(account.getId());
+        }
+
+        if (account.getAccountStatus() != AccountStatus.FROZEN) {
+            throw new AccountNotFrozenException(account.getId());
+        }
+
+        account.setAccountStatus(AccountStatus.ACTIVE);
+        accountRepository.save(account);
+
+        AccountOutboxEventEntity accountOutboxEventEntity = new AccountOutboxEventEntity();
+        accountOutboxEventEntity.setAggregateType("ACCOUNT_TYPE");
+        accountOutboxEventEntity.setAggregateId(account.getId());
+        accountOutboxEventEntity.setEventType(AccountEventType.ACCOUNT_UNFROZEN.name());
+        accountOutboxEventEntity.setTopic(AccountEventType.ACCOUNT_UNFROZEN.getTopic());
+        accountOutboxEventEntity.setEventKey(account.getId().toString());
+        accountOutboxEventEntity.setSchemaVersion(AccountEventType.ACCOUNT_UNFROZEN.getVersion());
+
+        accountOutboxEventEntity.setPayload(Map.of("accountId", account.getId()));
+
+        accountOutboxEventRepository.save(accountOutboxEventEntity);
+    }
+
     private boolean canAccessAccount(AccountEntity account, FreezeAccountCommand command) {
-        if (command.authUserId() == null) {
+        return canAccessAccount(account, command.authUserId(), command.role());
+    }
+
+    private boolean canAccessAccount(AccountEntity account, java.util.UUID authUserId, String role) {
+        if (authUserId == null) {
             return true;
         }
 
-        if (isPrivileged(command.role())) {
+        if (isPrivileged(role)) {
             return true;
         }
 
-        return account.getOwnerAuthUserId().equals(command.authUserId());
+        return account.getOwnerAuthUserId().equals(authUserId);
     }
 
     private boolean isPrivileged(String role) {
         return "ADMIN".equals(role) || "MANAGER".equals(role);
+    }
+
+    public GetAccountResult getAccountById(GetAccountByIdCommand command) {
+        AccountEntity account = accountRepository.findById(command.accountId())
+                .orElseThrow(() -> new AccountNotFoundException(command.accountId()));
+
+        return resultMapper.toGetAccountResult(account);
     }
 }

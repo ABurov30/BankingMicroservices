@@ -21,6 +21,7 @@ services:
     container_name: USER-service
     ports:
       - "${USER_PORT}:${USER_PORT}"
+      - "${USER_GRPC_PORT}:${USER_GRPC_PORT}"
     depends_on:
       - user-postgres
     environment:

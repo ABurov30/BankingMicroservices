@@ -21,6 +21,7 @@ services:
     container_name: notification-service
     ports:
       - "${NOTIFICATION_PORT}:${NOTIFICATION_PORT}"
+      - "${NOTIFICATION_GRPC_PORT}:${NOTIFICATION_GRPC_PORT}"
     depends_on:
       - notification-mongodb
     environment:

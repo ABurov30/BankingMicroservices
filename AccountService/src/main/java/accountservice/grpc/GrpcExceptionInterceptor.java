@@ -4,6 +4,7 @@ import accountservice.exception.AccountAlreadyFrozenException;
 import accountservice.exception.AccountClosedException;
 import accountservice.exception.AccountGenerationFailedException;
 import accountservice.exception.AccountNotFoundException;
+import accountservice.exception.AccountNotFrozenException;
 import accountservice.exception.AccountsNotFoundException;
 import io.grpc.ForwardingServerCallListener;
 import io.grpc.Metadata;
@@ -57,6 +58,7 @@ public class GrpcExceptionInterceptor implements ServerInterceptor {
         if (
                 exception instanceof AccountAlreadyFrozenException ||
                         exception instanceof AccountClosedException ||
+                        exception instanceof AccountNotFrozenException ||
                         exception instanceof AccountGenerationFailedException
         ) {
             return Status.FAILED_PRECONDITION;

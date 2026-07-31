@@ -21,6 +21,7 @@ services:
     container_name: card-service
     ports:
       - "${CARD_PORT}:${CARD_PORT}"
+      - "${CARD_GRPC_PORT}:${CARD_GRPC_PORT}"
     depends_on:
       - card-postgres
     environment:

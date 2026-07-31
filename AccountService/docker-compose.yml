@@ -21,6 +21,7 @@ services:
     container_name: account-service
     ports:
       - "${ACCOUNT_PORT}:${ACCOUNT_PORT}"
+      - "${ACCOUNT_GRPC_PORT}:${ACCOUNT_GRPC_PORT}"
     depends_on:
       - account-postgres
     environment:

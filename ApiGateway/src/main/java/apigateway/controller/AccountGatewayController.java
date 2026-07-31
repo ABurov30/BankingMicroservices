@@ -5,7 +5,7 @@ import apigateway.config.CookieConfig;
 import apigateway.dto.account.CreateAccountRequestDto;
 import apigateway.dto.account.CreateAccountResponseDto;
 import apigateway.dto.account.GetAccountWithCardsResponseDto;
-import apigateway.query.AccountOverviewQueryHandler;
+import apigateway.query.AccountQueryHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -19,12 +19,12 @@ import java.util.UUID;
 public class AccountGatewayController {
 
     private final AccountGrpcClient accountClient;
-    private final AccountOverviewQueryHandler accountOverviewQueryHandler;
+    private final AccountQueryHandler accountOverviewQueryHandler;
     private final CookieConfig cookieConfig;
 
     public AccountGatewayController(
             AccountGrpcClient accountClient,
-            AccountOverviewQueryHandler accountOverviewQueryHandler,
+            AccountQueryHandler accountOverviewQueryHandler,
             CookieConfig cookieConfig
     ) {
         this.accountClient = accountClient;
@@ -58,6 +58,15 @@ public class AccountGatewayController {
     ) {
         Jwt jwt = cookieConfig.getAccessTokenJwt(request);
         accountClient.freezeAccount(accountId, UUID.fromString(jwt.getSubject()), cookieConfig.extractRole(jwt));
+    }
+
+    @PutMapping("/unfreeze/{accountId}")
+    public void unfreezeAccount (
+            @PathVariable UUID accountId,
+            HttpServletRequest request
+    ) {
+        Jwt jwt = cookieConfig.getAccessTokenJwt(request);
+        accountClient.unfreezeAccount(accountId, UUID.fromString(jwt.getSubject()), cookieConfig.extractRole(jwt));
     }
 
     @GetMapping("/manager/all-accounts")

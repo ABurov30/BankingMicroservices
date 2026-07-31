@@ -21,6 +21,7 @@ services:
     container_name: transaction-service
     ports:
       - "${TRANSACTION_PORT}:${TRANSACTION_PORT}"
+      - "${TRANSACTION_GRPC_PORT}:${TRANSACTION_GRPC_PORT}"
     depends_on:
       - transaction-postgres
     environment:

@@ -1,9 +1,7 @@
 package apigateway.client;
 
 import account.contract.v1.*;
-import apigateway.dto.account.CreateAccountRequestDto;
-import apigateway.dto.account.CreateAccountResponseDto;
-import apigateway.dto.account.GetAccountResponseDto;
+import apigateway.dto.account.*;
 import apigateway.mapper.dto.AccountDtoMapper;
 import apigateway.mapper.grpc.AccountGrpcMapper;
 import com.google.protobuf.Empty;
@@ -63,5 +61,20 @@ public class AccountGrpcClient {
                 .build();
         stub.withDeadlineAfter(2, TimeUnit.SECONDS)
               .freezeAccount(request);
+  }
+
+  public void unfreezeAccount(UUID accountId, UUID authUserId, String role) {
+        UnfreezeAccountGrpcRequest request = UnfreezeAccountGrpcRequest.newBuilder()
+                .setAccountId(accountId.toString())
+                .setAuthUserId(authUserId.toString())
+                .setRole(role == null ? "" : role)
+                .build();
+        stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+              .unfreezeAccount(request);
+  }
+
+  public GetAccountResponseDto getAccountById(GetAccountByIdRequestDto request) {
+      return dtoMapper.toGetAccountByIdResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+              .getAccountById(grpcMapper.toGetAccountByIdGrpcRequest(request)));
   }
 }

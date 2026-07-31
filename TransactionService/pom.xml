@@ -50,7 +50,7 @@
         <dependency>
             <groupId>com.burov</groupId>
             <artifactId>outbox-support</artifactId>
-            <version>0.0.2</version>
+            <version>0.0.3</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -75,12 +75,12 @@
         <dependency>
             <groupId>com.burov</groupId>
             <artifactId>contracts</artifactId>
-            <version>0.0.5</version>
+            <version>0.0.6</version>
         </dependency>
         <dependency>
             <groupId>com.burov</groupId>
             <artifactId>kafka-contracts</artifactId>
-            <version>0.0.4-SNAPSHOT</version>
+            <version>0.0.4</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

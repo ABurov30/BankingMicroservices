@@ -75,5 +75,24 @@ public class AccountGrpcService extends AccountRpcServiceGrpc.AccountRpcServiceI
     @Override
     public void freezeAccount(FreezeAccountGrpcRequest request, StreamObserver<Empty> responseObserver) {
         accountService.freezeAccount(commandMapper.toFreezeAccountCommand(request));
+
+        responseObserver.onNext(Empty.getDefaultInstance());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void unfreezeAccount(UnfreezeAccountGrpcRequest request, StreamObserver<Empty> responseObserver) {
+        accountService.unfreezeAccount(commandMapper.toUnfreezeAccountCommand(request));
+
+        responseObserver.onNext(Empty.getDefaultInstance());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getAccountById(GetAccountByIdGrpcRequest request, StreamObserver<GetAccountByIdGrpcResponse> responseObserver) {
+        GetAccountResult result = accountService.getAccountById(commandMapper.toGetAccountByIdCommand(request));
+        AccountResponse response = grpcMapper.toAccountResponse(result);
+        responseObserver.onNext(grpcMapper.toGetAccountByIdGrpcResponse(response));
+        responseObserver.onCompleted();
     }
 }
