@@ -5,7 +5,8 @@ import apigateway.dto.card.CreateCardResponseDto;
 import apigateway.dto.card.GetCardByAccountIdResponseDto;
 import apigateway.dto.card.UpdateCardRequestDto;
 import apigateway.dto.card.UpdateCardResponseDto;
-import apigateway.mapper.CardMapper;
+import apigateway.mapper.dto.CardDtoMapper;
+import apigateway.mapper.grpc.CardGrpcMapper;
 import card.contract.v1.*;
 import com.google.protobuf.Empty;
 
@@ -17,14 +18,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class CardGrpcClient {
   private final CardRpcServiceGrpc.CardRpcServiceBlockingStub stub;
-  private final CardMapper cardMapper;
+  private final CardGrpcMapper grpcMapper;
+  private final CardDtoMapper dtoMapper;
 
   public CardGrpcClient(
           CardRpcServiceGrpc.CardRpcServiceBlockingStub stub,
-          CardMapper cardMapper
+          CardGrpcMapper grpcMapper, CardDtoMapper dtoMapper
   ) {
     this.stub = stub;
-    this.cardMapper = cardMapper;
+    this.grpcMapper = grpcMapper; this.dtoMapper = dtoMapper;
   }
 
   public String getCardHealth() {
@@ -34,13 +36,13 @@ public class CardGrpcClient {
   }
 
   public CreateCardResponseDto createCard (CreateCardRequestDto request, UUID authUserId, String role) {
-      CreateCardGrpcRequest grpcRequest = cardMapper.toCreateCardGrpcRequest(request, authUserId, role);
-      return cardMapper.toCreateCardResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).createCard(grpcRequest));
+      CreateCardGrpcRequest grpcRequest = grpcMapper.toCreateCardGrpcRequest(request, authUserId, role);
+      return dtoMapper.toCreateCardResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).createCard(grpcRequest));
   }
 
   public UpdateCardResponseDto updateCard (UpdateCardRequestDto request, UUID authUserId, String role) {
-        UpdateCardGrpcRequest grpcRequest = cardMapper.toUpdateCardGrpcRequest(request, authUserId, role);
-        return cardMapper.toUpdateCardResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).updateCard(grpcRequest));
+        UpdateCardGrpcRequest grpcRequest = grpcMapper.toUpdateCardGrpcRequest(request, authUserId, role);
+        return dtoMapper.toUpdateCardResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).updateCard(grpcRequest));
   }
 
   public List<GetCardByAccountIdResponseDto> getCardsByAccountId(UUID accountId) {
@@ -51,7 +53,7 @@ public class CardGrpcClient {
               .getCardsByAccountId(request);
 
       return response.getCardsList().stream()
-              .map(cardMapper::toGetCardByAccountIdResponseDto)
+              .map(dtoMapper::toGetCardByAccountIdResponseDto)
               .toList();
   }
 }

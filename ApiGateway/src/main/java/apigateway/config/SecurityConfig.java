@@ -11,7 +11,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -39,15 +41,6 @@ public class SecurityConfig {
                         ))
 
                         .requestMatchers(
-                                "/auth/manager/**",
-                                "/user/manager/**",
-                                "/account/manager/**"
-                        )
-                        .access((authentication, context) -> new AuthorizationDecision(
-                                hasRole(authentication.get(), Roles.ADMIN) || (hasRole(authentication.get(), Roles.MANAGER) && isActive(authentication.get()))
-                        ))
-
-                        .requestMatchers(
                                 "/auth/signup",
                                 "/auth/login",
                                 "/auth/refresh",
@@ -61,6 +54,15 @@ public class SecurityConfig {
                         )
                         .permitAll()
 
+                        .requestMatchers(
+                                "/auth/manager/**",
+                                "/user/manager/**",
+                                "/account/manager/**"
+                        )
+                        .access((authentication, context) -> new AuthorizationDecision(
+                                hasRole(authentication.get(), Roles.ADMIN) || (hasRole(authentication.get(), Roles.MANAGER) && isActive(authentication.get()))
+                        ))
+
                         .anyRequest()
                         .access((authentication, context) -> {
                             return new AuthorizationDecision(isActive(authentication.get()) || hasRole(authentication.get(), Roles.ADMIN));
@@ -68,9 +70,21 @@ public class SecurityConfig {
                 )
                 .oauth2ResourceServer(oauth -> oauth
                         .bearerTokenResolver(request ->cookieConfig.getCookieByKey(request, "at"))
-                        .jwt(Customizer.withDefaults())
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
                 )
                 .build();
+    }
+
+    @Bean
+    JwtAuthenticationConverter jwtAuthenticationConverter() {
+        var authoritiesConverter = new JwtGrantedAuthoritiesConverter();
+        authoritiesConverter.setAuthoritiesClaimName("roles");
+        authoritiesConverter.setAuthorityPrefix("ROLE_");
+
+        var jwtConverter = new JwtAuthenticationConverter();
+        jwtConverter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
+
+        return jwtConverter;
     }
 
     private boolean isActive(Authentication authentication) {

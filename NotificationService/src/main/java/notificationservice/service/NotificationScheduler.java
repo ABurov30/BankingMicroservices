@@ -36,8 +36,12 @@ public class NotificationScheduler {
             if (notification == null) {
                 break;
             }
-
-            emailSenderService.send(notification);
+            try {
+                emailSenderService.send(notification);
+                markSent(notification);
+            } catch (Exception e) {
+                markSendFailed(notification, e);
+            }
         }
     }
 
@@ -56,5 +60,27 @@ public class NotificationScheduler {
                 FindAndModifyOptions.options().returnNew(true),
                 NotificationDocument.class
         );
+    }
+
+    private void markSent(NotificationDocument notificationDocument) {
+        notificationDocument.setStatus(NotificationStatus.SENT);
+        notificationDocument.setSentAt(LocalDateTime.now());
+        notificationDocument.setErrorMessage(null);
+
+        mongoTemplate.save(notificationDocument);
+    }
+
+    private void markSendFailed(NotificationDocument notificationDocument, Exception e) {
+        notificationDocument.setRetryCount(notificationDocument.getRetryCount() + 1);
+        notificationDocument.setErrorMessage(e.getMessage());
+        notificationDocument.setSentAt(LocalDateTime.now());
+
+        if (notificationDocument.getRetryCount() >= notificationDocument.getMaxRetryCount()) {
+            notificationDocument.setStatus(NotificationStatus.FAILED);
+        } else {
+            notificationDocument.setStatus(NotificationStatus.PENDING);
+        }
+
+        mongoTemplate.save(notificationDocument);
     }
 }

@@ -28,6 +28,7 @@ public class NotificationService {
     public void createEmailNotification (CreateEmailNotificationCommand command) {
         NotificationDocument notification = new NotificationDocument();
 
+        notification.setAuthUserId(command.authUserId());
         notification.setEmail(command.email());
         notification.setType(command.type());
         notification.setVerificationCode(command.verificationCode());

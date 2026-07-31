@@ -3,17 +3,9 @@ package authservice.service;
 import authservice.config.JwtProperties;
 import authservice.dto.*;
 import authservice.entity.*;
-import authservice.exception.AuthUserAlreadyVerifiedException;
-import authservice.exception.AuthUserNotFoundException;
+import authservice.exception.*;
 import enums.auth.AuthUserStatus;
 import enums.auth.Roles;
-import authservice.exception.EmailAlreadyExistsException;
-import authservice.exception.InvalidEmailOrPasswordException;
-import authservice.exception.InvalidVerificationCodeException;
-import authservice.exception.RefreshTokenAlreadyExpiredException;
-import authservice.exception.RefreshTokenAlreadyRevokedException;
-import authservice.exception.RefreshTokenNotFoundException;
-import authservice.exception.RoleNotFoundException;
 import authservice.repository.*;
 import kafkacontracts.auth.AuthEventType;
 import kafkacontracts.common.KafkaTopics;
@@ -24,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -85,7 +78,7 @@ public class AuthService {
         }
 
         RoleEntity roleEntity = roleRepository.findByName(Roles.USER)
-                .orElseThrow(() -> new RoleNotFoundException());
+                .orElseThrow(() -> new RoleNotFoundException(savedUser.getId()));
 
         UserRoleEntity userRoleEntity = new UserRoleEntity();
         userRoleEntity.setAuthUser(savedUser);
@@ -136,8 +129,12 @@ public class AuthService {
             throw new InvalidEmailOrPasswordException();
         }
 
+        if (authUser.getStatus() != AuthUserStatus.ACTIVE) {
+            throw new AuthUserNotActiveException(authUser.getId());
+        }
+
         UserRoleEntity userRole = userRoleRepository.findByAuthUserId(authUser.getId()).orElseThrow(() ->
-                new RoleNotFoundException());
+                new RoleNotFoundException(authUser.getId()));
 
         String accessToken = tokenService.generateAccessToken(authUser, userRole.getRole().getName()).getTokenValue();
         String refreshToken = tokenService.generateRefreshToken();
@@ -197,7 +194,7 @@ public class AuthService {
         UserRoleEntity userRole = userRoleRepository
                 .findByAuthUserId(authUser.getId())
                 .orElseThrow(() ->
-                        new RoleNotFoundException());
+                        new RoleNotFoundException(authUser.getId()));
 
         String accessToken = tokenService.generateAccessToken(authUser, userRole.getRole().getName())
                 .getTokenValue();
@@ -223,7 +220,7 @@ public class AuthService {
         AuthUserEntity authUser = authUserRepository.findById(changePasswordCommand.authUserId())
                 .orElseThrow(() -> new IllegalArgumentException("Auth user not found by id " + changePasswordCommand.authUserId()));
 
-        if (authUser.getPasswordHash() != passwordEncoder.encode(changePasswordCommand.oldPassword())) {
+        if (!passwordEncoder.matches(changePasswordCommand.oldPassword(), authUser.getPasswordHash())) {
             throw new IllegalArgumentException("Wrong old password");
         }
 
@@ -289,11 +286,11 @@ public class AuthService {
     public void changeAuthUserRole(ChangeAuthUserRoleCommand changeAuthUserRoleCommand) {
         UserRoleEntity userRole = userRoleRepository
                 .findByAuthUserId(changeAuthUserRoleCommand.authUserId())
-                .orElseThrow(() -> new RoleNotFoundException());
+                .orElseThrow(() -> new RoleNotFoundException(changeAuthUserRoleCommand.authUserId()));
 
         RoleEntity role = roleRepository
                 .findByName(changeAuthUserRoleCommand.role())
-                .orElseThrow(() -> new RoleNotFoundException());
+                .orElseThrow(() -> new RoleNotFoundException(changeAuthUserRoleCommand.authUserId()));
 
         if (userRole.getRole().getName() == role.getName()) {
             return;
@@ -334,7 +331,7 @@ public class AuthService {
         saveAuthUserVerifiedOutboxEvent(authUser);
 
         UserRoleEntity userRole = userRoleRepository.findByAuthUserId(authUser.getId())
-                .orElseThrow(() -> new RoleNotFoundException());
+                .orElseThrow(() -> new RoleNotFoundException(authUser.getId()));
 
         String accessToken = tokenService.generateAccessToken(authUser, userRole.getRole().getName()).getTokenValue();
         String refreshToken = tokenService.generateRefreshToken();
@@ -401,4 +398,73 @@ public class AuthService {
     private boolean canVerifyWithoutCode(String role) {
         return Roles.ADMIN.name().equals(role) || Roles.MANAGER.name().equals(role);
     }
+
+    public GetRoleByAuthUserIdResult getRoleByAuthUserId(GetRoleByAuthUserIdCommand command) {
+        UserRoleEntity userRoleEntity = userRoleRepository.findByAuthUserId(command.authUserId())
+                .orElseThrow(() -> new RoleNotFoundException(command.authUserId()));
+
+        return new GetRoleByAuthUserIdResult(userRoleEntity.getRole().getName());
+    }
+
+    @Transactional
+    public void forgetPassword(ForgetPasswordCommand command) {
+        AuthUserEntity authUser = authUserRepository.findByEmail(command.email())
+                .orElseThrow(() -> new AuthUserNotFoundByEmailException(command.email()));
+        List<RefreshTokenEntity> refreshTokenEntityList = refreshTokenRepository.findAllByAuthUserId(authUser.getId());
+        LocalDateTime now = LocalDateTime.now();
+        refreshTokenEntityList.stream()
+                .filter(token -> token.getRevokedAt() == null)
+                .forEach(token -> token.setRevokedAt(now));
+
+        refreshTokenRepository.saveAll(refreshTokenEntityList);
+
+        authUser.setStatus(AuthUserStatus.FORGET_PASSWORD);
+        authUserRepository.save(authUser);
+        saveAuthUserForgetPasswordOutboxEvent(authUser);
+    }
+
+    public ResetPasswordResult resetPassword(ResetPasswordCommand command) {
+        AuthUserEntity authUser = authUserRepository.findById(command.authUserId())
+                .orElseThrow(() -> new AuthUserNotFoundException(command.authUserId()));
+
+        authUser.setPasswordHash(passwordEncoder.encode(command.newPassword()));
+
+        UserRoleEntity userRole = userRoleRepository.findByAuthUserId(authUser.getId()).orElseThrow(() ->
+                new RoleNotFoundException(authUser.getId()));
+
+        String accessToken = tokenService.generateAccessToken(authUser, userRole.getRole().getName()).getTokenValue();
+        String refreshToken = tokenService.generateRefreshToken();
+        String refreshTokenHash = tokenService.hashToken(refreshToken);
+
+        RefreshTokenEntity refreshTokenEntity = new RefreshTokenEntity();
+        refreshTokenEntity.setAuthUser(authUser);
+        refreshTokenEntity.setTokenHash(refreshTokenHash);
+        refreshTokenEntity.setExpiresAt(tokenService.refreshTokenExpiresAt());
+        refreshTokenRepository.save(refreshTokenEntity);
+
+        return new ResetPasswordResult(
+                accessToken,
+                refreshToken,
+                jwtProperties.accessTokenTtlMinutes(),
+                jwtProperties.refreshTokenTtlDays()
+        );
+    }
+
+    private void saveAuthUserForgetPasswordOutboxEvent(AuthUserEntity authUser) {
+        AuthOutboxEventEntity authOutboxEvent = new AuthOutboxEventEntity();
+        authOutboxEvent.setAggregateType("AUTH_USER");
+        authOutboxEvent.setAggregateId(authUser.getId());
+        authOutboxEvent.setEventType(AuthEventType.AUTH_USER_FORGET_PASSWORD.name());
+        authOutboxEvent.setTopic(AuthEventType.AUTH_USER_FORGET_PASSWORD.getTopic());
+        authOutboxEvent.setEventKey(authUser.getId() + ":" + AuthEventType.AUTH_USER_FORGET_PASSWORD.name());
+        authOutboxEvent.setSchemaVersion(AuthEventType.AUTH_USER_FORGET_PASSWORD.getVersion());
+
+        authOutboxEvent.setPayload(Map.of(
+                "authUserId", authUser.getId(),
+                "email", authUser.getEmail()
+        ));
+
+        authOutboxEventRepository.save(authOutboxEvent);
+    }
+
 }

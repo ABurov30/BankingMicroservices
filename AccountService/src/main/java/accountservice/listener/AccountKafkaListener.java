@@ -1,6 +1,6 @@
 package accountservice.listener;
 
-import accountservice.mapper.AccountMapper;
+import accountservice.mapper.command.AccountCommandMapper;
 import accountservice.service.AccountService;
 import kafkacontracts.user.UserProfileBlockedEventPayload;
 import kafkacontracts.user.UserProfileCreatedEventPayload;
@@ -11,14 +11,14 @@ import org.springframework.stereotype.Component;
 public class AccountKafkaListener {
 
     private final AccountService accountService;
-    private final AccountMapper accountMapper;
+    private final AccountCommandMapper commandMapper;
 
     public AccountKafkaListener (
         AccountService accountService,
-        AccountMapper accountMapper
+        AccountCommandMapper commandMapper
     ) {
         this.accountService = accountService;
-        this.accountMapper = accountMapper;
+        this.commandMapper = commandMapper;
     }
 
 
@@ -26,13 +26,13 @@ public class AccountKafkaListener {
             topics = "#{T(kafkacontracts.user.UserEventType).USER_PROFILE_CREATED.getTopic()}"
     )
     public void handleUserProfileCreated(UserProfileCreatedEventPayload payload) {
-        accountService.createAccount(accountMapper.toCreateAccountCommand(payload));
+        accountService.createAccount(commandMapper.toCreateAccountCommand(payload));
     }
 
     @KafkaListener(
             topics = "#{T(kafkacontracts.user.UserEventType).USER_PROFILE_BLOCKED.getTopic()}"
     )
     public void handleUserProfileBlocked(UserProfileBlockedEventPayload payload) {
-        accountService.freezeAccountByUserId(accountMapper.toFreezeAccountsByUserIdCommand(payload));
+        accountService.freezeAccountByUserId(commandMapper.toFreezeAccountsByUserIdCommand(payload));
     }
 }

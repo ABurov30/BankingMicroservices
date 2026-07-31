@@ -5,3 +5,5 @@ databaseChangeLog:
       file: db/changelog/changes/002-update-auth-verification-events.sql
   - include:
       file: db/changelog/changes/003-add-auth-user-role-changed-event.sql
+  - include:
+      file: db/changelog/changes/004-update-auth-user-status-constraint.sql

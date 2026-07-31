@@ -24,6 +24,8 @@ public class NotificationDocument {
     @Email
     private String email;
 
+    private UUID authUserId;
+
     @NotNull
     private NotificationType type;
     private String verificationCode;

@@ -8,7 +8,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import userservice.entity.UserOutboxEventEntity;
-import userservice.mapper.UserMapper;
+import userservice.mapper.eventpayload.UserEventPayloadMapper;
 import userservice.repository.UserOutboxEventRepository;
 import kafkacontracts.user.UserEventType;
 
@@ -19,16 +19,16 @@ import java.util.Map;
 public class UserOutboxPublisher implements KafkaOnSentHandler {
     private final UserOutboxEventRepository userOutboxEventRepository;
     private final KafkaTemplate<String, SpecificRecord> kafkaTemplate;
-    private final UserMapper userMapper;
+    private final UserEventPayloadMapper eventPayloadMapper;
 
     public UserOutboxPublisher(
             UserOutboxEventRepository userOutboxEventRepository,
             KafkaTemplate<String, SpecificRecord> kafkaTemplate,
-            UserMapper userMapper
+            UserEventPayloadMapper eventPayloadMapper
     ) {
         this.userOutboxEventRepository = userOutboxEventRepository;
         this.kafkaTemplate = kafkaTemplate;
-        this.userMapper = userMapper;
+        this.eventPayloadMapper = eventPayloadMapper;
     }
 
     @Scheduled(fixedDelay = 5000)
@@ -59,9 +59,9 @@ public class UserOutboxPublisher implements KafkaOnSentHandler {
 
     private SpecificRecord extractPayload(UserEventType eventType, Map<String, Object> payload) {
         return switch (eventType) {
-            case USER_PROFILE_CREATED -> userMapper.toUserProfileCreatedEventPayload(payload);
-            case USER_PROFILE_BLOCKED -> userMapper.toUserProfileBlockedEventPayload(payload);
-            case USER_PROFILE_UNLOCK -> userMapper.toUserProfileUnlockEventPayload(payload);
+            case USER_PROFILE_CREATED -> eventPayloadMapper.toUserProfileCreatedEventPayload(payload);
+            case USER_PROFILE_BLOCKED -> eventPayloadMapper.toUserProfileBlockedEventPayload(payload);
+            case USER_PROFILE_UNLOCK -> eventPayloadMapper.toUserProfileUnlockEventPayload(payload);
         };
     }
 }

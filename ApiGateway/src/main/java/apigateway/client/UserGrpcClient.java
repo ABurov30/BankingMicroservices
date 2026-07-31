@@ -2,7 +2,8 @@ package apigateway.client;
 
 import apigateway.dto.user.GetUserInfoRequestDto;
 import apigateway.dto.user.GetUserInfoResponseDto;
-import apigateway.mapper.UserMapper;
+import apigateway.mapper.dto.UserDtoMapper;
+import apigateway.mapper.grpc.UserGrpcMapper;
 import com.google.protobuf.Empty;
 
 import java.util.List;
@@ -13,20 +14,20 @@ import user.contract.v1.*;
 @Service
 public class UserGrpcClient {
   private final UserRpcServiceGrpc.UserRpcServiceBlockingStub stub;
-  private final UserMapper userMapper;
+  private final UserGrpcMapper grpcMapper;
+  private final UserDtoMapper dtoMapper;
 
-  public UserGrpcClient(UserRpcServiceGrpc.UserRpcServiceBlockingStub stub, UserMapper userMapper) {
-      this.stub = stub;
-      this.userMapper = userMapper;
+  public UserGrpcClient(UserRpcServiceGrpc.UserRpcServiceBlockingStub stub, UserGrpcMapper grpcMapper, UserDtoMapper dtoMapper) {
+      this.stub = stub; this.grpcMapper = grpcMapper; this.dtoMapper = dtoMapper;
   }
 
   public GetUserInfoResponseDto getUserInfo(GetUserInfoRequestDto getUserInfoRequest) {
-    GetUserInfoGrpcRequest getUserInfoGrpcRequest = userMapper.toGetUserInfoGrpcRequest(getUserInfoRequest);
-    return userMapper.toGetInfoResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).getUserInfo(getUserInfoGrpcRequest));
+    GetUserInfoGrpcRequest getUserInfoGrpcRequest = grpcMapper.toGetUserInfoGrpcRequest(getUserInfoRequest);
+    return dtoMapper.toGetInfoResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).getUserInfo(getUserInfoGrpcRequest));
   }
 
   public List<GetUserInfoResponseDto> getAllUserInfo() {
-      return userMapper.toGetInfoResponseDtoList(
+      return dtoMapper.toGetInfoResponseDtoList(
           stub.withDeadlineAfter(2, TimeUnit.SECONDS).getAllUserInfo(Empty.getDefaultInstance())
       );
   }

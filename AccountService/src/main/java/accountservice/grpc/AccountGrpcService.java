@@ -4,7 +4,8 @@ import account.contract.v1.*;
 import accountservice.dto.CreateAccountCommand;
 import accountservice.dto.GetAccountResult;
 import accountservice.dto.GetAccountsByOwnerUserIdCommand;
-import accountservice.mapper.AccountMapper;
+import accountservice.mapper.command.AccountCommandMapper;
+import accountservice.mapper.grpc.AccountGrpcMapper;
 import accountservice.service.AccountService;
 import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
@@ -17,14 +18,17 @@ import java.util.UUID;
 @Service
 public class AccountGrpcService extends AccountRpcServiceGrpc.AccountRpcServiceImplBase {
 
-    private final AccountMapper accountMapper;
+    private final AccountCommandMapper commandMapper;
+    private final AccountGrpcMapper grpcMapper;
     private final AccountService accountService;
 
     public AccountGrpcService(
-            AccountMapper accountMapper,
+            AccountCommandMapper commandMapper,
+            AccountGrpcMapper grpcMapper,
             AccountService accountService
     ) {
-        this.accountMapper = accountMapper;
+        this.commandMapper = commandMapper;
+        this.grpcMapper = grpcMapper;
         this.accountService = accountService;
     }
 
@@ -38,8 +42,8 @@ public class AccountGrpcService extends AccountRpcServiceGrpc.AccountRpcServiceI
 
     @Override
     public void createAccount(CreateAccountGrpcRequest request, StreamObserver<CreateAccountGrpcResponse> responseObserver) {
-        CreateAccountCommand updateAccountCommand = accountMapper.toCreateAccountCommand(request);
-        CreateAccountGrpcResponse response = accountMapper.toCreateAccountGrpcResponse(accountService.createAccount(updateAccountCommand));
+        CreateAccountCommand updateAccountCommand = commandMapper.toCreateAccountCommand(request);
+        CreateAccountGrpcResponse response = grpcMapper.toCreateAccountGrpcResponse(accountService.createAccount(updateAccountCommand));
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();
@@ -47,13 +51,13 @@ public class AccountGrpcService extends AccountRpcServiceGrpc.AccountRpcServiceI
 
     @Override
     public void getAccountsByOwnerUserId(GetAccountByOwnerUserIdGrpcRequest request, StreamObserver<GetAccountsGrpcResponse> responseObserver) {
-        GetAccountsByOwnerUserIdCommand command = accountMapper.toGetAccountsByOwnerUserIdCommand(request);
+        GetAccountsByOwnerUserIdCommand command = commandMapper.toGetAccountsByOwnerUserIdCommand(request);
         List<GetAccountResult> result = accountService.getAccountsByOwnerUserId(command);
         List<AccountResponse> accountResponseList = result.stream()
-                .map(accountMapper::toAccountResponse)
+                .map(grpcMapper::toAccountResponse)
                 .toList();
 
-        responseObserver.onNext(accountMapper.toGetAccountsGrpcResponse(accountResponseList));
+        responseObserver.onNext(grpcMapper.toGetAccountsGrpcResponse(accountResponseList));
         responseObserver.onCompleted();
     }
 
@@ -61,15 +65,15 @@ public class AccountGrpcService extends AccountRpcServiceGrpc.AccountRpcServiceI
     public void getAllAccounts(Empty request, StreamObserver<GetAccountsGrpcResponse> responseObserver) {
         List<GetAccountResult> result = accountService.getAllAccounts();
         List<AccountResponse> accountResponseList = result.stream()
-                .map(accountMapper::toAccountResponse)
+                .map(grpcMapper::toAccountResponse)
                 .toList();
 
-        responseObserver.onNext(accountMapper.toGetAccountsGrpcResponse(accountResponseList));
+        responseObserver.onNext(grpcMapper.toGetAccountsGrpcResponse(accountResponseList));
         responseObserver.onCompleted();
     }
 
     @Override
     public void freezeAccount(FreezeAccountGrpcRequest request, StreamObserver<Empty> responseObserver) {
-        accountService.freezeAccount(accountMapper.toFreezeAccountCommand(request));
+        accountService.freezeAccount(commandMapper.toFreezeAccountCommand(request));
     }
 }

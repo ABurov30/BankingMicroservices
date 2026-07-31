@@ -95,6 +95,22 @@ public class AuthGatewayController {
                 (int) verifyResponse.refreshTokenDaysTtl());
     }
 
+    @PostMapping("/forget-password")
+    public void ForgetPassword(@Valid @RequestBody ForgetPasswordRequestDto request) {
+        authClient.forgetPassword(request);
+    }
+
+    @PutMapping("/reset-password")
+    public void ResetPassword(@Valid @RequestBody ResetPasswordRequestDto request , HttpServletResponse response) {
+        ResetPasswordsResponseDto resetPasswordResponse = authClient.resetPassword(request);
+
+        cookieConfig.setCookieTokens(
+                response,
+                resetPasswordResponse.accessToken(),
+                (int) resetPasswordResponse.accessTokenMinutesTtl(),
+                resetPasswordResponse.refreshToken(),
+                (int) resetPasswordResponse.refreshTokenDaysTtl());
+    }
 
     @GetMapping("/health")
     public String getAuthHealth() {

@@ -1,7 +1,7 @@
 package accountservice.service;
 
 import accountservice.entity.AccountOutboxEventEntity;
-import accountservice.mapper.AccountMapper;
+import accountservice.mapper.eventpayload.AccountEventPayloadMapper;
 import accountservice.repository.AccountOutboxEventRepository;
 import kafkacontracts.account.AccountEventType;
 import org.apache.avro.specific.SpecificRecord;
@@ -19,16 +19,16 @@ import java.util.Map;
 public class AccountOutboxPublisher implements KafkaOnSentHandler {
     private final AccountOutboxEventRepository accountOutboxEventRepository;
     private final KafkaTemplate<String, SpecificRecord> kafkaTemplate;
-    private final AccountMapper accountMapper;
+    private final AccountEventPayloadMapper eventPayloadMapper;
 
     public AccountOutboxPublisher(
             AccountOutboxEventRepository accountOutboxEventRepository,
             KafkaTemplate<String, SpecificRecord> kafkaTemplate,
-            AccountMapper accountMapper
+            AccountEventPayloadMapper eventPayloadMapper
     ) {
         this.accountOutboxEventRepository = accountOutboxEventRepository;
         this.kafkaTemplate = kafkaTemplate;
-        this.accountMapper = accountMapper;
+        this.eventPayloadMapper = eventPayloadMapper;
     }
 
     @Scheduled(fixedDelay = 5000)
@@ -59,8 +59,8 @@ public class AccountOutboxPublisher implements KafkaOnSentHandler {
 
     private SpecificRecord extractPayload(AccountEventType eventType, Map<String, Object> payload) {
         return switch (eventType) {
-            case ACCOUNT_CREATED -> accountMapper.toAccountCreatedEventPayload(payload);
-            case ACCOUNT_FROZEN -> accountMapper.toAccountFrozenEventPayload(payload);
+            case ACCOUNT_CREATED -> eventPayloadMapper.toAccountCreatedEventPayload(payload);
+            case ACCOUNT_FROZEN -> eventPayloadMapper.toAccountFrozenEventPayload(payload);
         };
     }
 }

@@ -8,7 +8,7 @@ import cardservice.exception.CardExpiredException;
 import cardservice.exception.CardGenerationFailedException;
 import cardservice.exception.CardNotFoundException;
 import cardservice.exception.CardsNotFoundException;
-import cardservice.mapper.CardMapper;
+import cardservice.mapper.result.CardResultMapper;
 import cardservice.repository.AccountOwnershipProjectionRepository;
 import enums.card.CardStatus;
 import cardservice.repository.CardRepository;
@@ -26,7 +26,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class CardService {
     private final CardRepository cardRepository;
     private final AccountOwnershipProjectionRepository accountOwnershipProjectionRepository;
-    private final CardMapper cardMapper;
+    private final CardResultMapper resultMapper;
     private static final int CARD_EXPIRATION_YEARS = 5;
     private static final String CARD_BIN = "400000";
     private static final int PAN_LENGTH = 16;
@@ -36,11 +36,11 @@ public class CardService {
     public CardService(
             CardRepository cardRepository,
             AccountOwnershipProjectionRepository accountOwnershipProjectionRepository,
-            CardMapper cardMapper
+            CardResultMapper resultMapper
     ) {
         this.cardRepository = cardRepository;
         this.accountOwnershipProjectionRepository = accountOwnershipProjectionRepository;
-        this.cardMapper = cardMapper;
+        this.resultMapper = resultMapper;
     }
 
     private String generateUniquePan() {
@@ -115,7 +115,7 @@ public class CardService {
                     accountOwnershipProjectionRepository.save(accountOwnershipProjectionEntity);
                 }
 
-                return cardMapper.toCreateCardResult(savedCard);
+                return resultMapper.toCreateCardResult(savedCard);
             } catch (DataIntegrityViolationException e) {
                 // PAN collision, retry
             }
@@ -177,7 +177,7 @@ public class CardService {
 
         CardEntity savedCard = cardRepository.save(cardEntity);
 
-        return cardMapper.toUpdateCardResult(savedCard);
+        return resultMapper.toUpdateCardResult(savedCard);
     }
 
     public List<GetCardResult> getCardsByAccountId (GetCardsByAccountIdCommand command) {
@@ -185,7 +185,7 @@ public class CardService {
                 .orElseThrow(() -> new CardsNotFoundException(command.accountId()));
 
         return cardEntityList.stream()
-                .map(cardMapper::toGetCardResult)
+                .map(resultMapper::toGetCardResult)
                 .toList();
     }
 

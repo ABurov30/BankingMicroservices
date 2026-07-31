@@ -6,7 +6,8 @@ import org.springframework.stereotype.Service;
 import user.contract.v1.*;
 import userservice.dto.GetUserInfoCommand;
 import userservice.dto.GetUserInfoResult;
-import userservice.mapper.UserMapper;
+import userservice.mapper.command.UserCommandMapper;
+import userservice.mapper.grpc.UserGrpcMapper;
 import userservice.service.UserService;
 
 import java.time.LocalDateTime;
@@ -15,11 +16,13 @@ import java.util.List;
 @Service
 public class UserGrpcService extends UserRpcServiceGrpc.UserRpcServiceImplBase {
     private final UserService userService;
-    private final UserMapper userMapper;
+    private final UserCommandMapper commandMapper;
+    private final UserGrpcMapper grpcMapper;
 
-    public UserGrpcService(UserService userService, UserMapper userMapper) {
+    public UserGrpcService(UserService userService, UserCommandMapper commandMapper, UserGrpcMapper grpcMapper) {
         this.userService = userService;
-        this.userMapper = userMapper;
+        this.commandMapper = commandMapper;
+        this.grpcMapper = grpcMapper;
     }
 
     @Override
@@ -32,8 +35,8 @@ public class UserGrpcService extends UserRpcServiceGrpc.UserRpcServiceImplBase {
 
     @Override
     public void getUserInfo(GetUserInfoGrpcRequest request, StreamObserver<GetUserInfoGrpcResponse> responseObserver) {
-        GetUserInfoCommand getUserInfoCommand = userMapper.toGetUserInfoCommand(request);
-        GetUserInfoGrpcResponse response = userMapper.toGetUserInfoGrpcResponse(userService.getUserInfo(getUserInfoCommand));
+        GetUserInfoCommand getUserInfoCommand = commandMapper.toGetUserInfoCommand(request);
+        GetUserInfoGrpcResponse response = grpcMapper.toGetUserInfoGrpcResponse(userService.getUserInfo(getUserInfoCommand));
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();
@@ -42,9 +45,9 @@ public class UserGrpcService extends UserRpcServiceGrpc.UserRpcServiceImplBase {
     @Override
     public void getAllUserInfo (Empty request, StreamObserver<GetAllUserInfoGrpcResponse> responseObserver) {
         List<GetUserInfoResult> resultList = userService.getAllUserInfo();
-        List<UserResponse> responses = resultList.stream().map(userMapper::toUserResponse).toList();
+        List<UserResponse> responses = resultList.stream().map(grpcMapper::toUserResponse).toList();
 
-        responseObserver.onNext(userMapper.toGetAllUserInfoGrpcResponse(responses));
+        responseObserver.onNext(grpcMapper.toGetAllUserInfoGrpcResponse(responses));
         responseObserver.onCompleted();
     }
 }

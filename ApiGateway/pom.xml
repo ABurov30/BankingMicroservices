@@ -51,7 +51,7 @@
         <dependency>
             <groupId>com.burov</groupId>
             <artifactId>kafka-contracts</artifactId>
-            <version>0.0.3</version>
+            <version>0.0.4-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -66,7 +66,7 @@
         <dependency>
             <groupId>com.burov</groupId>
             <artifactId>contracts</artifactId>
-            <version>0.0.4</version>
+            <version>0.0.5</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
@@ -94,7 +94,7 @@
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-netty-shaded</artifactId>
-            <version>1.73.0</version>
+            <version>1.80.0</version>
         </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>

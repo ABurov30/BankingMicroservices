@@ -1,7 +1,10 @@
 package apigateway.client;
 
 import apigateway.dto.auth.*;
-import apigateway.mapper.AuthMapper;
+import apigateway.dto.user.GetRoleByAuthUserIdRequestDto;
+import apigateway.dto.user.GetRoleByAuthUserIdResponseDto;
+import apigateway.mapper.dto.AuthDtoMapper;
+import apigateway.mapper.grpc.AuthGrpcMapper;
 import auth.contract.v1.*;
 import com.google.protobuf.Empty;
 
@@ -12,11 +15,13 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthGrpcClient {
     private final AuthRpcServiceGrpc.AuthRpcServiceBlockingStub stub;
-    private final AuthMapper authMapper;
+    private final AuthGrpcMapper grpcMapper;
+    private final AuthDtoMapper dtoMapper;
 
-    public AuthGrpcClient(AuthRpcServiceGrpc.AuthRpcServiceBlockingStub stub, AuthMapper authMapper) {
+    public AuthGrpcClient(AuthRpcServiceGrpc.AuthRpcServiceBlockingStub stub, AuthGrpcMapper grpcMapper, AuthDtoMapper dtoMapper) {
         this.stub = stub;
-        this.authMapper = authMapper;
+        this.grpcMapper = grpcMapper;
+        this.dtoMapper = dtoMapper;
     }
 
     public String getAuthHealth() {
@@ -26,52 +31,67 @@ public class AuthGrpcClient {
     }
 
     public void signup(SignupRequestDto request) {
-        SignupAuthGrpcRequest grpcRequest = authMapper.toSignupAuthGrpcRequest(request);
+        SignupAuthGrpcRequest grpcRequest = grpcMapper.toSignupAuthGrpcRequest(request);
         stub.withDeadlineAfter(2, TimeUnit.SECONDS).signup(grpcRequest);
     }
 
     public LoginResponseDto login(LoginRequestDto request) {
-        LoginAuthGrpcRequest grpcRequest = authMapper.toLoginAuthGrpcRequest(request);
-        return authMapper.toLoginResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).login(grpcRequest));
+        LoginAuthGrpcRequest grpcRequest = grpcMapper.toLoginAuthGrpcRequest(request);
+        return dtoMapper.toLoginResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).login(grpcRequest));
     }
 
     public void logout (LogoutRequestDto request) {
-        LogoutAuthGrpcRequest grpcRequest = authMapper.toLogoutAuthGrpcRequest(request);
+        LogoutAuthGrpcRequest grpcRequest = grpcMapper.toLogoutAuthGrpcRequest(request);
         stub.withDeadlineAfter(2, TimeUnit.SECONDS).logout(grpcRequest);
     }
 
     public RefreshResponseDto refresh (RefreshRequestDto request) {
-        RefreshAuthGrpcRequest grpcRequest = authMapper.toRefreshAuthGrpcRequest(request);
-        return authMapper.toRefreshResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).refresh(grpcRequest));
+        RefreshAuthGrpcRequest grpcRequest = grpcMapper.toRefreshAuthGrpcRequest(request);
+        return dtoMapper.toRefreshResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).refresh(grpcRequest));
     }
 
     public void changePassword (ChangePasswordRequestDto request) {
-        ChangePasswordGrpcRequest grpcRequest = authMapper.toChangePasswordGrpcRequest(request);
+        ChangePasswordGrpcRequest grpcRequest = grpcMapper.toChangePasswordGrpcRequest(request);
         stub.withDeadlineAfter(2,TimeUnit.SECONDS).changePassword(grpcRequest);
     }
 
     public void blockUser (BlockAuthUserRequestDto request) {
-        BlockAuthGrpcRequest grpcRequest = authMapper.toBlockUserGrpcRequest(request);
+        BlockAuthGrpcRequest grpcRequest = grpcMapper.toBlockUserGrpcRequest(request);
         stub.withDeadlineAfter(2, TimeUnit.SECONDS).blockAuthUser(grpcRequest);
     }
 
     public void unlockUser (UnlockAuthUserRequestDto request) {
-        UnlockAuthGrpcRequest grpcRequest = authMapper.toUnlockUserGrpcRequest(request);
+        UnlockAuthGrpcRequest grpcRequest = grpcMapper.toUnlockUserGrpcRequest(request);
         stub.withDeadlineAfter(2, TimeUnit.SECONDS).unlockAuthUser(grpcRequest);
     }
 
     public VerifyAuthUserByCodeResponseDto verifyByCode(VerifyAuthUserByCodeRequestDto request) {
-        VerifyAuthUserByCodeGrpcRequest grpcRequest = authMapper.toVerifyAuthUserByCodeGrpcRequest(request);
-        return authMapper.toVerifyAuthUserByCodeResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).verifyAuthUserByCode(grpcRequest));
+        VerifyAuthUserByCodeGrpcRequest grpcRequest = grpcMapper.toVerifyAuthUserByCodeGrpcRequest(request);
+        return dtoMapper.toVerifyAuthUserByCodeResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).verifyAuthUserByCode(grpcRequest));
     }
 
     public void verifyByPrivilegedRole(VerifyAuthUserByPrivilegeRoleRequestDto request) {
-        VerifyAuthUserByPrivilegeRoleGrpcRequest grpcRequest = authMapper.toVerifyAuthUserByPrivilegeRoleGrpcRequest(request);
+        VerifyAuthUserByPrivilegeRoleGrpcRequest grpcRequest = grpcMapper.toVerifyAuthUserByPrivilegeRoleGrpcRequest(request);
         stub.withDeadlineAfter(2, TimeUnit.SECONDS).verifyAuthUserByPrivilegeRole(grpcRequest);
     }
 
     public void changeAuthUserRole (ChangeAuthUserRoleRequestDto request) {
-        ChangeAuthUserRoleGrpcRequest grpcRequest = authMapper.toChangeAuthUserRoleGrpcRequest(request);
+        ChangeAuthUserRoleGrpcRequest grpcRequest = grpcMapper.toChangeAuthUserRoleGrpcRequest(request);
         stub.withDeadlineAfter(2, TimeUnit.SECONDS).changeAuthUserRole(grpcRequest);
+    }
+
+    public GetRoleByAuthUserIdResponseDto getRoleByAuthUserId (GetRoleByAuthUserIdRequestDto request) {
+        GetRoleByAuthUserIdGrpcRequest grpcRequest = grpcMapper.toGetRoleByAuthUserIdGrpcRequest(request);
+        return dtoMapper.toGetRoleByAuthUserIdResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).getRoleByAuthUserId(grpcRequest));
+    }
+
+    public void forgetPassword (ForgetPasswordRequestDto request) {
+        ForgetPasswordGrpcRequest grpcRequest = grpcMapper.toForgetPasswordGrpcRequest(request);
+        stub.withDeadlineAfter(2, TimeUnit.SECONDS).forgetPassword(grpcRequest);
+    }
+
+    public ResetPasswordsResponseDto resetPassword (ResetPasswordRequestDto request) {
+        ResetPasswordGrpcRequest grpcRequest = grpcMapper.toResetPasswordGrpcRequest(request);
+        return dtoMapper.toResetPasswordsResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).resetPassword(grpcRequest));
     }
 }

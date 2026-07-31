@@ -1,6 +1,6 @@
 package cardservice.listener;
 
-import cardservice.mapper.CardMapper;
+import cardservice.mapper.command.CardCommandMapper;
 import cardservice.service.CardService;
 import kafkacontracts.account.AccountCreatedEventPayload;
 import kafkacontracts.account.AccountFrozenEventPayload;
@@ -11,27 +11,27 @@ import org.springframework.stereotype.Component;
 public class CardKafkaListener {
 
     private final CardService cardService;
-    private final CardMapper cardMapper;
+    private final CardCommandMapper commandMapper;
 
     public CardKafkaListener(
             CardService cardService,
-            CardMapper cardMapper
+            CardCommandMapper commandMapper
     ) {
         this.cardService = cardService;
-        this.cardMapper = cardMapper;
+        this.commandMapper = commandMapper;
     }
 
     @KafkaListener(
             topics = "#{T(kafkacontracts.account.AccountEventType).ACCOUNT_CREATED.getTopic()}"
     )
     public void handleAccountCreated(AccountCreatedEventPayload payload) {
-        cardService.createCard(cardMapper.toCreateCardCommand(payload));
+        cardService.createCard(commandMapper.toCreateCardCommand(payload));
     }
 
     @KafkaListener(
             topics = "#{T(kafkacontracts.account.AccountEventType).ACCOUNT_FROZEN.getTopic()}"
     )
     public void handleAccountFrozen(AccountFrozenEventPayload payload) {
-        cardService.freezeCards(cardMapper.toFreezeCardsCommand(payload));
+        cardService.freezeCards(commandMapper.toFreezeCardsCommand(payload));
     }
 }

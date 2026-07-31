@@ -97,6 +97,7 @@ services:
     name: notification-service
     port: 8086
     grpcPort: 9095
+    siteUrl: http://localhost:8080
     mongo:
       host: notification-mongodb
       port: 27017

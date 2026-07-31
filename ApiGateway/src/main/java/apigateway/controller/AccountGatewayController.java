@@ -38,8 +38,12 @@ public class AccountGatewayController {
     }
 
     @PostMapping("/create")
-    public CreateAccountResponseDto postCreateAccount(@Valid @RequestBody CreateAccountRequestDto request) {
-        return accountClient.createAccount(request);
+    public CreateAccountResponseDto postCreateAccount(
+            @Valid @RequestBody CreateAccountRequestDto request,
+            HttpServletRequest httpRequest
+    ) {
+        Jwt jwt = cookieConfig.getAccessTokenJwt(httpRequest);
+        return accountClient.createAccount(request, UUID.fromString(jwt.getSubject()));
     }
 
     @GetMapping("/accounts/{ownerUserId}")

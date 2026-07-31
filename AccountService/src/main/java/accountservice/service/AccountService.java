@@ -8,7 +8,7 @@ import accountservice.exception.AccountClosedException;
 import accountservice.exception.AccountGenerationFailedException;
 import accountservice.exception.AccountNotFoundException;
 import accountservice.exception.AccountsNotFoundException;
-import accountservice.mapper.AccountMapper;
+import accountservice.mapper.result.AccountResultMapper;
 import accountservice.repository.AccountOutboxEventRepository;
 import accountservice.repository.AccountRepository;
 import enums.account.AccountStatus;
@@ -27,16 +27,16 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final AccountOutboxEventRepository accountOutboxEventRepository;
     private static final int TRY_TO_GENERATE_ACCOUNT_NUMBER = 10;
-    private final AccountMapper accountMapper;
+    private final AccountResultMapper resultMapper;
 
     public AccountService(
             AccountRepository accountRepository,
             AccountOutboxEventRepository accountOutboxEventRepository,
-            AccountMapper accountMapper
+            AccountResultMapper resultMapper
     ) {
         this.accountRepository = accountRepository;
         this.accountOutboxEventRepository = accountOutboxEventRepository;
-        this.accountMapper = accountMapper;
+        this.resultMapper = resultMapper;
     }
 
     private String generateUniqueAccountNumber() {
@@ -114,14 +114,14 @@ public class AccountService {
                 .orElseThrow(() -> new AccountsNotFoundException(command.ownerUserId()));
 
         return accountEntityList.stream()
-                .map(accountMapper::toGetAccountResult)
+                .map(resultMapper::toGetAccountResult)
                 .toList();
     }
 
     public List<GetAccountResult> getAllAccounts() {
         List<AccountEntity> accountEntityList = accountRepository.findAll();
         return  accountEntityList.stream()
-                .map(accountMapper::toGetAccountResult)
+                .map(resultMapper::toGetAccountResult)
                 .toList();
     }
 

@@ -8,7 +8,7 @@ import userservice.dto.*;
 import userservice.entity.UserOutboxEventEntity;
 import userservice.entity.UserProfileEntity;
 import userservice.exception.UserProfileNotFoundException;
-import userservice.mapper.UserMapper;
+import userservice.mapper.result.UserResultMapper;
 import userservice.repository.UserOutboxEventRepository;
 import userservice.repository.UserProfileRepository;
 
@@ -19,16 +19,16 @@ import java.util.Map;
 public class UserService {
     private final UserProfileRepository userProfileRepository;
     private final UserOutboxEventRepository userOutboxEventRepository;
-    private final UserMapper userMapper;
+    private final UserResultMapper resultMapper;
 
     public UserService(
             UserProfileRepository userProfileRepository,
             UserOutboxEventRepository userOutboxEventRepository,
-            UserMapper userMapper
+            UserResultMapper resultMapper
     ) {
         this.userProfileRepository = userProfileRepository;
         this.userOutboxEventRepository = userOutboxEventRepository;
-        this.userMapper = userMapper;
+        this.resultMapper = resultMapper;
     }
 
     @Transactional()
@@ -36,7 +36,7 @@ public class UserService {
         UserProfileEntity userProfileEntity = userProfileRepository.findByAuthUserId(getUserInfoCommand.authUserId())
                 .orElseThrow(() -> new UserProfileNotFoundException(getUserInfoCommand.authUserId()));
 
-        return userMapper.toGetUserInfoResult(userProfileEntity);
+        return resultMapper.toGetUserInfoResult(userProfileEntity);
     }
 
     @Transactional
@@ -73,7 +73,7 @@ public class UserService {
 
     public List<GetUserInfoResult> getAllUserInfo () {
        List<UserProfileEntity> userProfileEntities = userProfileRepository.findAll();
-       return userProfileEntities.stream().map(userMapper::toGetUserInfoResult).toList();
+       return userProfileEntities.stream().map(resultMapper::toGetUserInfoResult).toList();
     }
 
     public void blockUser(BlockedUserCommand blockedUserCommand) {

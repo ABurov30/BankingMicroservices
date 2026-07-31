@@ -2,6 +2,9 @@ package apigateway.exception;
 
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -15,9 +18,21 @@ import java.util.List;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(StatusRuntimeException.class)
-    public ResponseEntity<ApiErrorResponse> handleGrpcException(StatusRuntimeException exception) {
+    public ResponseEntity<ApiErrorResponse> handleGrpcException(
+            StatusRuntimeException exception,
+            HttpServletRequest request
+    ) {
+        log.error("gRPC request failed: httpMethod={}, requestUri={}, status={}, description={}",
+                request.getMethod(),
+                request.getRequestURI(),
+                exception.getStatus().getCode(),
+                exception.getStatus().getDescription(),
+                exception
+        );
+
         HttpStatus httpStatus = mapGrpcStatus(exception.getStatus().getCode());
 
         String message = exception.getStatus().getDescription();
@@ -39,6 +54,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MissingAccessTokenException.class)
     public ResponseEntity<ApiErrorResponse> handleRuntimeException(MissingAccessTokenException exception) {
+        log.error("Access token exception cause={}, description={}",
+                exception.getCause(),
+                exception.getMessage(),
+                exception
+        );
+
         List messages = new ArrayList();
         messages.add(exception.getMessage());
 
@@ -55,6 +76,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MissingRefreshTokenException.class)
     public ResponseEntity<ApiErrorResponse> handleRuntimeException(MissingRefreshTokenException exception) {
+        log.error("Refresh token exception cause={}, description={}",
+                exception.getCause(),
+                exception.getMessage(),
+                exception
+        );
+
         List messages = new ArrayList();
         messages.add(exception.getMessage());
 
@@ -72,7 +99,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleValidationException(
             MethodArgumentNotValidException exception
     ) {
-
+        log.error("Validation exception cause={}, description={}",
+                exception.getCause(),
+                exception.getMessage(),
+                exception
+        );
 
         List<String> messages = exception
                 .getBindingResult()

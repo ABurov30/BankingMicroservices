@@ -7,7 +7,8 @@ import cardservice.dto.GetCardResult;
 import cardservice.dto.GetCardsByAccountIdCommand;
 import cardservice.dto.UpdateCardCommand;
 import cardservice.entity.CardEntity;
-import cardservice.mapper.CardMapper;
+import cardservice.mapper.command.CardCommandMapper;
+import cardservice.mapper.grpc.CardGrpcMapper;
 import cardservice.service.CardService;
 import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
@@ -18,14 +19,17 @@ import java.util.List;
 
 @Service
 public class CardGrpcService extends CardRpcServiceGrpc.CardRpcServiceImplBase {
-    private final CardMapper cardMapper;
+    private final CardCommandMapper commandMapper;
+    private final CardGrpcMapper grpcMapper;
     private final CardService cardService;
 
     public CardGrpcService(
-            CardMapper cardMapper,
+            CardCommandMapper commandMapper,
+            CardGrpcMapper grpcMapper,
             CardService cardService
     ) {
-        this.cardMapper = cardMapper;
+        this.commandMapper = commandMapper;
+        this.grpcMapper = grpcMapper;
         this.cardService = cardService;
     }
 
@@ -39,8 +43,8 @@ public class CardGrpcService extends CardRpcServiceGrpc.CardRpcServiceImplBase {
 
     @Override
     public void createCard(CreateCardGrpcRequest request, StreamObserver<CreateCardGrpcResponse> responseObserver) {
-        CreatedCardCommand createdCardCommand = cardMapper.toCreateCardCommand(request);
-        CreateCardGrpcResponse response = cardMapper.toCreateCardGrpcResponse(cardService.createCard(createdCardCommand));
+        CreatedCardCommand createdCardCommand = commandMapper.toCreateCardCommand(request);
+        CreateCardGrpcResponse response = grpcMapper.toCreateCardGrpcResponse(cardService.createCard(createdCardCommand));
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();
@@ -48,8 +52,8 @@ public class CardGrpcService extends CardRpcServiceGrpc.CardRpcServiceImplBase {
 
     @Override
     public void updateCard(UpdateCardGrpcRequest request, StreamObserver<UpdateCardGrpcResponse> responseObserver) {
-        UpdateCardCommand updateCardCommand = cardMapper.toUpdateCardCommand(request);
-        UpdateCardGrpcResponse response = cardMapper.toUpdateCardGrpcResponse(cardService.updateCard(updateCardCommand));
+        UpdateCardCommand updateCardCommand = commandMapper.toUpdateCardCommand(request);
+        UpdateCardGrpcResponse response = grpcMapper.toUpdateCardGrpcResponse(cardService.updateCard(updateCardCommand));
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();
@@ -57,11 +61,11 @@ public class CardGrpcService extends CardRpcServiceGrpc.CardRpcServiceImplBase {
 
     @Override
     public void getCardsByAccountId (GetCardByAccountIdGrpcRequest request, StreamObserver<GetCardsGrpcResponse> responseObserver) {
-        GetCardsByAccountIdCommand command = cardMapper.toGetCardsByAccountIdCommand(request);
+        GetCardsByAccountIdCommand command = commandMapper.toGetCardsByAccountIdCommand(request);
         List<GetCardResult> results = cardService.getCardsByAccountId(command);
-        List<CardResponse> response = results.stream().map(cardMapper::toCardResponse).toList();
+        List<CardResponse> response = results.stream().map(grpcMapper::toCardResponse).toList();
 
-        responseObserver.onNext(cardMapper.toGetCardsGrpcResponse(response));
+        responseObserver.onNext(grpcMapper.toGetCardsGrpcResponse(response));
         responseObserver.onCompleted();
     }
 }

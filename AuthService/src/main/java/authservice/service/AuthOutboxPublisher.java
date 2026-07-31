@@ -1,7 +1,7 @@
 package authservice.service;
 
 import authservice.entity.AuthOutboxEventEntity;
-import authservice.mapper.AuthMapper;
+import authservice.mapper.eventpayload.AuthEventPayloadMapper;
 import authservice.repository.AuthOutboxEventRepository;
 import kafkacontracts.auth.AuthEventType;
 import org.apache.avro.specific.SpecificRecord;
@@ -19,16 +19,16 @@ import java.util.Map;
 public class AuthOutboxPublisher implements KafkaOnSentHandler {
     private final AuthOutboxEventRepository authOutboxEventRepository;
     private final KafkaTemplate<String, SpecificRecord> kafkaTemplate;
-    private final AuthMapper authMapper;
+    private final AuthEventPayloadMapper eventPayloadMapper;
 
     public AuthOutboxPublisher(
             AuthOutboxEventRepository authOutboxEventRepository,
             KafkaTemplate<String, SpecificRecord> kafkaTemplate,
-            AuthMapper authMapper
+            AuthEventPayloadMapper eventPayloadMapper
     ) {
         this.authOutboxEventRepository = authOutboxEventRepository;
         this.kafkaTemplate = kafkaTemplate;
-        this.authMapper = authMapper;
+        this.eventPayloadMapper = eventPayloadMapper;
     }
 
     @Scheduled(fixedDelay = 5000)
@@ -59,11 +59,12 @@ public class AuthOutboxPublisher implements KafkaOnSentHandler {
 
     private SpecificRecord extractPayload(AuthEventType eventType, Map<String, Object> payload) {
         return switch (eventType) {
-            case AUTH_USER_CREATED -> authMapper.toAuthUserCreatedEventPayload(payload);
-            case AUTH_USER_BLOCKED -> authMapper.toAuthUserBlockedEventPayload(payload);
-            case AUTH_USER_UNLOCK -> authMapper.toAuthUserUnlockEventPayload(payload);
-            case AUTH_USER_VERIFIED -> authMapper.toAuthUserVerifiedEventPayload(payload);
-            case AUTH_USER_ROLE_CHANGED -> authMapper.toAuthUserRoleChangedEventPayload(payload);
+            case AUTH_USER_CREATED -> eventPayloadMapper.toAuthUserCreatedEventPayload(payload);
+            case AUTH_USER_BLOCKED -> eventPayloadMapper.toAuthUserBlockedEventPayload(payload);
+            case AUTH_USER_UNLOCK -> eventPayloadMapper.toAuthUserUnlockEventPayload(payload);
+            case AUTH_USER_VERIFIED -> eventPayloadMapper.toAuthUserVerifiedEventPayload(payload);
+            case AUTH_USER_ROLE_CHANGED -> eventPayloadMapper.toAuthUserRoleChangedEventPayload(payload);
+            case AUTH_USER_FORGET_PASSWORD -> eventPayloadMapper.toAuthUserForgetPasswordEventPayload(payload);
         };
     }
 }

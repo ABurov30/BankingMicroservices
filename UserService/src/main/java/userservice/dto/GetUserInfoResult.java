@@ -6,6 +6,7 @@ import java.util.UUID;
 
 public record GetUserInfoResult(
         UUID userProfileId,
+        UUID authUserId,
         String email,
         String firstName,
         String lastName,

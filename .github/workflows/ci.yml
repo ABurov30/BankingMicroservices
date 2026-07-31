@@ -144,6 +144,7 @@ jobs:
 
           API_GATEWAY_NAME: ${{ vars.API_GATEWAY_NAME }}
           API_GATEWAY_PORT: ${{ vars.API_GATEWAY_PORT }}
+          SITE_URL: ${{ vars.SITE_URL }}
 
           AUTH_NAME: ${{ vars.AUTH_NAME }}
           AUTH_PORT: ${{ vars.AUTH_PORT }}
@@ -261,6 +262,7 @@ jobs:
 
           API_GATEWAY_NAME: ${{ vars.API_GATEWAY_NAME }}
           API_GATEWAY_PORT: ${{ vars.API_GATEWAY_PORT }}
+          SITE_URL: ${{ vars.SITE_URL }}
 
           AUTH_NAME: ${{ vars.AUTH_NAME }}
           AUTH_PORT: ${{ vars.AUTH_PORT }}
@@ -356,6 +358,7 @@ jobs:
 
           API_GATEWAY_NAME: ${{ vars.API_GATEWAY_NAME }}
           API_GATEWAY_PORT: ${{ vars.API_GATEWAY_PORT }}
+          SITE_URL: ${{ vars.SITE_URL }}
 
           AUTH_NAME: ${{ vars.AUTH_NAME }}
           AUTH_PORT: ${{ vars.AUTH_PORT }}
@@ -452,6 +455,7 @@ jobs:
 
           API_GATEWAY_NAME: ${{ vars.API_GATEWAY_NAME }}
           API_GATEWAY_PORT: ${{ vars.API_GATEWAY_PORT }}
+          SITE_URL: ${{ vars.SITE_URL }}
 
           AUTH_NAME: ${{ vars.AUTH_NAME }}
           AUTH_PORT: ${{ vars.AUTH_PORT }}

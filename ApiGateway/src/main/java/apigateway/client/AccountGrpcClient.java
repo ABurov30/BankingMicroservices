@@ -4,7 +4,8 @@ import account.contract.v1.*;
 import apigateway.dto.account.CreateAccountRequestDto;
 import apigateway.dto.account.CreateAccountResponseDto;
 import apigateway.dto.account.GetAccountResponseDto;
-import apigateway.mapper.AccountMapper;
+import apigateway.mapper.dto.AccountDtoMapper;
+import apigateway.mapper.grpc.AccountGrpcMapper;
 import com.google.protobuf.Empty;
 
 import java.util.List;
@@ -15,14 +16,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class AccountGrpcClient {
   private final AccountRpcServiceGrpc.AccountRpcServiceBlockingStub stub;
-  private final AccountMapper accountMapper;
+  private final AccountGrpcMapper grpcMapper;
+  private final AccountDtoMapper dtoMapper;
 
   public AccountGrpcClient(
           AccountRpcServiceGrpc.AccountRpcServiceBlockingStub stub,
-          AccountMapper accountMapper
+          AccountGrpcMapper grpcMapper, AccountDtoMapper dtoMapper
   ) {
     this.stub = stub;
-    this.accountMapper = accountMapper;
+    this.grpcMapper = grpcMapper; this.dtoMapper = dtoMapper;
   }
 
   public String getAccountHealth() {
@@ -32,9 +34,9 @@ public class AccountGrpcClient {
     return response.getMessage();
   }
 
-  public CreateAccountResponseDto createAccount(CreateAccountRequestDto request) {
-      CreateAccountGrpcRequest grpcRequest = accountMapper.toCreateAccountGrpcRequest(request);
-      return accountMapper.toCreateAccountResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).createAccount(grpcRequest));
+  public CreateAccountResponseDto createAccount(CreateAccountRequestDto request, UUID authUserId) {
+      CreateAccountGrpcRequest grpcRequest = grpcMapper.toCreateAccountGrpcRequest(request, authUserId);
+      return dtoMapper.toCreateAccountResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).createAccount(grpcRequest));
   }
 
   public List<GetAccountResponseDto> getAccountsByOwnerId(UUID ownerUserId) {
@@ -44,13 +46,13 @@ public class AccountGrpcClient {
       GetAccountsGrpcResponse response = stub.withDeadlineAfter(2, TimeUnit.SECONDS)
               .getAccountsByOwnerUserId(request);
 
-      return accountMapper.toListGetAccountResponseDto(response);
+      return dtoMapper.toListGetAccountResponseDto(response);
   }
 
   public List<GetAccountResponseDto> getAllAccounts() {
       GetAccountsGrpcResponse response = stub.withDeadlineAfter(2, TimeUnit.SECONDS)
               .getAllAccounts(Empty.getDefaultInstance());
-      return accountMapper.toListGetAccountResponseDto(response);
+      return dtoMapper.toListGetAccountResponseDto(response);
   }
 
   public void freezeAccount(UUID accountId, UUID authUserId, String role) {
