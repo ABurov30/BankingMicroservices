@@ -1,7 +1,7 @@
-package notificationservice.service;
+package notificationservice.service.email;
 
-import notificationservice.document.NotificationDocument;
-import notificationservice.enums.NotificationStatus;
+import notificationservice.document.EmailNotificationDocument;
+import notificationservice.enums.email.EmailNotificationStatus;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -14,12 +14,12 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 
 @Service
-public class NotificationScheduler {
+public class EmailNotificationScheduler {
     private final EmailSenderService emailSenderService;
     private final MongoTemplate mongoTemplate;
     private static final int BATCH_SIZE = 50;
 
-    public NotificationScheduler(
+    public EmailNotificationScheduler(
             EmailSenderService emailSenderService,
             MongoTemplate mongoTemplate
     ) {
@@ -31,7 +31,7 @@ public class NotificationScheduler {
     @Scheduled(fixedDelay = 5000)
     public void sendEmailNotifications() {
         for (int i = 0; i < BATCH_SIZE; i++) {
-            NotificationDocument notification = getNextPendingNotification();
+            EmailNotificationDocument notification = getNextPendingNotification();
 
             if (notification == null) {
                 break;
@@ -45,40 +45,40 @@ public class NotificationScheduler {
         }
     }
 
-    private NotificationDocument getNextPendingNotification() {
+    private EmailNotificationDocument getNextPendingNotification() {
         Query query = new Query()
-                .addCriteria(Criteria.where("status").is(NotificationStatus.PENDING))
+                .addCriteria(Criteria.where("status").is(EmailNotificationStatus.PENDING))
                 .addCriteria(Criteria.where("nextRetryAt").lte(LocalDateTime.now()))
                 .with(Sort.by(Sort.Direction.ASC, "createdAt"));
 
         Update update = new Update()
-                .set("status", NotificationStatus.PROCESSING);
+                .set("status", EmailNotificationStatus.PROCESSING);
 
         return mongoTemplate.findAndModify(
                 query,
                 update,
                 FindAndModifyOptions.options().returnNew(true),
-                NotificationDocument.class
+                EmailNotificationDocument.class
         );
     }
 
-    private void markSent(NotificationDocument notificationDocument) {
-        notificationDocument.setStatus(NotificationStatus.SENT);
+    private void markSent(EmailNotificationDocument notificationDocument) {
+        notificationDocument.setStatus(EmailNotificationStatus.SENT);
         notificationDocument.setSentAt(LocalDateTime.now());
         notificationDocument.setErrorMessage(null);
 
         mongoTemplate.save(notificationDocument);
     }
 
-    private void markSendFailed(NotificationDocument notificationDocument, Exception e) {
+    private void markSendFailed(EmailNotificationDocument notificationDocument, Exception e) {
         notificationDocument.setRetryCount(notificationDocument.getRetryCount() + 1);
         notificationDocument.setErrorMessage(e.getMessage());
         notificationDocument.setSentAt(LocalDateTime.now());
 
         if (notificationDocument.getRetryCount() >= notificationDocument.getMaxRetryCount()) {
-            notificationDocument.setStatus(NotificationStatus.FAILED);
+            notificationDocument.setStatus(EmailNotificationStatus.FAILED);
         } else {
-            notificationDocument.setStatus(NotificationStatus.PENDING);
+            notificationDocument.setStatus(EmailNotificationStatus.PENDING);
         }
 
         mongoTemplate.save(notificationDocument);

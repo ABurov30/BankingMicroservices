@@ -1,8 +1,8 @@
-package notificationservice.service;
+package notificationservice.service.email;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import notificationservice.document.NotificationDocument;
+import notificationservice.document.EmailNotificationDocument;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -16,13 +16,13 @@ import java.io.UnsupportedEncodingException;
 public class EmailSenderService {
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
-    private final NotificationTemplateResolver templateResolver;
+    private final EmailNotificationTemplateResolver templateResolver;
     private final String siteUrl;
 
     public EmailSenderService (
             JavaMailSender mailSender,
             TemplateEngine templateEngine,
-            NotificationTemplateResolver templateResolver,
+            EmailNotificationTemplateResolver templateResolver,
             @Value("${site.url}") String siteUrl
     ) {
         this.mailSender = mailSender;
@@ -31,7 +31,7 @@ public class EmailSenderService {
         this.siteUrl = siteUrl;
     }
 
-    public void send(NotificationDocument notification) {
+    public void send(EmailNotificationDocument notification) {
         String template = templateResolver.resolveTemplate(notification.getType());
         String subject = templateResolver.resolveSubject(notification.getType());
 
@@ -59,7 +59,7 @@ public class EmailSenderService {
         }
     }
 
-    private String buildVerifyUrl(NotificationDocument notification) {
+    private String buildVerifyUrl(EmailNotificationDocument notification) {
         return siteUrl.replaceAll("/+$", "")
                 + "/user-verify/"
                 + notification.getAuthUserId()
@@ -67,7 +67,7 @@ public class EmailSenderService {
                 + notification.getVerificationCode();
     }
 
-    private String buildResetPasswordUrl(NotificationDocument notification) {
+    private String buildResetPasswordUrl(EmailNotificationDocument notification) {
         return siteUrl.replaceAll("/+$", "")
                 + "/reset-password/"
                 + notification.getAuthUserId();

@@ -4,9 +4,11 @@ import apigateway.dto.auth.LoginResponseDto;
 import apigateway.dto.auth.RefreshResponseDto;
 import apigateway.dto.auth.ResetPasswordsResponseDto;
 import apigateway.dto.auth.VerifyAuthUserByCodeResponseDto;
-import apigateway.dto.user.GetRoleByAuthUserIdResponseDto;
+import apigateway.dto.user.GetAuthUserByIdResponseDto;
+import enums.auth.AuthUserStatus;
 import auth.contract.v1.*;
 import enums.auth.Roles;
+import java.util.UUID;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
@@ -26,8 +28,13 @@ public interface AuthDtoMapper {
         return new RefreshResponseDto(tokens.getAccessToken(), tokens.getRefreshToken(), tokens.getAccessTokenMinutesTtl(), tokens.getRefreshTokenDaysTtl());
     }
 
-    default GetRoleByAuthUserIdResponseDto toGetRoleByAuthUserIdResponseDto(GetRoleByAuthUserIdGrpcResponse value) {
-        return new GetRoleByAuthUserIdResponseDto(Roles.valueOf(value.getRole()));
+    default GetAuthUserByIdResponseDto toGetAuthUserByIdResponseDto(GetAuthUserByIdGrpcResponse value) {
+        return new GetAuthUserByIdResponseDto(
+                UUID.fromString(value.getAuthUserId()),
+                value.getEmail(),
+                Roles.valueOf(value.getRole()),
+                AuthUserStatus.valueOf(value.getStatus())
+        );
     }
 
     default ResetPasswordsResponseDto toResetPasswordsResponseDto(ResetPasswordsGrpcResponse value) {

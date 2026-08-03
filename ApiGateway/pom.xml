@@ -31,6 +31,7 @@
         <spring-cloud.version>2025.1.2</spring-cloud.version>
         <checkstyle.version>13.6.0</checkstyle.version>
         <spotless.version>2.44.4</spotless.version>
+        <confluent.version>7.7.10</confluent.version>
     </properties>
     <repositories>
         <repository>
@@ -41,6 +42,10 @@
             <id>github</id>
             <url>https://maven.pkg.github.com/ABurov30/BankingProtoContracts</url>
         </repository>
+        <repository>
+            <id>confluent</id>
+            <url>https://packages.confluent.io/maven/</url>
+        </repository>
     </repositories>
     <dependencies>
         <dependency>
@@ -49,13 +54,26 @@
             <version>0.0.3</version>
         </dependency>
         <dependency>
-            <groupId>com.burov</groupId>
-            <artifactId>kafka-contracts</artifactId>
-            <version>0.0.4</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-kafka</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>kafka-avro-serializer</artifactId>
+            <version>${confluent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.burov</groupId>
+            <artifactId>kafka-contracts</artifactId>
+            <version>0.0.5</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -66,7 +84,7 @@
         <dependency>
             <groupId>com.burov</groupId>
             <artifactId>contracts</artifactId>
-            <version>0.0.7-SNAPSHOT</version>
+            <version>0.0.7</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>

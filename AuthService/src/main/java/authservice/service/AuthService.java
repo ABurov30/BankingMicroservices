@@ -399,11 +399,18 @@ public class AuthService {
         return Roles.ADMIN.name().equals(role) || Roles.MANAGER.name().equals(role);
     }
 
-    public GetRoleByAuthUserIdResult getRoleByAuthUserId(GetRoleByAuthUserIdCommand command) {
-        UserRoleEntity userRoleEntity = userRoleRepository.findByAuthUserId(command.authUserId())
+    public GetAuthUserByIdResult getAuthUserById(GetAuthUserByIdCommand command) {
+        AuthUserEntity authUser = authUserRepository.findById(command.authUserId())
+                .orElseThrow(() -> new AuthUserNotFoundException(command.authUserId()));
+        UserRoleEntity userRole = userRoleRepository.findByAuthUserId(command.authUserId())
                 .orElseThrow(() -> new RoleNotFoundException(command.authUserId()));
 
-        return new GetRoleByAuthUserIdResult(userRoleEntity.getRole().getName());
+        return new GetAuthUserByIdResult(
+                authUser.getId(),
+                authUser.getStatus(),
+                authUser.getEmail(),
+                userRole.getRole().getName()
+        );
     }
 
     @Transactional

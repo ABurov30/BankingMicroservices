@@ -4,7 +4,7 @@ import apigateway.client.UserGrpcClient;
 import apigateway.config.CookieConfig;
 import apigateway.dto.user.GetUserInfoRequestDto;
 import apigateway.dto.user.GetUserInfoResponseDto;
-import apigateway.dto.user.GetUserInfoWithRoleResponseDto;
+import apigateway.dto.user.GetUserInfoWithAuthInfoResponseDto;
 import apigateway.query.UserInfoQueryHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -36,11 +36,11 @@ public class UserGatewayController {
 
 
     @GetMapping("/user-info")
-    public GetUserInfoWithRoleResponseDto getUserInfo(HttpServletRequest request) {
+    public GetUserInfoWithAuthInfoResponseDto getUserInfo(HttpServletRequest request) {
         Jwt jwt = cookieConfig.getAccessTokenJwt(request);
         UUID authUserId = UUID.fromString(jwt.getSubject());
 
-        return userInfoQueryHandler.getUserInfoWithRole(authUserId);
+        return userInfoQueryHandler.getUserInfoWithAuthInfo(authUserId);
     }
 
     @GetMapping("/health")
@@ -49,12 +49,12 @@ public class UserGatewayController {
     }
 
     @GetMapping("/manager/all-user-info")
-    public List<GetUserInfoWithRoleResponseDto> getAllUserInfo() {
-        return userInfoQueryHandler.getAllUserInfoWithRole();
+    public List<GetUserInfoWithAuthInfoResponseDto> getAllUserInfo() {
+        return userInfoQueryHandler.getAllUserInfoWithAuthInfo();
     }
 
     @GetMapping("/manager/user-info/{userId}")
-    public GetUserInfoWithRoleResponseDto getUserInfoByManager(@PathVariable UUID userId) {
-        return userInfoQueryHandler.getUserInfoWithRole(userId);
+    public GetUserInfoWithAuthInfoResponseDto getUserInfoByManager(@PathVariable UUID userId) {
+        return userInfoQueryHandler.getUserInfoWithAuthInfo(userId);
     }
 }

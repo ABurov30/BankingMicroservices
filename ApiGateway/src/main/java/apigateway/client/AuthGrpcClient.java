@@ -1,8 +1,8 @@
 package apigateway.client;
 
 import apigateway.dto.auth.*;
+import apigateway.dto.user.GetAuthUserByIdResponseDto;
 import apigateway.dto.user.GetRoleByAuthUserIdRequestDto;
-import apigateway.dto.user.GetRoleByAuthUserIdResponseDto;
 import apigateway.mapper.dto.AuthDtoMapper;
 import apigateway.mapper.grpc.AuthGrpcMapper;
 import auth.contract.v1.*;
@@ -80,9 +80,9 @@ public class AuthGrpcClient {
         stub.withDeadlineAfter(2, TimeUnit.SECONDS).changeAuthUserRole(grpcRequest);
     }
 
-    public GetRoleByAuthUserIdResponseDto getAuthUserById (GetRoleByAuthUserIdRequestDto request) {
-        GetAuthUserByIdGrpcRequest grpcRequest = grpcMapper.toGetRoleByAuthUserIdGrpcRequest(request);
-        return dtoMapper.toGetRoleByAuthUserIdResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).getRoleByAuthUserId(grpcRequest));
+    public GetAuthUserByIdResponseDto getAuthUserById (GetRoleByAuthUserIdRequestDto request) {
+        GetAuthUserByIdGrpcRequest grpcRequest = grpcMapper.toGetAuthUserByIdGrpcRequest(request);
+        return dtoMapper.toGetAuthUserByIdResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).getAuthUserById(grpcRequest));
     }
 
     public void forgetPassword (ForgetPasswordRequestDto request) {

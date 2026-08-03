@@ -50,8 +50,8 @@ public interface AuthCommandMapper {
         return new ChangeAuthUserRoleCommand(UUID.fromString(request.getAuthUserId()), Roles.valueOf(request.getRole()));
     }
 
-    default GetRoleByAuthUserIdCommand toGetRoleByAuthUserIdCommand(GetRoleByAuthUserIdGrpcRequest request) {
-        return new GetRoleByAuthUserIdCommand(UUID.fromString(request.getAuthUserId()));
+    default GetAuthUserByIdCommand toGetAuthUserByIdCommand(GetAuthUserByIdGrpcRequest request) {
+        return new GetAuthUserByIdCommand(UUID.fromString(request.getAuthUserId()));
     }
 
     default ForgetPasswordCommand toForgetPasswordCommand(ForgetPasswordGrpcRequest request) {

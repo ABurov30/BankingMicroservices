@@ -49,8 +49,8 @@ public interface AuthGrpcMapper {
         return VerifyAuthUserByPrivilegeRoleGrpcRequest.newBuilder().setAuthUserId(value.authUserId().toString()).setRole(value.roles().name()).build();
     }
 
-    default GetRoleByAuthUserIdGrpcRequest toGetRoleByAuthUserIdGrpcRequest(GetRoleByAuthUserIdRequestDto value) {
-        return GetRoleByAuthUserIdGrpcRequest.newBuilder().setAuthUserId(value.authUserId().toString()).build();
+    default GetAuthUserByIdGrpcRequest toGetAuthUserByIdGrpcRequest(GetRoleByAuthUserIdRequestDto value) {
+        return GetAuthUserByIdGrpcRequest.newBuilder().setAuthUserId(value.authUserId().toString()).build();
     }
 
     default ForgetPasswordGrpcRequest toForgetPasswordGrpcRequest(ForgetPasswordRequestDto value) {

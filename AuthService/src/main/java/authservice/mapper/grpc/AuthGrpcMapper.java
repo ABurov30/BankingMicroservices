@@ -18,8 +18,13 @@ public interface AuthGrpcMapper {
         return VerifyAuthUserByCodeGrpcResponse.newBuilder().setTokens(tokens(result.accessToken(), result.refreshToken(), result.accessTokenMinutesTtl(), result.refreshTokenDaysTtl())).build();
     }
 
-    default GetRoleByAuthUserIdGrpcResponse toGetRoleByAuthUserIdGrpcResponse(GetRoleByAuthUserIdResult result) {
-        return GetRoleByAuthUserIdGrpcResponse.newBuilder().setRole(result.role().name()).build();
+    default GetAuthUserByIdGrpcResponse toGetAuthUserByIdGrpcResponse(GetAuthUserByIdResult result) {
+        return GetAuthUserByIdGrpcResponse.newBuilder()
+                .setAuthUserId(result.authUserId().toString())
+                .setStatus(result.status().name())
+                .setEmail(result.email())
+                .setRole(result.role().name())
+                .build();
     }
 
     default ResetPasswordsGrpcResponse toResetPasswordsGrpcResponse(ResetPasswordResult result) {

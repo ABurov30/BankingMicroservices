@@ -1,6 +1,6 @@
 package notificationservice.dto;
 
-import notificationservice.enums.NotificationType;
+import notificationservice.enums.email.EmailNotificationType;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -13,7 +13,7 @@ public record CreateEmailNotificationCommand(
         @Email
         String email,
         @NotNull
-        NotificationType type,
+        EmailNotificationType type,
         String verificationCode
 ) {
 }

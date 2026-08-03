@@ -17,29 +17,30 @@ jobs:
         include:
           - service: notification-service
             path: NotificationService
-            db_type: mongo
-            db_config: { DB_VAR: NOTIFICATION_MONGO_DB, USER_VAR: NOTIFICATION_MONGO_USER, PASSWORD_SECRET: NOTIFICATION_MONGO_PASSWORD, CONTAINER_NAME: 'notification-mongodb' }
+            db_type: mongo-postgres
+            mongo_config: { DB_VAR: NOTIFICATION_MONGO_DB, USER_VAR: NOTIFICATION_MONGO_USER, PASSWORD_SECRET: NOTIFICATION_MONGO_PASSWORD, CONTAINER_NAME: 'notification-mongodb' }
+            postgres_config: { DB_VAR: NOTIFICATION_POSTGRES_DB, USER_VAR: NOTIFICATION_POSTGRES_USER, PASSWORD_SECRET: NOTIFICATION_POSTGRES_PASSWORD, CONTAINER_NAME: 'notification-postgres' }
           - service: user-service
             path: UserService
             db_type: postgres
-            db_config: { DB_VAR: USER_POSTGRES_DB, USER_VAR: USER_POSTGRES_USER, PASSWORD_SECRET: USER_POSTGRES_PASSWORD, CONTAINER_NAME: 'user-postgres' }
+            postgres_config: { DB_VAR: USER_POSTGRES_DB, USER_VAR: USER_POSTGRES_USER, PASSWORD_SECRET: USER_POSTGRES_PASSWORD, CONTAINER_NAME: 'user-postgres' }
           - service: transaction-service
             path: TransactionService
             db_type: postgres
-            db_config: { DB_VAR: TRANSACTION_POSTGRES_DB, USER_VAR: TRANSACTION_POSTGRES_USER, PASSWORD_SECRET: TRANSACTION_POSTGRES_PASSWORD, CONTAINER_NAME: 'transaction-postgres' }
+            postgres_config: { DB_VAR: TRANSACTION_POSTGRES_DB, USER_VAR: TRANSACTION_POSTGRES_USER, PASSWORD_SECRET: TRANSACTION_POSTGRES_PASSWORD, CONTAINER_NAME: 'transaction-postgres' }
           - service: card-service
             path: CardService
             db_type: postgres
-            db_config: { DB_VAR: CARD_POSTGRES_DB, USER_VAR: CARD_POSTGRES_USER, PASSWORD_SECRET: CARD_POSTGRES_PASSWORD, CONTAINER_NAME: 'card-postgres' }
+            postgres_config: { DB_VAR: CARD_POSTGRES_DB, USER_VAR: CARD_POSTGRES_USER, PASSWORD_SECRET: CARD_POSTGRES_PASSWORD, CONTAINER_NAME: 'card-postgres' }
           - service: account-service
             path: AccountService
             db_type: postgres
-            db_config: { DB_VAR: ACCOUNT_POSTGRES_DB, USER_VAR: ACCOUNT_POSTGRES_USER, PASSWORD_SECRET: ACCOUNT_POSTGRES_PASSWORD, CONTAINER_NAME: 'account-postgres' }
+            postgres_config: { DB_VAR: ACCOUNT_POSTGRES_DB, USER_VAR: ACCOUNT_POSTGRES_USER, PASSWORD_SECRET: ACCOUNT_POSTGRES_PASSWORD, CONTAINER_NAME: 'account-postgres' }
           - service: auth-service
             path: AuthService
             db_type: postgres
             keys_required: true
-            db_config: { DB_VAR: AUTH_POSTGRES_DB, USER_VAR: AUTH_POSTGRES_USER, PASSWORD_SECRET: AUTH_POSTGRES_PASSWORD, CONTAINER_NAME: 'auth-postgres' }
+            postgres_config: { DB_VAR: AUTH_POSTGRES_DB, USER_VAR: AUTH_POSTGRES_USER, PASSWORD_SECRET: AUTH_POSTGRES_PASSWORD, CONTAINER_NAME: 'auth-postgres' }
           - service: api-gateway
             path: ApiGateway
             keys_required: true
@@ -68,14 +69,14 @@ jobs:
           chmod 644 secrets/public.pem
 
       - name: Start PostgreSQL
-        if: matrix.db_type == 'postgres'
+        if: matrix.db_type == 'postgres' || matrix.db_type == 'mongo-postgres'
         env:
-          DB_NAME: ${{ vars[matrix.db_config.DB_VAR] }}
-          DB_USER: ${{ vars[matrix.db_config.USER_VAR] }}
-          DB_PASSWORD: ${{ secrets[matrix.db_config.PASSWORD_SECRET] }}
+          DB_NAME: ${{ vars[matrix.postgres_config.DB_VAR] }}
+          DB_USER: ${{ vars[matrix.postgres_config.USER_VAR] }}
+          DB_PASSWORD: ${{ secrets[matrix.postgres_config.PASSWORD_SECRET] }}
         run: |
           docker run -d \
-            --name ${{ matrix.db_config.CONTAINER_NAME }} \
+            --name ${{ matrix.postgres_config.CONTAINER_NAME }} \
             -e POSTGRES_DB="$DB_NAME" \
             -e POSTGRES_USER="$DB_USER" \
             -e POSTGRES_PASSWORD="$DB_PASSWORD" \
@@ -83,29 +84,30 @@ jobs:
             postgres:16
 
       - name: Wait for PostgreSQL
-        if: matrix.db_type == 'postgres'
+        if: matrix.db_type == 'postgres' || matrix.db_type == 'mongo-postgres'
         env:
-          DB_NAME: ${{ vars[matrix.db_config.DB_VAR] }}
-          DB_USER: ${{ vars[matrix.db_config.USER_VAR] }}
+          DB_NAME: ${{ vars[matrix.postgres_config.DB_VAR] }}
+          DB_USER: ${{ vars[matrix.postgres_config.USER_VAR] }}
         run: |
           for i in {1..30}; do
-            docker exec ${{ matrix.db_config.CONTAINER_NAME }} pg_isready \
+            echo "Waiting for PostgreSQL attempt $i"
+            docker exec ${{ matrix.postgres_config.CONTAINER_NAME }} pg_isready \
               -U "$DB_USER" \
               -d "$DB_NAME" && exit 0
             sleep 2
           done
-          docker logs ${{ matrix.db_config.CONTAINER_NAME }}
+          docker logs ${{ matrix.postgres_config.CONTAINER_NAME }}
           exit 1
 
       - name: Start MongoDB
-        if: matrix.db_type == 'mongo'
+        if: matrix.db_type == 'mongo' || matrix.db_type == 'mongo-postgres'
         env:
-          DB_NAME: ${{ vars[matrix.db_config.DB_VAR] }}
-          DB_USER: ${{ vars[matrix.db_config.USER_VAR] }}
-          DB_PASSWORD: ${{ secrets[matrix.db_config.PASSWORD_SECRET] }}
+          DB_NAME: ${{ vars[matrix.mongo_config.DB_VAR] }}
+          DB_USER: ${{ vars[matrix.mongo_config.USER_VAR] }}
+          DB_PASSWORD: ${{ secrets[matrix.mongo_config.PASSWORD_SECRET] }}
         run: |
           docker run -d \
-            --name ${{ matrix.db_config.CONTAINER_NAME }} \
+            --name ${{ matrix.mongo_config.CONTAINER_NAME }} \
             -e MONGO_INITDB_DATABASE="$DB_NAME" \
             -e MONGO_INITDB_ROOT_USERNAME="$DB_USER" \
             -e MONGO_INITDB_ROOT_PASSWORD="$DB_PASSWORD" \
@@ -113,15 +115,15 @@ jobs:
             mongo:7
 
       - name: Wait for MongoDB
-        if: matrix.db_type == 'mongo'
+        if: matrix.db_type == 'mongo' || matrix.db_type == 'mongo-postgres'
         env:
-          DB_USER: ${{ vars[matrix.db_config.USER_VAR] }}
-          DB_PASSWORD: ${{ secrets[matrix.db_config.PASSWORD_SECRET] }}
+          DB_USER: ${{ vars[matrix.mongo_config.USER_VAR] }}
+          DB_PASSWORD: ${{ secrets[matrix.mongo_config.PASSWORD_SECRET] }}
         run: |
           sleep 10
           for i in {1..60}; do
             echo "Waiting for MongoDB attempt $i"
-            docker exec ${{ matrix.db_config.CONTAINER_NAME }} mongosh \
+            docker exec ${{ matrix.mongo_config.CONTAINER_NAME }} mongosh \
               --quiet \
               --username "$DB_USER" \
               --password "$DB_PASSWORD" \
@@ -131,7 +133,7 @@ jobs:
             sleep 3
           done
 
-          docker logs ${{ matrix.db_config.CONTAINER_NAME }}
+          docker logs ${{ matrix.mongo_config.CONTAINER_NAME }}
           exit 1
 
       - name: Run tests
@@ -205,6 +207,12 @@ jobs:
           NOTIFICATION_PORT: ${{ vars.NOTIFICATION_PORT }}
           NOTIFICATION_GRPC_HOST: ${{ vars.NOTIFICATION_GRPC_HOST }}
           NOTIFICATION_GRPC_PORT: ${{ vars.NOTIFICATION_GRPC_PORT }}
+          NOTIFICATION_SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/${{ vars.NOTIFICATION_POSTGRES_DB }}
+          NOTIFICATION_SPRING_DATASOURCE_USERNAME: ${{ vars.NOTIFICATION_SPRING_DATASOURCE_USERNAME }}
+          NOTIFICATION_SPRING_DATASOURCE_PASSWORD: ${{ secrets.NOTIFICATION_SPRING_DATASOURCE_PASSWORD }}
+          NOTIFICATION_POSTGRES_DB: ${{ vars.NOTIFICATION_POSTGRES_DB }}
+          NOTIFICATION_POSTGRES_USER: ${{ vars.NOTIFICATION_POSTGRES_USER }}
+          NOTIFICATION_POSTGRES_PASSWORD: ${{ secrets.NOTIFICATION_POSTGRES_PASSWORD }}
           NOTIFICATION_MONGO_HOST: ${{ vars.NOTIFICATION_MONGO_HOST }}
           NOTIFICATION_MONGO_PORT: ${{ vars.NOTIFICATION_MONGO_PORT }}
           NOTIFICATION_MONGO_DB: ${{ vars.NOTIFICATION_MONGO_DB }}
@@ -225,9 +233,13 @@ jobs:
         working-directory: ${{ matrix.path }}
         run: cat target/surefire-reports/*.txt
 
-      - name: Stop database
-        if: always() && matrix.db_type != 'none'
-        run: docker rm -f ${{ matrix.db_config.CONTAINER_NAME }}
+      - name: Stop PostgreSQL
+        if: always() && (matrix.db_type == 'postgres' || matrix.db_type == 'mongo-postgres')
+        run: docker rm -f ${{ matrix.postgres_config.CONTAINER_NAME }}
+
+      - name: Stop MongoDB
+        if: always() && (matrix.db_type == 'mongo' || matrix.db_type == 'mongo-postgres')
+        run: docker rm -f ${{ matrix.mongo_config.CONTAINER_NAME }}
 
   build:
     name: Build Docker Compose
@@ -328,6 +340,13 @@ jobs:
           NOTIFICATION_PORT: ${{ vars.NOTIFICATION_PORT }}
           NOTIFICATION_GRPC_HOST: ${{ vars.NOTIFICATION_GRPC_HOST }}
           NOTIFICATION_GRPC_PORT: ${{ vars.NOTIFICATION_GRPC_PORT }}
+          NOTIFICATION_SPRING_DATASOURCE_URL: ${{ vars.NOTIFICATION_SPRING_DATASOURCE_URL }}
+          NOTIFICATION_SPRING_DATASOURCE_USERNAME: ${{ vars.NOTIFICATION_SPRING_DATASOURCE_USERNAME }}
+          NOTIFICATION_SPRING_DATASOURCE_PASSWORD: ${{ secrets.NOTIFICATION_SPRING_DATASOURCE_PASSWORD }}
+          NOTIFICATION_POSTGRES_DB: ${{ vars.NOTIFICATION_POSTGRES_DB }}
+          NOTIFICATION_POSTGRES_USER: ${{ vars.NOTIFICATION_POSTGRES_USER }}
+          NOTIFICATION_POSTGRES_PASSWORD: ${{ secrets.NOTIFICATION_POSTGRES_PASSWORD }}
+          NOTIFICATION_POSTGRES_PORT: ${{ vars.NOTIFICATION_POSTGRES_PORT }}
           NOTIFICATION_MONGO_HOST: ${{ vars.NOTIFICATION_MONGO_HOST }}
           NOTIFICATION_MONGO_PORT: ${{ vars.NOTIFICATION_MONGO_PORT }}
           NOTIFICATION_MONGO_DB: ${{ vars.NOTIFICATION_MONGO_DB }}
@@ -424,6 +443,13 @@ jobs:
           NOTIFICATION_PORT: ${{ vars.NOTIFICATION_PORT }}
           NOTIFICATION_GRPC_HOST: ${{ vars.NOTIFICATION_GRPC_HOST }}
           NOTIFICATION_GRPC_PORT: ${{ vars.NOTIFICATION_GRPC_PORT }}
+          NOTIFICATION_SPRING_DATASOURCE_URL: ${{ vars.NOTIFICATION_SPRING_DATASOURCE_URL }}
+          NOTIFICATION_SPRING_DATASOURCE_USERNAME: ${{ vars.NOTIFICATION_SPRING_DATASOURCE_USERNAME }}
+          NOTIFICATION_SPRING_DATASOURCE_PASSWORD: ${{ secrets.NOTIFICATION_SPRING_DATASOURCE_PASSWORD }}
+          NOTIFICATION_POSTGRES_DB: ${{ vars.NOTIFICATION_POSTGRES_DB }}
+          NOTIFICATION_POSTGRES_USER: ${{ vars.NOTIFICATION_POSTGRES_USER }}
+          NOTIFICATION_POSTGRES_PASSWORD: ${{ secrets.NOTIFICATION_POSTGRES_PASSWORD }}
+          NOTIFICATION_POSTGRES_PORT: ${{ vars.NOTIFICATION_POSTGRES_PORT }}
           NOTIFICATION_MONGO_HOST: ${{ vars.NOTIFICATION_MONGO_HOST }}
           NOTIFICATION_MONGO_PORT: ${{ vars.NOTIFICATION_MONGO_PORT }}
           NOTIFICATION_MONGO_DB: ${{ vars.NOTIFICATION_MONGO_DB }}
@@ -521,6 +547,13 @@ jobs:
           NOTIFICATION_PORT: ${{ vars.NOTIFICATION_PORT }}
           NOTIFICATION_GRPC_HOST: ${{ vars.NOTIFICATION_GRPC_HOST }}
           NOTIFICATION_GRPC_PORT: ${{ vars.NOTIFICATION_GRPC_PORT }}
+          NOTIFICATION_SPRING_DATASOURCE_URL: ${{ vars.NOTIFICATION_SPRING_DATASOURCE_URL }}
+          NOTIFICATION_SPRING_DATASOURCE_USERNAME: ${{ vars.NOTIFICATION_SPRING_DATASOURCE_USERNAME }}
+          NOTIFICATION_SPRING_DATASOURCE_PASSWORD: ${{ secrets.NOTIFICATION_SPRING_DATASOURCE_PASSWORD }}
+          NOTIFICATION_POSTGRES_DB: ${{ vars.NOTIFICATION_POSTGRES_DB }}
+          NOTIFICATION_POSTGRES_USER: ${{ vars.NOTIFICATION_POSTGRES_USER }}
+          NOTIFICATION_POSTGRES_PASSWORD: ${{ secrets.NOTIFICATION_POSTGRES_PASSWORD }}
+          NOTIFICATION_POSTGRES_PORT: ${{ vars.NOTIFICATION_POSTGRES_PORT }}
           NOTIFICATION_MONGO_HOST: ${{ vars.NOTIFICATION_MONGO_HOST }}
           NOTIFICATION_MONGO_PORT: ${{ vars.NOTIFICATION_MONGO_PORT }}
           NOTIFICATION_MONGO_DB: ${{ vars.NOTIFICATION_MONGO_DB }}

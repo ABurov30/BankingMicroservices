@@ -34,7 +34,7 @@ public class CookieConfig {
                 .path("/")
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Strict")
+//                .sameSite("Strict")
                 .build();
 
         ResponseCookie rtCookie = ResponseCookie.from("rt", refreshToken)
@@ -42,7 +42,7 @@ public class CookieConfig {
                 .path("/")
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Strict")
+//                .sameSite("Strict")
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, rtCookie.toString());
@@ -55,7 +55,7 @@ public class CookieConfig {
                 .path("/")
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Strict")
+//                .sameSite("Strict")
                 .build();
 
         ResponseCookie rtCookie = ResponseCookie.from("rt", "")
@@ -63,7 +63,7 @@ public class CookieConfig {
                 .path("/")
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Strict")
+//                .sameSite("Strict")
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, rtCookie.toString());

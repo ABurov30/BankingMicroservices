@@ -1,6 +1,6 @@
-package notificationservice.enums;
+package notificationservice.enums.email;
 
-public enum NotificationType {
+public enum EmailNotificationType {
     AUTH_USER_CREATED,
     AUTH_USER_BLOCKED,
     AUTH_USER_UNLOCKED,

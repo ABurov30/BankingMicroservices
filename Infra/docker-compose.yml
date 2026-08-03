@@ -251,6 +251,18 @@ services:
     volumes:
       - notification_mongo_data:/data/db
 
+  notification-postgres:
+    image: postgres:16
+    container_name: notification-postgres
+    environment:
+      POSTGRES_DB: ${NOTIFICATION_POSTGRES_DB}
+      POSTGRES_USER: ${NOTIFICATION_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${NOTIFICATION_POSTGRES_PASSWORD}
+    ports:
+      - "${NOTIFICATION_POSTGRES_PORT}:5432"
+    volumes:
+      - notification_postgres_data:/var/lib/postgresql/data
+
   notification-service:
     image: notification-service:${IMAGE_TAG:-dev}
     build:
@@ -264,6 +276,7 @@ services:
       - "${NOTIFICATION_GRPC_PORT}:${NOTIFICATION_GRPC_PORT}"
     depends_on:
       - notification-mongodb
+      - notification-postgres
       - kafka
       - schema-registry
     environment:
@@ -271,6 +284,9 @@ services:
       NOTIFICATION_PORT: ${NOTIFICATION_PORT}
       NOTIFICATION_GRPC_PORT: ${NOTIFICATION_GRPC_PORT}
       SITE_URL: ${SITE_URL}
+      NOTIFICATION_SPRING_DATASOURCE_URL: ${NOTIFICATION_SPRING_DATASOURCE_URL}
+      NOTIFICATION_SPRING_DATASOURCE_USERNAME: ${NOTIFICATION_SPRING_DATASOURCE_USERNAME}
+      NOTIFICATION_SPRING_DATASOURCE_PASSWORD: ${NOTIFICATION_SPRING_DATASOURCE_PASSWORD}
       NOTIFICATION_MONGO_URI: ${NOTIFICATION_MONGO_URI}
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
       SCHEMA_REGISTRY_URL: ${SCHEMA_REGISTRY_URL}
@@ -312,6 +328,9 @@ services:
       TRANSACTION_GRPC_PORT: ${TRANSACTION_GRPC_PORT}
       NOTIFICATION_GRPC_HOST: ${NOTIFICATION_GRPC_HOST}
       NOTIFICATION_GRPC_PORT: ${NOTIFICATION_GRPC_PORT}
+      NOTIFICATION_PORT: ${NOTIFICATION_PORT}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      SCHEMA_REGISTRY_URL: ${SCHEMA_REGISTRY_URL}
       JWT_PUBLIC_KEY_PATH: ${JWT_PUBLIC_KEY_PATH}
     volumes:
       - ./secrets/public.pem:${JWT_PUBLIC_KEY_PATH}:ro
@@ -323,3 +342,4 @@ volumes:
   card_postgres_data:
   transaction_postgres_data:
   notification_mongo_data:
+  notification_postgres_data:

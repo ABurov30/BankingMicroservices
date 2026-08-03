@@ -1,14 +1,14 @@
-package notificationservice.service;
+package notificationservice.service.email;
 
-import notificationservice.enums.NotificationType;
+import notificationservice.enums.email.EmailNotificationType;
 import org.springframework.stereotype.Service;
 
 
 
 @Service
-public class NotificationTemplateResolver {
+public class EmailNotificationTemplateResolver {
 
-    public String resolveTemplate(NotificationType type) {
+    public String resolveTemplate(EmailNotificationType type) {
         return switch (type) {
             case AUTH_USER_BLOCKED -> "email/auth-user-blocked";
             case AUTH_USER_UNLOCKED -> "email/auth-user-unlocked";
@@ -18,7 +18,7 @@ public class NotificationTemplateResolver {
         };
     }
 
-    public String resolveSubject(NotificationType type) {
+    public String resolveSubject(EmailNotificationType type) {
         return switch (type) {
             case AUTH_USER_CREATED -> "Добро пожаловать";
             case AUTH_USER_BLOCKED -> "Аккаунт заблокирован";

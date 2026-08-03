@@ -18,6 +18,21 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 public class SecurityConfig {
+    private static final String[] PUBLIC_ENDPOINTS = {
+        "/auth/signup",
+        "/auth/login",
+        "/auth/refresh",
+        "/auth/logout",
+        "/auth/verify-user",
+        "/ws",
+        "/ws/**",
+        "/*/health",
+        "/v3/api-docs/**",
+        "/swagger-ui/**",
+        "/swagger-ui.html",
+        "/actuator/health"
+    };
+
     private final CookieConfig cookieConfig;
 
     public SecurityConfig(CookieConfig cookieConfig) {
@@ -41,16 +56,7 @@ public class SecurityConfig {
                         ))
 
                         .requestMatchers(
-                                "/auth/signup",
-                                "/auth/login",
-                                "/auth/refresh",
-                                "/auth/logout",
-                                "/auth/verify-user",
-                                "/*/health",
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/actuator/health"
+                                PUBLIC_ENDPOINTS
                         )
                         .permitAll()
 
@@ -69,7 +75,13 @@ public class SecurityConfig {
                         })
                 )
                 .oauth2ResourceServer(oauth -> oauth
-                        .bearerTokenResolver(request ->cookieConfig.getCookieByKey(request, "at"))
+                        .bearerTokenResolver(request -> {
+                            String path = request.getRequestURI();
+                            if (isPublicEndpoint(path)) {
+                                return null;
+                            }
+                            return cookieConfig.getCookieByKey(request, "at");
+                        })
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
                 )
                 .build();
@@ -103,5 +115,20 @@ public class SecurityConfig {
 
         return authentication.getAuthorities().stream()
                 .anyMatch(authority -> roleAuthority.equals(authority.getAuthority()));
+    }
+
+    private boolean isPublicEndpoint(String path) {
+        return path.equals("/auth/signup")
+                || path.equals("/auth/login")
+                || path.equals("/auth/refresh")
+                || path.equals("/auth/logout")
+                || path.equals("/auth/verify-user")
+                || path.equals("/ws")
+                || path.startsWith("/ws/")
+                || path.endsWith("/health")
+                || path.startsWith("/v3/api-docs/")
+                || path.equals("/swagger-ui.html")
+                || path.startsWith("/swagger-ui/")
+                || path.equals("/actuator/health");
     }
 }

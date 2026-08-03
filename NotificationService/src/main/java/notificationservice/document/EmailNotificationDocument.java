@@ -5,8 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
-import notificationservice.enums.NotificationStatus;
-import notificationservice.enums.NotificationType;
+import notificationservice.enums.email.EmailNotificationStatus;
+import notificationservice.enums.email.EmailNotificationType;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -15,8 +15,8 @@ import java.util.UUID;
 
 @Getter
 @Setter
-@Document(collection = "notifications")
-public class NotificationDocument {
+@Document(collection = "email_notifications")
+public class EmailNotificationDocument {
     @Id
     private UUID id = UUID.randomUUID();
 
@@ -27,11 +27,11 @@ public class NotificationDocument {
     private UUID authUserId;
 
     @NotNull
-    private NotificationType type;
+    private EmailNotificationType type;
     private String verificationCode;
 
     @NotNull
-    private NotificationStatus status = NotificationStatus.PENDING;
+    private EmailNotificationStatus status = EmailNotificationStatus.PENDING;
 
     @NotNull
     private LocalDateTime createdAt = LocalDateTime.now();

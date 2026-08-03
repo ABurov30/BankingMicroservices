@@ -121,9 +121,9 @@ public class AuthGrpcService extends AuthRpcServiceGrpc.AuthRpcServiceImplBase {
     }
 
     @Override
-    public void getRoleByAuthUserId(GetRoleByAuthUserIdGrpcRequest request, StreamObserver<GetRoleByAuthUserIdGrpcResponse> responseObserver) {
-        GetRoleByAuthUserIdCommand getRoleByAuthUserIdCommand = commandMapper.toGetRoleByAuthUserIdCommand(request);
-        GetRoleByAuthUserIdGrpcResponse response = grpcMapper.toGetRoleByAuthUserIdGrpcResponse(authService.getRoleByAuthUserId(getRoleByAuthUserIdCommand));
+    public void getAuthUserById(GetAuthUserByIdGrpcRequest request, StreamObserver<GetAuthUserByIdGrpcResponse> responseObserver) {
+        GetAuthUserByIdCommand command = commandMapper.toGetAuthUserByIdCommand(request);
+        GetAuthUserByIdGrpcResponse response = grpcMapper.toGetAuthUserByIdGrpcResponse(authService.getAuthUserById(command));
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }

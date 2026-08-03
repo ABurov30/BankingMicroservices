@@ -21,19 +21,20 @@ public class UserInfoQueryHandler {
         this.userGrpcClient = userGrpcClient;
     }
 
-    public GetUserInfoWithRoleResponseDto getUserInfoWithRole (UUID autUserId) {
+    public GetUserInfoWithAuthInfoResponseDto getUserInfoWithAuthInfo (UUID autUserId) {
         GetUserInfoResponseDto userInfoResponseDto = userGrpcClient.getUserInfo(new GetUserInfoRequestDto(autUserId));
-        GetRoleByAuthUserIdResponseDto getRoleByAuthUserIdResponseDto = authGrpcClient.getRoleByAuthUserId(new GetRoleByAuthUserIdRequestDto(autUserId));
+        GetAuthUserByIdResponseDto authInfo = authGrpcClient.getAuthUserById(new GetRoleByAuthUserIdRequestDto(autUserId));
 
-        return new GetUserInfoWithRoleResponseDto(userInfoResponseDto, getRoleByAuthUserIdResponseDto);
+        return new GetUserInfoWithAuthInfoResponseDto(userInfoResponseDto, authInfo.role(), authInfo.status());
     }
 
-    public List<GetUserInfoWithRoleResponseDto> getAllUserInfoWithRole () {
+    public List<GetUserInfoWithAuthInfoResponseDto> getAllUserInfoWithAuthInfo () {
         List<GetUserInfoResponseDto> userInfoResponseDtoList = userGrpcClient.getAllUserInfo();
         return userInfoResponseDtoList.stream()
-                .map((userInfo) ->
-                        new GetUserInfoWithRoleResponseDto(userInfo,
-                                authGrpcClient.getRoleByAuthUserId(new GetRoleByAuthUserIdRequestDto(userInfo.autUserId()))))
+                .map((userInfo) -> {
+                    GetAuthUserByIdResponseDto authInfo = authGrpcClient.getAuthUserById(new GetRoleByAuthUserIdRequestDto(userInfo.autUserId()));
+                    return new GetUserInfoWithAuthInfoResponseDto(userInfo, authInfo.role(), authInfo.status());
+                })
                 .toList();
     }
 }
