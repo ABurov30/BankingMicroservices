@@ -19,10 +19,10 @@ import java.util.UUID;
 
 @Mapper(componentModel = "spring")
 public interface CardCommandMapper {
-    default CreatedCardCommand toCreateCardCommand(AccountCreatedEventPayload payload) { return new CreatedCardCommand(payload.getAccountId(), payload.getAuthUserId(), null); }
-    default FreezeCardsCommand toFreezeCardsCommand(AccountFrozenEventPayload payload) { return new FreezeCardsCommand(payload.getAccountId()); }
-    default UnfreezeCardsCommand toUnfreezeCardsCommand(AccountUnfrozenEventPayload payload) { return new UnfreezeCardsCommand(payload.getAccountId()); }
-    default CreatedCardCommand toCreateCardCommand(CreateCardGrpcRequest request) { return new CreatedCardCommand(UUID.fromString(request.getAccountId()), UUID.fromString(request.getAuthUserId()), request.getRole()); }
+    default CreatedCardCommand toCreateCardCommand(AccountCreatedEventPayload payload) { return new CreatedCardCommand(payload.getAccountId(), payload.getAuthUserId(), payload.getAccountNumber(), null); }
+    default FreezeCardsCommand toFreezeCardsCommand(AccountFrozenEventPayload payload) { return new FreezeCardsCommand(payload.getAccountId(), payload.getAuthUserId(), payload.getAccountNumber()); }
+    default UnfreezeCardsCommand toUnfreezeCardsCommand(AccountUnfrozenEventPayload payload) { return new UnfreezeCardsCommand(payload.getAccountId(), payload.getAuthUserId(), payload.getAccountNumber()); }
+    default CreatedCardCommand toCreateCardCommand(CreateCardGrpcRequest request) { return new CreatedCardCommand(UUID.fromString(request.getAccountId()), UUID.fromString(request.getAuthUserId()), null, request.getRole()); }
     default UpdateCardCommand toUpdateCardCommand(UpdateCardGrpcRequest request) { return new UpdateCardCommand(UUID.fromString(request.getCardId()), CardStatus.valueOf(request.getStatus()), BigDecimal.valueOf(request.getDailyLimit()), BigDecimal.valueOf(request.getMonthlyLimit()), UUID.fromString(request.getAuthUserId()), request.getRole()); }
     default GetCardsByAccountIdCommand toGetCardsByAccountIdCommand(GetCardByAccountIdGrpcRequest request) { return new GetCardsByAccountIdCommand(UUID.fromString(request.getAccountId())); }
 }

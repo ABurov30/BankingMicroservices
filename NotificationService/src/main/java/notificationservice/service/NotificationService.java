@@ -70,7 +70,11 @@ public class NotificationService {
         pushNotification.setType(command.type());
         pushNotification.setStatus(PushNotificationStatus.CREATED);
         pushNotification.setTitle(pushNotificationResolver.resolveTitle(command.type()));
-        pushNotification.setBody(pushNotificationResolver.resolveBody(command.type()));
+        pushNotification.setBody(pushNotificationResolver.resolveBody(
+                command.type(),
+                command.accountNumber(),
+                command.cardNumber()
+        ));
 
         Set<ConstraintViolation<PushNotificationDocument>> violations = validator.validate(pushNotification);
 
@@ -88,7 +92,7 @@ public class NotificationService {
         outboxEventEntity.setAggregateId(pushNotificationDocument.getId());
         outboxEventEntity.setEventType(NotificationEventType.PUSH_NOTIFICATION_CREATED.name());
         outboxEventEntity.setTopic(NotificationEventType.PUSH_NOTIFICATION_CREATED.getTopic());
-        outboxEventEntity.setEventKey(pushNotificationDocument.getId().toString());
+        outboxEventEntity.setEventKey(pushNotificationDocument.getId() + ":" + NotificationEventType.PUSH_NOTIFICATION_CREATED.name());
         outboxEventEntity.setSchemaVersion(NotificationEventType.PUSH_NOTIFICATION_CREATED.getVersion());
 
         outboxEventEntity.setPayload(Map.of(

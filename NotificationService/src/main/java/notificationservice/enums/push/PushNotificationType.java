@@ -3,5 +3,8 @@ package notificationservice.enums.push;
 public enum PushNotificationType {
     ACCOUNT_CREATED,
     ACCOUNT_FROZEN,
-    ACCOUNT_UNFROZEN
+    ACCOUNT_UNFROZEN,
+    CARD_CREATED,
+    CARD_FROZEN,
+    CARD_UNFROZEN
 }

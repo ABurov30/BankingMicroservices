@@ -87,12 +87,13 @@ public class AccountService {
         accountOutboxEventEntity.setAggregateId(accountEntity.getId());
         accountOutboxEventEntity.setEventType(AccountEventType.ACCOUNT_CREATED.name());
         accountOutboxEventEntity.setTopic(AccountEventType.ACCOUNT_CREATED.getTopic());
-        accountOutboxEventEntity.setEventKey(accountEntity.getId().toString());
+        accountOutboxEventEntity.setEventKey(accountEntity.getId() + ":" + AccountEventType.ACCOUNT_CREATED.name());
         accountOutboxEventEntity.setSchemaVersion(AccountEventType.ACCOUNT_CREATED.getVersion());
 
         accountOutboxEventEntity.setPayload(Map.of(
                 "accountId", accountEntity.getId(),
-                "authUserId", accountEntity.getOwnerAuthUserId()
+                "authUserId", accountEntity.getOwnerAuthUserId(),
+                "accountNumber", accountEntity.getAccountNumber()
         ));
 
         accountOutboxEventRepository.save(accountOutboxEventEntity);
@@ -162,10 +163,14 @@ public class AccountService {
         accountOutboxEventEntity.setAggregateId(account.getId());
         accountOutboxEventEntity.setEventType(AccountEventType.ACCOUNT_FROZEN.name());
         accountOutboxEventEntity.setTopic(AccountEventType.ACCOUNT_FROZEN.getTopic());
-        accountOutboxEventEntity.setEventKey(account.getId().toString());
+        accountOutboxEventEntity.setEventKey(account.getId() + ":" + AccountEventType.ACCOUNT_FROZEN.name());
         accountOutboxEventEntity.setSchemaVersion(AccountEventType.ACCOUNT_FROZEN.getVersion());
 
-        accountOutboxEventEntity.setPayload(Map.of("accountId", account.getId()));
+        accountOutboxEventEntity.setPayload(Map.of(
+                "accountId", account.getId(),
+                "authUserId", account.getOwnerAuthUserId(),
+                "accountNumber", account.getAccountNumber()
+        ));
 
         accountOutboxEventRepository.save(accountOutboxEventEntity);
     }
@@ -195,10 +200,14 @@ public class AccountService {
         accountOutboxEventEntity.setAggregateId(account.getId());
         accountOutboxEventEntity.setEventType(AccountEventType.ACCOUNT_UNFROZEN.name());
         accountOutboxEventEntity.setTopic(AccountEventType.ACCOUNT_UNFROZEN.getTopic());
-        accountOutboxEventEntity.setEventKey(account.getId().toString());
+        accountOutboxEventEntity.setEventKey(account.getId() + ":" + AccountEventType.ACCOUNT_UNFROZEN.name());
         accountOutboxEventEntity.setSchemaVersion(AccountEventType.ACCOUNT_UNFROZEN.getVersion());
 
-        accountOutboxEventEntity.setPayload(Map.of("accountId", account.getId()));
+        accountOutboxEventEntity.setPayload(Map.of(
+                "accountId", account.getId(),
+                "authUserId", account.getOwnerAuthUserId(),
+                "accountNumber", account.getAccountNumber()
+        ));
 
         accountOutboxEventRepository.save(accountOutboxEventEntity);
     }

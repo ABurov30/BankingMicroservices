@@ -3,7 +3,11 @@ package notificationservice.listener;
 
 import kafkacontracts.account.AccountCreatedEventPayload;
 import kafkacontracts.account.AccountFrozenEventPayload;
+import kafkacontracts.account.AccountUnfrozenEventPayload;
 import kafkacontracts.auth.*;
+import kafkacontracts.card.CardCreatedEventPayload;
+import kafkacontracts.card.CardFrozenEventPayload;
+import kafkacontracts.card.CardUnfrozenEventPayload;
 import notificationservice.mapper.command.EmailNotificationCommandMapper;
 import notificationservice.mapper.command.PushNotificationCommandMapper;
 import notificationservice.service.NotificationService;
@@ -66,6 +70,41 @@ public class NotificationKafkaListener {
             topics = "#{T(kafkacontracts.account.AccountEventType).ACCOUNT_CREATED.getTopic()}"
     )
     public void handleAccountCreate(AccountCreatedEventPayload payload) {
+        notificationService.createPushNotification(pushCommandMapper.toCreatePushNotificationCommand(payload));
+    }
+
+    @KafkaListener(
+            topics = "#{T(kafkacontracts.account.AccountEventType).ACCOUNT_FROZEN.getTopic()}"
+    )
+    public void handleAccountFrozen(AccountFrozenEventPayload payload) {
+        notificationService.createPushNotification(pushCommandMapper.toCreatePushNotificationCommand(payload));
+    }
+
+    @KafkaListener(
+            topics = "#{T(kafkacontracts.account.AccountEventType).ACCOUNT_UNFROZEN.getTopic()}"
+    )
+    public void handleAccountUnfrozen(AccountUnfrozenEventPayload payload) {
+        notificationService.createPushNotification(pushCommandMapper.toCreatePushNotificationCommand(payload));
+    }
+
+    @KafkaListener(
+            topics = "#{T(kafkacontracts.card.CardEventType).CARD_CREATED.getTopic()}"
+    )
+    public void handleCardCreated(CardCreatedEventPayload payload) {
+        notificationService.createPushNotification(pushCommandMapper.toCreatePushNotificationCommand(payload));
+    }
+
+    @KafkaListener(
+            topics = "#{T(kafkacontracts.card.CardEventType).CARD_FROZEN.getTopic()}"
+    )
+    public void handleCardFrozen(CardFrozenEventPayload payload) {
+        notificationService.createPushNotification(pushCommandMapper.toCreatePushNotificationCommand(payload));
+    }
+
+    @KafkaListener(
+            topics = "#{T(kafkacontracts.card.CardEventType).CARD_UNFROZEN.getTopic()}"
+    )
+    public void handleCardUnfrozen(CardUnfrozenEventPayload payload) {
         notificationService.createPushNotification(pushCommandMapper.toCreatePushNotificationCommand(payload));
     }
 }

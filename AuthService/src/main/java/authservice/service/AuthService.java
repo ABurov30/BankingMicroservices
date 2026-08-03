@@ -101,7 +101,7 @@ public class AuthService {
         authOutboxEvent.setAggregateId(savedUser.getId());
         authOutboxEvent.setEventType(AuthEventType.AUTH_USER_CREATED.name());
         authOutboxEvent.setTopic(AuthEventType.AUTH_USER_CREATED.getTopic());
-        authOutboxEvent.setEventKey(savedUser.getId().toString());
+        authOutboxEvent.setEventKey(savedUser.getId() + ":" + AuthEventType.AUTH_USER_CREATED.name());
         authOutboxEvent.setSchemaVersion(AuthEventType.AUTH_USER_CREATED.getVersion());
 
         authOutboxEvent.setPayload(Map.of(
@@ -304,7 +304,7 @@ public class AuthService {
         authOutboxEvent.setAggregateId(changeAuthUserRoleCommand.authUserId());
         authOutboxEvent.setEventType(AuthEventType.AUTH_USER_ROLE_CHANGED.name());
         authOutboxEvent.setTopic(KafkaTopics.AUTH_USER_ROLE_CHANGED);
-        authOutboxEvent.setEventKey(changeAuthUserRoleCommand.authUserId() + ":" + AuthEventType.AUTH_USER_ROLE_CHANGED.name() + ":" + UUID.randomUUID());
+        authOutboxEvent.setEventKey(changeAuthUserRoleCommand.authUserId() + ":" + AuthEventType.AUTH_USER_ROLE_CHANGED.name());
         authOutboxEvent.setSchemaVersion(AuthEventType.AUTH_USER_ROLE_CHANGED.getVersion());
 
         authOutboxEvent.setPayload(Map.of(

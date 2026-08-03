@@ -2,6 +2,7 @@ package cardservice.service;
 
 import cardservice.dto.*;
 import cardservice.entity.AccountOwnershipProjectionEntity;
+import cardservice.entity.CardOutboxEventEntity;
 import cardservice.entity.CardEntity;
 import cardservice.exception.CardBlockedException;
 import cardservice.exception.CardExpiredException;
@@ -11,8 +12,10 @@ import cardservice.exception.CardNotFoundException;
 import cardservice.exception.CardsNotFoundException;
 import cardservice.mapper.result.CardResultMapper;
 import cardservice.repository.AccountOwnershipProjectionRepository;
+import cardservice.repository.CardOutboxEventRepository;
 import enums.card.CardStatus;
 import cardservice.repository.CardRepository;
+import kafkacontracts.card.CardEventType;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -27,20 +31,22 @@ import java.util.concurrent.ThreadLocalRandom;
 public class CardService {
     private final CardRepository cardRepository;
     private final AccountOwnershipProjectionRepository accountOwnershipProjectionRepository;
+    private final CardOutboxEventRepository cardOutboxEventRepository;
     private final CardResultMapper resultMapper;
     private static final int CARD_EXPIRATION_YEARS = 5;
     private static final String CARD_BIN = "400000";
     private static final int PAN_LENGTH = 16;
-    private static final int ATTEMPTS_TO_CREATE_CARD = 10;
     private static final int ATTEMPTS_TO_GENERATE_PAN = 10;
 
     public CardService(
             CardRepository cardRepository,
             AccountOwnershipProjectionRepository accountOwnershipProjectionRepository,
+            CardOutboxEventRepository cardOutboxEventRepository,
             CardResultMapper resultMapper
     ) {
         this.cardRepository = cardRepository;
         this.accountOwnershipProjectionRepository = accountOwnershipProjectionRepository;
+        this.cardOutboxEventRepository = cardOutboxEventRepository;
         this.resultMapper = resultMapper;
     }
 
@@ -90,39 +96,41 @@ public class CardService {
         return (10 - (sum % 10)) % 10;
     }
 
+    @Transactional
     public CreateCardResult createCard(CreatedCardCommand createdCardCommand) {
-        for (int i = 0; i < ATTEMPTS_TO_CREATE_CARD; i++) {
-            try {
-                if (
-                        createdCardCommand.role() != null &&
-                                !canAccessAccount(createdCardCommand.accountId(), createdCardCommand.authUserId(), createdCardCommand.role())
-                ) {
-                    throw new CardsNotFoundException(createdCardCommand.accountId());
-                }
-
-                CardEntity cardEntity = new CardEntity();
-                cardEntity.setAccountId(createdCardCommand.accountId());
-                cardEntity.setPan(generateUniquePan());
-                cardEntity.setCardStatus(CardStatus.ACTIVE);
-                cardEntity.setDailyLimit(BigDecimal.ZERO);
-                cardEntity.setMonthlyLimit(BigDecimal.ZERO);
-                cardEntity.setExpiresAt(LocalDateTime.now().plusYears(CARD_EXPIRATION_YEARS));
-                CardEntity savedCard = cardRepository.save(cardEntity);
-
-                if (createdCardCommand.authUserId() != null) {
-                    AccountOwnershipProjectionEntity accountOwnershipProjectionEntity = new AccountOwnershipProjectionEntity();
-                    accountOwnershipProjectionEntity.setOwnerAuthUserId(createdCardCommand.authUserId());
-                    accountOwnershipProjectionEntity.setAccountId(createdCardCommand.accountId());
-                    accountOwnershipProjectionRepository.save(accountOwnershipProjectionEntity);
-                }
-
-                return resultMapper.toCreateCardResult(savedCard);
-            } catch (DataIntegrityViolationException e) {
-                // PAN collision, retry
+            if (
+                    createdCardCommand.role() != null &&
+                            !canAccessAccount(createdCardCommand.accountId(), createdCardCommand.authUserId(), createdCardCommand.role())
+            ) {
+                throw new CardsNotFoundException(createdCardCommand.accountId());
             }
-        }
 
-        throw new CardGenerationFailedException("Failed to create card after retries");
+            CardEntity cardEntity = new CardEntity();
+            cardEntity.setAccountId(createdCardCommand.accountId());
+            cardEntity.setPan(generateUniquePan());
+            cardEntity.setCardStatus(CardStatus.ACTIVE);
+            cardEntity.setDailyLimit(BigDecimal.ZERO);
+            cardEntity.setMonthlyLimit(BigDecimal.ZERO);
+            cardEntity.setExpiresAt(LocalDateTime.now().plusYears(CARD_EXPIRATION_YEARS));
+            CardEntity savedCard = cardRepository.save(cardEntity);
+
+            if (createdCardCommand.authUserId() != null) {
+                AccountOwnershipProjectionEntity accountOwnershipProjectionEntity = new AccountOwnershipProjectionEntity();
+                accountOwnershipProjectionEntity.setOwnerAuthUserId(createdCardCommand.authUserId());
+                accountOwnershipProjectionEntity.setAccountId(createdCardCommand.accountId());
+                accountOwnershipProjectionEntity.setAccountNumber(createdCardCommand.accountNumber());
+                accountOwnershipProjectionRepository.save(accountOwnershipProjectionEntity);
+            }
+
+            if (createdCardCommand.accountNumber() != null) {
+                createCardOutboxEvent(
+                        CardEventType.CARD_CREATED,
+                        savedCard,
+                        createdCardCommand.authUserId(),
+                        createdCardCommand.accountNumber()
+                );
+            }
+            return resultMapper.toCreateCardResult(savedCard);
     }
 
     private void changeCardStatus(CardEntity cardEntity, CardStatus cardStatus) {
@@ -151,6 +159,12 @@ public class CardService {
         cardEntityList.forEach(card -> {
                     if (card.getCardStatus() != CardStatus.BLOCKED) {
                         changeCardStatus(card, CardStatus.FROZEN);
+                        createCardOutboxEvent(
+                                CardEventType.CARD_FROZEN,
+                                card,
+                                freezeCardsCommand.authUserId(),
+                                freezeCardsCommand.accountNumber()
+                        );
                     }
                 }
         );
@@ -166,6 +180,12 @@ public class CardService {
         cardEntityList.forEach(card -> {
                     if (card.getCardStatus() == CardStatus.FROZEN) {
                         changeCardStatus(card, CardStatus.ACTIVE);
+                        createCardOutboxEvent(
+                                CardEventType.CARD_UNFROZEN,
+                                card,
+                                unfreezeCardsCommand.authUserId(),
+                                unfreezeCardsCommand.accountNumber()
+                        );
                     }
                 }
         );
@@ -232,5 +252,28 @@ public class CardService {
 
     private boolean isPrivileged(String role) {
         return "ADMIN".equals(role) || "MANAGER".equals(role);
+    }
+
+    private void createCardOutboxEvent(CardEventType eventType, CardEntity card, UUID authUserId, String accountNumber) {
+        if (authUserId == null || accountNumber == null) {
+            return;
+        }
+
+        CardOutboxEventEntity outboxEvent = new CardOutboxEventEntity();
+        outboxEvent.setAggregateType("CARD");
+        outboxEvent.setAggregateId(card.getId());
+        outboxEvent.setEventType(eventType.name());
+        outboxEvent.setTopic(eventType.getTopic());
+        outboxEvent.setEventKey(card.getId() + ":" + eventType.name());
+        outboxEvent.setSchemaVersion(eventType.getVersion());
+        outboxEvent.setPayload(Map.of(
+                "authUserId", authUserId,
+                "accountId", card.getAccountId(),
+                "accountNumber", accountNumber,
+                "cardId", card.getId(),
+                "cardNumber", card.getPan()
+        ));
+
+        cardOutboxEventRepository.save(outboxEvent);
     }
 }

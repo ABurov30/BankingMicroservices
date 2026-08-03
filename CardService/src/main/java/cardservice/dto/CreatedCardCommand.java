@@ -8,6 +8,8 @@ public record CreatedCardCommand(
         @Nullable
         UUID authUserId,
         @Nullable
+        String accountNumber,
+        @Nullable
         String role
 ) {
 }

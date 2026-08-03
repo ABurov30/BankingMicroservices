@@ -20,4 +20,7 @@ public class AccountOwnershipProjectionEntity {
 
     @Column(name = "owner_auth_user_id", nullable = false)
     private UUID ownerAuthUserId;
+
+    @Column(name = "account_number")
+    private String accountNumber;
 }

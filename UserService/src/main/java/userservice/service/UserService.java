@@ -60,7 +60,7 @@ public class UserService {
         userOutboxEventEntity.setAggregateId(userProfileEntity.getId());
         userOutboxEventEntity.setEventType(UserEventType.USER_PROFILE_CREATED.name());
         userOutboxEventEntity.setTopic(UserEventType.USER_PROFILE_CREATED.getTopic());
-        userOutboxEventEntity.setEventKey(userProfileEntity.getId().toString());
+        userOutboxEventEntity.setEventKey(userProfileEntity.getId() + ":" + UserEventType.USER_PROFILE_CREATED.name());
         userOutboxEventEntity.setSchemaVersion(UserEventType.USER_PROFILE_CREATED.getVersion());
 
         userOutboxEventEntity.setPayload(Map.of(
@@ -92,7 +92,7 @@ public class UserService {
         userOutboxEventEntity.setAggregateId(userProfileEntity.getId());
         userOutboxEventEntity.setEventType(UserEventType.USER_PROFILE_BLOCKED.name());
         userOutboxEventEntity.setTopic(UserEventType.USER_PROFILE_BLOCKED.getTopic());
-        userOutboxEventEntity.setEventKey(userProfileEntity.getId().toString());
+        userOutboxEventEntity.setEventKey(userProfileEntity.getId() + ":" + UserEventType.USER_PROFILE_BLOCKED.name());
         userOutboxEventEntity.setSchemaVersion(UserEventType.USER_PROFILE_BLOCKED.getVersion());
 
         userOutboxEventEntity.setPayload(Map.of("userId", userProfileEntity.getId()));
@@ -116,7 +116,7 @@ public class UserService {
         userOutboxEventEntity.setAggregateId(userProfileEntity.getId());
         userOutboxEventEntity.setEventType(UserEventType.USER_PROFILE_UNLOCK.name());
         userOutboxEventEntity.setTopic(UserEventType.USER_PROFILE_UNLOCK.getTopic());
-        userOutboxEventEntity.setEventKey(userProfileEntity.getId().toString());
+        userOutboxEventEntity.setEventKey(userProfileEntity.getId() + ":" + UserEventType.USER_PROFILE_UNLOCK.name());
         userOutboxEventEntity.setSchemaVersion(UserEventType.USER_PROFILE_UNLOCK.getVersion());
 
         userOutboxEventEntity.setPayload(Map.of("userId", userProfileEntity.getId()));
