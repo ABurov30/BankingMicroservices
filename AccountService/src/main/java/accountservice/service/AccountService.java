@@ -10,6 +10,7 @@ import accountservice.exception.AccountGenerationFailedException;
 import accountservice.exception.AccountNotFoundException;
 import accountservice.exception.AccountNotFrozenException;
 import accountservice.exception.AccountsNotFoundException;
+import accountservice.exception.InsufficientFundsException;
 import accountservice.mapper.result.AccountResultMapper;
 import accountservice.repository.AccountOutboxEventRepository;
 import accountservice.repository.AccountRepository;
@@ -260,9 +261,14 @@ public class AccountService {
         return resultMapper.toGetAccountResult(account);
     }
 
+    @Transactional
     public GetAccountResult withdrawAccount (UpdateAccountBalanceCommand command) {
         AccountEntity account = accountRepository.findByIdForUpdate(command.accountId())
                 .orElseThrow(() -> new AccountNotFoundException(command.accountId()));
+
+        if (account.getAvailableBalance().compareTo(command.amount()) < 0) {
+            throw new InsufficientFundsException(account.getId());
+        }
 
         account.setAvailableBalance(account.getAvailableBalance().subtract(command.amount()));
 

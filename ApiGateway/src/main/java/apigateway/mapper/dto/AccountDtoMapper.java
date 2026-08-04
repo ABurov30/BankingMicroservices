@@ -19,11 +19,11 @@ import java.util.UUID;
 public interface AccountDtoMapper {
     default CreateAccountResponseDto toCreateAccountResponseDto(CreateAccountGrpcResponse response) {
         AccountResponse account = response.getAccount();
-        return new CreateAccountResponseDto(UUID.fromString(account.getAccountId()), UUID.fromString(account.getOwnerUserId()), account.getAccountNumber(), AccountType.valueOf(account.getType()), AccountStatus.valueOf(account.getStatus()), BigDecimal.valueOf(account.getAvailableBalance(), 2), BigDecimal.valueOf(account.getReservedBalance(), 2), AccountCurrency.valueOf(account.getCurrency()));
+        return new CreateAccountResponseDto(UUID.fromString(account.getAccountId()), UUID.fromString(account.getOwnerUserId()), account.getAccountNumber(), AccountType.valueOf(account.getType()), AccountStatus.valueOf(account.getStatus()), toAmount(account.getAvailableBalance()), toAmount(account.getReservedBalance()), AccountCurrency.valueOf(account.getCurrency()));
     }
 
     default GetAccountResponseDto toGetAccountResponseDto(AccountResponse account) {
-        return new GetAccountResponseDto(UUID.fromString(account.getAccountId()), UUID.fromString(account.getOwnerUserId()), account.getAccountNumber(), AccountType.valueOf(account.getType()), AccountStatus.valueOf(account.getStatus()), BigDecimal.valueOf(account.getAvailableBalance(), 2), BigDecimal.valueOf(account.getReservedBalance(), 2), AccountCurrency.valueOf(account.getCurrency()));
+        return new GetAccountResponseDto(UUID.fromString(account.getAccountId()), UUID.fromString(account.getOwnerUserId()), account.getAccountNumber(), AccountType.valueOf(account.getType()), AccountStatus.valueOf(account.getStatus()), toAmount(account.getAvailableBalance()), toAmount(account.getReservedBalance()), AccountCurrency.valueOf(account.getCurrency()));
     }
 
     default GetAccountResponseDto toGetAccountByIdResponseDto (GetAccountByIdGrpcResponse response){
@@ -32,5 +32,9 @@ public interface AccountDtoMapper {
 
     default List<GetAccountResponseDto> toListGetAccountResponseDto(GetAccountsGrpcResponse response) {
         return response.getAccountsList().stream().map(this::toGetAccountResponseDto).toList();
+    }
+
+    private BigDecimal toAmount(long amount) {
+        return BigDecimal.valueOf(amount);
     }
 }

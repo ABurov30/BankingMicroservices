@@ -23,8 +23,13 @@ create table accounts
         check ( status in ('ACTIVE', 'FROZEN', 'CLOSED') ),
 
     constraint chk_accounts_currency
-        check ( currency in ('USD', 'EUR', 'CNY', 'GBP') )
+        check ( currency in ('USD', 'EUR', 'CNY', 'GBP') ),
 
+    constraint chk_accounts_available_balance_non_negative
+        check ( available_balance >= 0 ),
+
+    constraint chk_accounts_reserved_balance_non_negative
+        check ( reserved_balance >= 0 )
 );
 
 create table account_outbox_events
