@@ -17,6 +17,7 @@ import accountservice.repository.CurrencyRepository;
 import enums.account.AccountStatus;
 import jakarta.transaction.Transactional;
 import kafkacontracts.account.AccountEventType;
+import org.checkerframework.checker.units.qual.A;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -138,7 +139,7 @@ public class AccountService {
 
     @Transactional
     public void freezeAccountByUserId(FreezeAccountsByUserIdCommand command) {
-        List<AccountEntity> accountEntityList = accountRepository.findAllByOwnerUserId(command.userId())
+        List<AccountEntity> accountEntityList = accountRepository.findAllByOwnerUserIdForUpdate(command.userId())
                 .orElseThrow(() ->new AccountsNotFoundException(command.userId()));
 
         accountEntityList.forEach((account) -> {
@@ -149,7 +150,7 @@ public class AccountService {
 
     @Transactional
     public void freezeAccount(FreezeAccountCommand command) {
-        AccountEntity account = accountRepository.findById(command.accountId())
+        AccountEntity account = accountRepository.findByIdForUpdate(command.accountId())
                 .orElseThrow(() -> new AccountNotFoundException(command.accountId()));
 
         if (!canAccessAccount(account, command)) {
@@ -186,7 +187,7 @@ public class AccountService {
 
     @Transactional
     public void unfreezeAccount(UnfreezeAccountCommand command) {
-        AccountEntity account = accountRepository.findById(command.accountId())
+        AccountEntity account = accountRepository.findByIdForUpdate(command.accountId())
                 .orElseThrow(() -> new AccountNotFoundException(command.accountId()));
 
         if (!canAccessAccount(account, command.authUserId(), command.role())) {
@@ -245,6 +246,27 @@ public class AccountService {
         AccountEntity account = accountRepository.findById(command.accountId())
                 .orElseThrow(() -> new AccountNotFoundException(command.accountId()));
 
+        return resultMapper.toGetAccountResult(account);
+    }
+
+    @Transactional
+    public GetAccountResult topUpAccount (UpdateAccountBalanceCommand command) {
+        AccountEntity account = accountRepository.findByIdForUpdate(command.accountId())
+                .orElseThrow(() -> new AccountNotFoundException(command.accountId()));
+
+        account.setAvailableBalance(account.getAvailableBalance().add(command.amount()));
+
+        accountRepository.save(account);
+        return resultMapper.toGetAccountResult(account);
+    }
+
+    public GetAccountResult withdrawAccount (UpdateAccountBalanceCommand command) {
+        AccountEntity account = accountRepository.findByIdForUpdate(command.accountId())
+                .orElseThrow(() -> new AccountNotFoundException(command.accountId()));
+
+        account.setAvailableBalance(account.getAvailableBalance().subtract(command.amount()));
+
+        accountRepository.save(account);
         return resultMapper.toGetAccountResult(account);
     }
 }

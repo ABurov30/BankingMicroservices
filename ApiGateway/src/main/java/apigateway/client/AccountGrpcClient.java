@@ -77,4 +77,14 @@ public class AccountGrpcClient {
       return dtoMapper.toGetAccountByIdResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS)
               .getAccountById(grpcMapper.toGetAccountByIdGrpcRequest(request)));
   }
+
+  public GetAccountResponseDto topUpAccount(UpdateAccountBalanceRequestDto request) {
+      return dtoMapper.toGetAccountResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+              .topUpAccount(grpcMapper.toUpdateAccountBalanceGrpcRequest(request)));
+  }
+
+  public GetAccountResponseDto withdrawAccount(UpdateAccountBalanceRequestDto request) {
+      return dtoMapper.toGetAccountResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+              .withdrawAccount(grpcMapper.toUpdateAccountBalanceGrpcRequest(request)));
+  }
 }

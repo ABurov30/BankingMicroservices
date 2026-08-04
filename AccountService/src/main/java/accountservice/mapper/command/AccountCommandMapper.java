@@ -8,6 +8,7 @@ import kafkacontracts.user.UserProfileBlockedEventPayload;
 import kafkacontracts.user.UserProfileCreatedEventPayload;
 import org.mapstruct.Mapper;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Mapper(componentModel = "spring")
@@ -38,5 +39,9 @@ public interface AccountCommandMapper {
 
     default GetAccountByIdCommand toGetAccountByIdCommand(GetAccountByIdGrpcRequest request) {
         return new GetAccountByIdCommand(UUID.fromString(request.getAccountId()));
+    }
+
+    default UpdateAccountBalanceCommand toUpdateAccountBalanceCommand (UpdateAccountBalanceGrpcRequest request) {
+        return new UpdateAccountBalanceCommand(UUID.fromString(request.getAccountId()), BigDecimal.valueOf(request.getAmount()));
     }
 }

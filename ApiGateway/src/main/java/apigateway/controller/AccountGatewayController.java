@@ -2,9 +2,7 @@ package apigateway.controller;
 
 import apigateway.client.AccountGrpcClient;
 import apigateway.config.CookieConfig;
-import apigateway.dto.account.CreateAccountRequestDto;
-import apigateway.dto.account.CreateAccountResponseDto;
-import apigateway.dto.account.GetAccountWithCardsResponseDto;
+import apigateway.dto.account.*;
 import apigateway.query.AccountQueryHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -72,5 +70,15 @@ public class AccountGatewayController {
     @GetMapping("/manager/all-accounts")
     public List<GetAccountWithCardsResponseDto> getAllAccountsWithCards () {
         return accountOverviewQueryHandler.getAllAccountsWithCards();
+    }
+
+    @PostMapping("/topUp")
+    public GetAccountResponseDto topUpAccount (@Valid @RequestBody UpdateAccountBalanceRequestDto request) {
+        return accountClient.topUpAccount(request);
+    }
+
+    @PostMapping("/withdraw")
+    public GetAccountResponseDto withdrawAccount (@Valid @RequestBody UpdateAccountBalanceRequestDto request) {
+        return accountClient.withdrawAccount(request);
     }
 }

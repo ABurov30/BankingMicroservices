@@ -95,4 +95,18 @@ public class AccountGrpcService extends AccountRpcServiceGrpc.AccountRpcServiceI
         responseObserver.onNext(grpcMapper.toGetAccountByIdGrpcResponse(response));
         responseObserver.onCompleted();
     }
+
+    @Override
+    public void topUpAccount(UpdateAccountBalanceGrpcRequest request, StreamObserver<AccountResponse> responseObserver) {
+        GetAccountResult result = accountService.topUpAccount(commandMapper.toUpdateAccountBalanceCommand(request));
+        responseObserver.onNext(grpcMapper.toAccountResponse(result));
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void withdrawAccount(UpdateAccountBalanceGrpcRequest request, StreamObserver<AccountResponse> responseObserver) {
+        GetAccountResult result = accountService.withdrawAccount(commandMapper.toUpdateAccountBalanceCommand(request));
+        responseObserver.onNext(grpcMapper.toAccountResponse(result));
+        responseObserver.onCompleted();
+    }
 }
