@@ -7,23 +7,23 @@ import org.springframework.stereotype.Service;
 public class PushNotificationResolver {
     public String resolveTitle (PushNotificationType type) {
         return switch (type) {
-            case ACCOUNT_CREATED -> "Лицевой счет создан";
-            case ACCOUNT_FROZEN -> "Лицевой счет заморожен";
-            case ACCOUNT_UNFROZEN -> "Лицевой счет разморожен";
-            case CARD_CREATED -> "Карта создана";
-            case CARD_FROZEN -> "Карта заморожена";
-            case CARD_UNFROZEN -> "Карта разморожена";
+            case ACCOUNT_CREATED -> "Account created";
+            case ACCOUNT_FROZEN -> "Account frozen";
+            case ACCOUNT_UNFROZEN -> "Account unfrozen";
+            case CARD_CREATED -> "Card created";
+            case CARD_FROZEN -> "Card frozen";
+            case CARD_UNFROZEN -> "Card unfrozen";
         };
     }
 
     public String resolveBody(PushNotificationType type, String accountNumber, String cardNumber) {
         return switch (type) {
-            case ACCOUNT_CREATED -> "Ваш лицевой счет " + accountNumber + " создан";
-            case ACCOUNT_FROZEN -> "Ваш лицевой счет " + accountNumber + " заморожен";
-            case ACCOUNT_UNFROZEN -> "Ваш лицевой счет " + accountNumber + " разморожен";
-            case CARD_CREATED -> "Ваша карта " + cardNumber + " по счету " + accountNumber + " создана";
-            case CARD_FROZEN -> "Ваша карта " + cardNumber + " по счету " + accountNumber + " заморожена";
-            case CARD_UNFROZEN -> "Ваша карта " + cardNumber + " по счету " + accountNumber + " разморожена";
+            case ACCOUNT_CREATED -> "Your account " + accountNumber + " has been created";
+            case ACCOUNT_FROZEN -> "Your account " + accountNumber + " has been frozen";
+            case ACCOUNT_UNFROZEN -> "Your account " + accountNumber + " has been unfrozen";
+            case CARD_CREATED -> "Your card " + cardNumber + " for account " + accountNumber + " has been created";
+            case CARD_FROZEN -> "Your card " + cardNumber + " for account " + accountNumber + " has been frozen";
+            case CARD_UNFROZEN -> "Your card " + cardNumber + " for account " + accountNumber + " has been unfrozen";
         };
     }
 }

@@ -20,11 +20,11 @@ public class EmailNotificationTemplateResolver {
 
     public String resolveSubject(EmailNotificationType type) {
         return switch (type) {
-            case AUTH_USER_CREATED -> "Добро пожаловать";
-            case AUTH_USER_BLOCKED -> "Аккаунт заблокирован";
-            case AUTH_USER_UNLOCKED -> "Аккаунт разблокирован";
-            case AUTH_USER_VERIFIED -> "Email подтвержден";
-            case AUTH_USER_FORGET_PASSWORD -> "Пароль сброшен";
+            case AUTH_USER_CREATED -> "Welcome";
+            case AUTH_USER_BLOCKED -> "Account blocked";
+            case AUTH_USER_UNLOCKED -> "Account unlocked";
+            case AUTH_USER_VERIFIED -> "Email verified";
+            case AUTH_USER_FORGET_PASSWORD -> "Password reset";
         };
     }
 }
