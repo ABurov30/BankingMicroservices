@@ -1,6 +1,7 @@
 package authservice.grpc;
 
 import authservice.exception.AuthUserAlreadyVerifiedException;
+import authservice.exception.AuthUserMustBeInForgetPasswordStatusException;
 import authservice.exception.AuthUserNotFoundException;
 import authservice.exception.AuthUserNotActiveException;
 import authservice.exception.EmailAlreadyExistsException;
@@ -72,6 +73,7 @@ public class GrpcExceptionInterceptor implements ServerInterceptor {
                 exception instanceof RefreshTokenAlreadyExpiredException ||
                         exception instanceof RefreshTokenAlreadyRevokedException ||
                         exception instanceof AuthUserAlreadyVerifiedException ||
+                        exception instanceof AuthUserMustBeInForgetPasswordStatusException ||
                         exception instanceof AuthUserNotActiveException
         ) {
             return Status.FAILED_PRECONDITION;

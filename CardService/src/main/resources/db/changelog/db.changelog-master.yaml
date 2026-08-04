@@ -1,3 +1,5 @@
 databaseChangeLog:
   - include:
       file: db/changelog/changes/001-create-card-tables.sql
+  - include:
+      file: db/changelog/changes/002-create-proccessed-event-table.sql

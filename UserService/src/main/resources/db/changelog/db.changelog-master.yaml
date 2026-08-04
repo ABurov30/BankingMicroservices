@@ -7,3 +7,5 @@ databaseChangeLog:
       file: db/changelog/changes/003-add-user-profile-role.sql
   - include:
       file: db/changelog/changes/004-drop-user-outbox-event-key-unique-constraint.sql
+  - include:
+      file: db/changelog/changes/005-create-processed-event-table.sql

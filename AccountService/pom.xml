@@ -89,7 +89,15 @@
         <dependency>
             <groupId>com.burov</groupId>
             <artifactId>outbox-support</artifactId>
-            <version>0.0.3</version>
+            <version>0.0.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-aop</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

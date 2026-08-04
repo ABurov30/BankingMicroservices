@@ -434,7 +434,14 @@ public class AuthService {
         AuthUserEntity authUser = authUserRepository.findById(command.authUserId())
                 .orElseThrow(() -> new AuthUserNotFoundException(command.authUserId()));
 
+        if (authUser.getStatus() != AuthUserStatus.FORGET_PASSWORD) {
+            throw new AuthUserMustBeInForgetPasswordStatusException(authUser.getId());
+        }
+
         authUser.setPasswordHash(passwordEncoder.encode(command.newPassword()));
+        authUser.setStatus(AuthUserStatus.ACTIVE);
+
+        authUserRepository.save(authUser);
 
         UserRoleEntity userRole = userRoleRepository.findByAuthUserId(authUser.getId()).orElseThrow(() ->
                 new RoleNotFoundException(authUser.getId()));
