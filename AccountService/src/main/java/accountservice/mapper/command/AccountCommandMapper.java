@@ -13,7 +13,7 @@ import java.util.UUID;
 @Mapper(componentModel = "spring")
 public interface AccountCommandMapper {
     default CreateAccountCommand toCreateAccountCommand(UserProfileCreatedEventPayload payload) {
-        return new CreateAccountCommand(payload.getUserId(), payload.getAuthUserId(), AccountType.CHECKING, AccountCurrency.RUB);
+        return new CreateAccountCommand(payload.getUserId(), payload.getAuthUserId(), AccountType.CHECKING, AccountCurrency.USD);
     }
 
     default CreateAccountCommand toCreateAccountCommand(CreateAccountGrpcRequest request) {

@@ -3,6 +3,7 @@ package accountservice.service;
 import accountservice.dto.*;
 import accountservice.entity.AccountEntity;
 import accountservice.entity.AccountOutboxEventEntity;
+import accountservice.entity.CurrencyEntity;
 import accountservice.exception.AccountAlreadyFrozenException;
 import accountservice.exception.AccountClosedException;
 import accountservice.exception.AccountGenerationFailedException;
@@ -12,9 +13,12 @@ import accountservice.exception.AccountsNotFoundException;
 import accountservice.mapper.result.AccountResultMapper;
 import accountservice.repository.AccountOutboxEventRepository;
 import accountservice.repository.AccountRepository;
+import accountservice.repository.CurrencyRepository;
 import enums.account.AccountStatus;
 import jakarta.transaction.Transactional;
 import kafkacontracts.account.AccountEventType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
@@ -28,16 +32,20 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final AccountOutboxEventRepository accountOutboxEventRepository;
     private static final int TRY_TO_GENERATE_ACCOUNT_NUMBER = 10;
+    private final CurrencyRepository currencyRepository;
     private final AccountResultMapper resultMapper;
+    private static final Logger log = LoggerFactory.getLogger(CurrencyScheduler.class);
 
     public AccountService(
             AccountRepository accountRepository,
             AccountOutboxEventRepository accountOutboxEventRepository,
-            AccountResultMapper resultMapper
+            AccountResultMapper resultMapper,
+            CurrencyRepository currencyRepository
     ) {
         this.accountRepository = accountRepository;
         this.accountOutboxEventRepository = accountOutboxEventRepository;
         this.resultMapper = resultMapper;
+        this.currencyRepository = currencyRepository;
     }
 
     private String generateUniqueAccountNumber() {
@@ -58,12 +66,13 @@ public class AccountService {
 
 
     private AccountEntity tryToCreateAccount(CreateAccountCommand createAccountCommand) {
+        CurrencyEntity currency = currencyRepository.findByName(createAccountCommand.currency());
         for (int i = 0; i < TRY_TO_GENERATE_ACCOUNT_NUMBER; i++) {
             try {
                 AccountEntity accountEntity = new AccountEntity();
                 accountEntity.setAccountType(createAccountCommand.type());
                 accountEntity.setAccountStatus(AccountStatus.ACTIVE);
-                accountEntity.setCurrency(createAccountCommand.currency());
+                accountEntity.setCurrency(currency);
                 accountEntity.setOwnerUserId(createAccountCommand.userId());
                 accountEntity.setOwnerAuthUserId(createAccountCommand.authUserId());
                 accountEntity.setAccountNumber(generateUniqueAccountNumber());
@@ -72,7 +81,7 @@ public class AccountService {
                 accountRepository.save(accountEntity);
                 return accountEntity;
             } catch (DataIntegrityViolationException e) {
-                // account_number collision, retry
+                log.error("account_number collision, retry " + e.getMessage());
             }
         }
         throw new AccountGenerationFailedException("Failed to create account with unique account number");
@@ -106,7 +115,7 @@ public class AccountService {
                 accountEntity.getAccountStatus(),
                 accountEntity.getAvailableBalance(),
                 accountEntity.getReservedBalance(),
-                accountEntity.getCurrency()
+                accountEntity.getCurrency().getName()
         );
     }
 

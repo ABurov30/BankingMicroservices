@@ -10,5 +10,6 @@ public interface AccountResultMapper {
     @Mapping(target = "accountId", source = "id")
     @Mapping(target = "type", source = "accountType")
     @Mapping(target = "status", source = "accountStatus")
+    @Mapping(target = "currency", source = "currency.name")
     GetAccountResult toGetAccountResult(AccountEntity accountEntity);
 }

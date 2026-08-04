@@ -49,9 +49,9 @@ public class AccountEntity {
     @Column(name = "version", nullable = false)
     private int version;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "currency", nullable = false)
-    private AccountCurrency currency;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "currency_id", nullable = false)
+    private CurrencyEntity currency;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

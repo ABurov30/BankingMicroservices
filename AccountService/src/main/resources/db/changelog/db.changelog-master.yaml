@@ -5,3 +5,5 @@ databaseChangeLog:
       file: db/changelog/changes/002-drop-account-outbox-event-key-unique-constraint.sql
   - include:
       file: db/changelog/changes/003-create-processed-event-table.sql
+  - include:
+      file: db/changelog/changes/004-create-currency-table.sql

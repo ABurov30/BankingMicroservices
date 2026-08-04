@@ -12,7 +12,7 @@ create table accounts
     available_balance  decimal     not null default 0,
     reserved_balance   decimal     not null default 0,
     version            integer     not null default 0,
-    currency           varchar(55) not null default 'RUB',
+    currency           varchar(55) not null default 'USD',
     created_at         timestamp   not null,
     updated_at         timestamp   not null,
 
@@ -23,7 +23,7 @@ create table accounts
         check ( status in ('ACTIVE', 'FROZEN', 'CLOSED') ),
 
     constraint chk_accounts_currency
-        check ( currency in ('RUB', 'USD', 'EUR', 'CNY', 'GBP') )
+        check ( currency in ('USD', 'EUR', 'CNY', 'GBP') )
 
 );
 
