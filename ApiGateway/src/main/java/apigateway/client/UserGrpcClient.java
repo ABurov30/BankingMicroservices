@@ -1,5 +1,6 @@
 package apigateway.client;
 
+import apigateway.dto.user.GetUserInfoByEmailRequestDto;
 import apigateway.dto.user.GetUserInfoRequestDto;
 import apigateway.dto.user.GetUserInfoResponseDto;
 import apigateway.mapper.dto.UserDtoMapper;
@@ -31,6 +32,12 @@ public class UserGrpcClient {
           stub.withDeadlineAfter(2, TimeUnit.SECONDS).getAllUserInfo(Empty.getDefaultInstance())
       );
   }
+
+  public GetUserInfoResponseDto getUserInfoByEmail (GetUserInfoByEmailRequestDto request) {
+      return dtoMapper.toGetInfoResponseDto(
+              stub.withDeadlineAfter(2, TimeUnit.SECONDS).getUserInfoByEmail(grpcMapper.toGetUserInfoByEmailRequest(request))
+      );
+  };
 
   public String getUserHealth() {
     GetUserHealthGrpcResponse response =

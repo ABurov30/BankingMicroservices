@@ -2,16 +2,12 @@ package apigateway.controller;
 
 import apigateway.client.UserGrpcClient;
 import apigateway.config.CookieConfig;
-import apigateway.dto.user.GetUserInfoRequestDto;
-import apigateway.dto.user.GetUserInfoResponseDto;
-import apigateway.dto.user.GetUserInfoWithAuthInfoResponseDto;
+import apigateway.dto.user.*;
 import apigateway.query.UserInfoQueryHandler;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -41,6 +37,11 @@ public class UserGatewayController {
         UUID authUserId = UUID.fromString(jwt.getSubject());
 
         return userInfoQueryHandler.getUserInfoWithAuthInfo(authUserId);
+    }
+
+    @PostMapping("/user-info")
+    public GetUserInfoWithAccountResponseDto getUserInfoWithAccountsByEmail (@Valid @RequestBody GetUserInfoByEmailRequestDto request) {
+        return userInfoQueryHandler.getUserInfoWithAccountByEmail(request);
     }
 
     @GetMapping("/health")

@@ -4,6 +4,7 @@ import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
 import org.springframework.stereotype.Service;
 import user.contract.v1.*;
+import userservice.dto.GetUserInfoByEmailCommand;
 import userservice.dto.GetUserInfoCommand;
 import userservice.dto.GetUserInfoResult;
 import userservice.mapper.command.UserCommandMapper;
@@ -48,6 +49,15 @@ public class UserGrpcService extends UserRpcServiceGrpc.UserRpcServiceImplBase {
         List<UserResponse> responses = resultList.stream().map(grpcMapper::toUserResponse).toList();
 
         responseObserver.onNext(grpcMapper.toGetAllUserInfoGrpcResponse(responses));
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getUserInfoByEmail (GetUserInfoByEmailRequest request, StreamObserver<GetUserInfoGrpcResponse> responseObserver) {
+        GetUserInfoByEmailCommand getUserInfoCommand = commandMapper.toGetUserInfoByEmailCommand(request);
+        GetUserInfoGrpcResponse response = grpcMapper.toGetUserInfoGrpcResponse(userService.getUserInfoByEmail(getUserInfoCommand));
+
+        responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
 }

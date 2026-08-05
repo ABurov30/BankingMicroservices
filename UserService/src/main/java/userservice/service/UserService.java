@@ -31,10 +31,18 @@ public class UserService {
         this.resultMapper = resultMapper;
     }
 
-    @Transactional()
+    @Transactional
     public GetUserInfoResult getUserInfo(GetUserInfoCommand getUserInfoCommand) {
         UserProfileEntity userProfileEntity = userProfileRepository.findByAuthUserId(getUserInfoCommand.authUserId())
                 .orElseThrow(() -> new UserProfileNotFoundException(getUserInfoCommand.authUserId()));
+
+        return resultMapper.toGetUserInfoResult(userProfileEntity);
+    }
+
+    @Transactional
+    public GetUserInfoResult getUserInfoByEmail (GetUserInfoByEmailCommand command) {
+        UserProfileEntity userProfileEntity = userProfileRepository.findByEmail(command.email())
+                .orElseThrow(() -> new UserProfileNotFoundException(command.email()));
 
         return resultMapper.toGetUserInfoResult(userProfileEntity);
     }

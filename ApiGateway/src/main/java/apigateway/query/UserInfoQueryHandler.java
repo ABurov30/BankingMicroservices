@@ -1,5 +1,6 @@
 package apigateway.query;
 
+import apigateway.client.AccountGrpcClient;
 import apigateway.client.AuthGrpcClient;
 import apigateway.client.UserGrpcClient;
 import apigateway.dto.user.*;
@@ -12,13 +13,16 @@ import java.util.UUID;
 public class UserInfoQueryHandler {
     private final AuthGrpcClient authGrpcClient;
     private final UserGrpcClient userGrpcClient;
+    private final AccountGrpcClient accountGrpcClient;
 
     public  UserInfoQueryHandler (
             AuthGrpcClient authGrpcClient,
-            UserGrpcClient userGrpcClient
+            UserGrpcClient userGrpcClient,
+            AccountGrpcClient accountGrpcClient
     ) {
         this.authGrpcClient = authGrpcClient;
         this.userGrpcClient = userGrpcClient;
+        this.accountGrpcClient = accountGrpcClient;
     }
 
     public GetUserInfoWithAuthInfoResponseDto getUserInfoWithAuthInfo (UUID autUserId) {
@@ -36,5 +40,11 @@ public class UserInfoQueryHandler {
                     return new GetUserInfoWithAuthInfoResponseDto(userInfo, authInfo.role(), authInfo.status());
                 })
                 .toList();
+    }
+
+    public GetUserInfoWithAccountResponseDto getUserInfoWithAccountByEmail (GetUserInfoByEmailRequestDto request) {
+        var userInfo = userGrpcClient.getUserInfoByEmail(request);
+        var accounts = accountGrpcClient.getAccountsByOwnerId(userInfo.userProfileId());
+        return new GetUserInfoWithAccountResponseDto(userInfo, accounts);
     }
 }
