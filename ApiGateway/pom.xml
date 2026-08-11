@@ -84,7 +84,7 @@
         <dependency>
             <groupId>com.burov</groupId>
             <artifactId>contracts</artifactId>
-            <version>0.0.13</version>
+            <version>0.0.14-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>

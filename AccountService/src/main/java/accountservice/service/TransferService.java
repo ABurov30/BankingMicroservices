@@ -11,6 +11,7 @@ import accountservice.repository.AccountHoldRepository;
 import accountservice.repository.AccountRepository;
 import enums.account.AccountCurrency;
 import enums.account.ReservationStatus;
+import enums.transaction.TransactionDirection;
 import jakarta.transaction.Transactional;
 import kafkacontracts.account.AccountEventType;
 import org.slf4j.Logger;
@@ -67,14 +68,12 @@ public class TransferService {
         var sourceCurrency = sourceAccount.getCurrency().getName();
         var targetCurrency = targetAccount.getCurrency().getName();
 
-        targetAccount.setAvailableBalance(
-                targetAccount.getAvailableBalance().add(
-                        convertAmountForTransactionToTagetCurrency(
-                                accountHold.getAmount(),
-                                sourceCurrency,
-                                targetCurrency
-                        )
-                ));
+        var creditedAmount = convertAmountForTransactionToTagetCurrency(
+                accountHold.getAmount(),
+                sourceCurrency,
+                targetCurrency
+        );
+        targetAccount.setAvailableBalance(targetAccount.getAvailableBalance().add(creditedAmount));
 
         sourceAccount.setAvailableBalance(sourceAccount.getAvailableBalance().subtract(accountHold.getAmount()));
         sourceAccount.setReservedBalance(
@@ -88,14 +87,34 @@ public class TransferService {
         accountRepository.save(sourceAccount);
         accountHoldRepository.save(accountHold);
 
-        Map<String, Object> payload = Map.of(
+        Map<String, Object> recipientPayload = Map.of(
                 "accountNumber", targetAccount.getAccountNumber(),
+                "amount", creditedAmount,
+                "authUserId", targetAccount.getOwnerAuthUserId(),
+                "transactionId", accountHold.getTransactionId(),
+                "transactionDirection", TransactionDirection.RECIPIENT
+        );
+        Map<String, Object> senderPayload = Map.of(
+                "accountNumber", sourceAccount.getAccountNumber(),
                 "amount", accountHold.getAmount(),
-                "authUserId", command.authUserId(),
-                "transactionId", accountHold.getTransactionId()
+                "authUserId", sourceAccount.getOwnerAuthUserId(),
+                "transactionId", accountHold.getTransactionId(),
+                "transactionDirection", TransactionDirection.SENDER
         );
 
-        accountOutboxService.saveAccountOutboxEvent(accountHold.getTransactionId(), AccountEventType.TRANSACTION_COMPLETED, payload);
+        var eventKeyPrefix = accountHold.getTransactionId() + ":" + AccountEventType.TRANSACTION_COMPLETED.name();
+        accountOutboxService.saveAccountOutboxEvent(
+                accountHold.getTransactionId(),
+                AccountEventType.TRANSACTION_COMPLETED,
+                eventKeyPrefix + ":" + TransactionDirection.RECIPIENT,
+                recipientPayload
+        );
+        accountOutboxService.saveAccountOutboxEvent(
+                accountHold.getTransactionId(),
+                AccountEventType.TRANSACTION_COMPLETED,
+                eventKeyPrefix + ":" + TransactionDirection.SENDER,
+                senderPayload
+        );
     }
 
     @Transactional
@@ -104,7 +123,7 @@ public class TransferService {
             var sourceAccount = accountRepository.findByIdForUpdate(command.sourceAccountId())
                     .orElseThrow(() -> new AccountNotFoundException(command.sourceAccountId()));
 
-            var targetAccount = accountRepository.findById(command.sourceAccountId())
+            var targetAccount = accountRepository.findById(command.targetAccountId())
                     .orElseThrow(() -> new AccountNotFoundException(command.targetAccountId()));
 
             if (accountHoldRepository.existsByTransactionId(command.transactionId())) {

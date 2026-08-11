@@ -6,6 +6,7 @@ import kafkacontracts.auth.*;
 import kafkacontracts.card.CardCreatedEventPayload;
 import kafkacontracts.card.CardFrozenEventPayload;
 import kafkacontracts.card.CardUnfrozenEventPayload;
+import enums.transaction.TransactionDirection;
 import notificationservice.annotation.EventKey;
 import notificationservice.annotation.IdempotentKafkaEvent;
 import notificationservice.mapper.command.EmailNotificationCommandMapper;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class NotificationKafkaListener {
+    private static final String TRANSACTION_NOTIFICATION_DIRECTION_HEADER = "transaction-notification-direction";
     private final NotificationService notificationService;
     private final EmailNotificationCommandMapper emailCommandMapper;
     private final PushNotificationCommandMapper pushCommandMapper;
@@ -146,7 +148,14 @@ public class NotificationKafkaListener {
             topics = "#{T(kafkacontracts.account.AccountEventType).TRANSACTION_COMPLETED.getTopic()}"
     )
     public void handleTransactionCompleted(TransactionCompletedEventPayload payload,
-                                        @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
-        notificationService.createPushNotification(pushCommandMapper.toCreatePushNotificationCommand(payload));
+                                        @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey,
+                                        @Header(value = TRANSACTION_NOTIFICATION_DIRECTION_HEADER, required = false)
+                                        String transactionDirection) {
+        notificationService.createPushNotification(
+                pushCommandMapper.toCreatePushNotificationCommand(
+                        payload,
+                        transactionDirection == null ? null : TransactionDirection.valueOf(transactionDirection)
+                )
+        );
     }
 }

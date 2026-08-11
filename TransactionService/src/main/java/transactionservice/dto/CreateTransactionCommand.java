@@ -11,6 +11,7 @@ public record CreateTransactionCommand(
         BigDecimal amount,
         AccountCurrency currency,
         UUID idempotencyKey,
-        UUID authUserId
+        UUID sourceAuthUserId,
+        UUID targetAuthUserId
 ) {
 }

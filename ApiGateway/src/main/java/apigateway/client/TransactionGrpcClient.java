@@ -30,7 +30,12 @@ public class TransactionGrpcClient {
         return response.getMessage();
     }
 
-    public void createTransaction(CreateTransactionRequestDto request, UUID authUserId) {
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS).createTransaction(grpcMapper.toCreateTransactionGrpcRequest(request, authUserId));
+    public void createTransaction(
+            CreateTransactionRequestDto request,
+            UUID sourceAuthUserId,
+            UUID targetAuthUserId
+    ) {
+        stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+                .createTransaction(grpcMapper.toCreateTransactionGrpcRequest(request, sourceAuthUserId, targetAuthUserId));
     }
 }

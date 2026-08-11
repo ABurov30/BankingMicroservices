@@ -4,6 +4,7 @@ import apigateway.client.TransactionGrpcClient;
 import apigateway.config.CookieConfig;
 import apigateway.dto.card.CreateCardRequestDto;
 import apigateway.dto.transaction.CreateTransactionRequestDto;
+import apigateway.query.TransactionQueryHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -16,13 +17,16 @@ import java.util.UUID;
 public class TransactionGatewayController {
 
     private final TransactionGrpcClient transactionClient;
+    private final TransactionQueryHandler transactionQueryHandler;
     private final CookieConfig cookieConfig;
 
     public TransactionGatewayController(
             TransactionGrpcClient transactionClient,
+            TransactionQueryHandler transactionQueryHandler,
             CookieConfig cookieConfig
     ) {
         this.transactionClient = transactionClient;
+        this.transactionQueryHandler = transactionQueryHandler;
         this.cookieConfig = cookieConfig;
     }
 
@@ -37,6 +41,6 @@ public class TransactionGatewayController {
         Jwt jwt = cookieConfig.getAccessTokenJwt(httpRequest);
         UUID authUserId = UUID.fromString(jwt.getSubject());
 
-        transactionClient.createTransaction(request, authUserId);
+        transactionQueryHandler.startTransaction(request, authUserId);
     }
 }

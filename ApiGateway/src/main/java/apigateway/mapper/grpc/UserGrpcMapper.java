@@ -3,9 +3,11 @@ package apigateway.mapper.grpc;
 import apigateway.dto.user.GetUserInfoByEmailRequestDto;
 import apigateway.dto.user.GetUserInfoRequestDto;
 import apigateway.dto.user.GetUserInfoResponseDto;
+import enums.user.UserProfileStatus;
 import org.mapstruct.Mapper;
 import user.contract.v1.GetUserInfoByEmailRequest;
 import user.contract.v1.GetUserInfoGrpcRequest;
+import user.contract.v1.UserResponse;
 
 @Mapper(componentModel = "spring")
 public interface UserGrpcMapper {

@@ -125,6 +125,7 @@ public class AccountService {
         return new CreateAccountResult(
                 accountEntity.getId(),
                 accountEntity.getOwnerUserId(),
+                accountEntity.getOwnerAuthUserId(),
                 accountEntity.getAccountNumber(),
                 accountEntity.getAccountType(),
                 accountEntity.getAccountStatus(),

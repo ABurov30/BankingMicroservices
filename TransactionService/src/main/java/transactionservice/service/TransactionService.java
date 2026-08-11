@@ -79,7 +79,7 @@ public class TransactionService {
                     Map.of(
                             "accountNumber", reservationResponse.targetAccount().accountNumber(),
                             "amount", transaction.getAmount(),
-                            "authUserId", command.authUserId()
+                            "authUserId", command.sourceAuthUserId()
                     )
             );
             throw new FundsReservationFailedException("Funds reservation failed");
@@ -94,7 +94,7 @@ public class TransactionService {
                 Map.of(
                         "transactionId", transaction.getId(),
                         "targetAccountId", transaction.getTargetAccountId(),
-                        "authUserId", command.authUserId()
+                        "authUserId", command.targetAuthUserId()
                 )
         );
     }
@@ -103,6 +103,9 @@ public class TransactionService {
     public void  markAs(MarkAsCommand command) {
         var transaction = transactionRepository.findByIdToUpdate(command.transactionId())
                 .orElseThrow(() -> new TransactionNotFoundException(command.transactionId()));
+        if (transaction.getStatus() == command.status()) {
+            return;
+        }
         transaction.setCompletedAdt(LocalDateTime.now());
         transaction.setStatus(command.status());
         transactionRepository.save(transaction);

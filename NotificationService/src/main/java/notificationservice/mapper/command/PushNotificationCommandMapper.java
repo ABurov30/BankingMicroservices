@@ -4,6 +4,7 @@ import kafkacontracts.account.*;
 import kafkacontracts.card.CardCreatedEventPayload;
 import kafkacontracts.card.CardFrozenEventPayload;
 import kafkacontracts.card.CardUnfrozenEventPayload;
+import enums.transaction.TransactionDirection;
 import notificationservice.dto.AccountPushNotificationPayload;
 import notificationservice.dto.CardPushNotificationPayload;
 import notificationservice.dto.CreatePushNotificationCommand;
@@ -147,9 +148,18 @@ public interface PushNotificationCommandMapper {
     }
 
     default CreatePushNotificationCommand toCreatePushNotificationCommand (TransactionCompletedEventPayload payload) {
+        return toCreatePushNotificationCommand(payload, null);
+    }
+
+    default CreatePushNotificationCommand toCreatePushNotificationCommand(
+            TransactionCompletedEventPayload payload,
+            TransactionDirection transactionDirection
+    ) {
         return new CreatePushNotificationCommand(
                 toTransactionPushNotificationPayload(payload),
-                PushNotificationType.TRANSACTION_COMPLETED,
+                TransactionDirection.RECIPIENT == transactionDirection
+                        ? PushNotificationType.TRANSACTION_RECEIVED
+                        : PushNotificationType.TRANSACTION_COMPLETED,
                 payload.getAuthUserId()
         );
     }

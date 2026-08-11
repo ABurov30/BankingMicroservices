@@ -22,7 +22,8 @@ public interface TransactionCommandMapper {
                 BigDecimal.valueOf(grpcRequest.getAmount()),
                 AccountCurrency.valueOf(grpcRequest.getCurrency()),
                 UUID.fromString(grpcRequest.getIdempotencyKey()),
-                UUID.fromString(grpcRequest.getAuthUserId())
+                UUID.fromString(grpcRequest.getSourceAuthUserId()),
+                UUID.fromString(grpcRequest.getSourceTargetAuthUserId())
         );
     }
 

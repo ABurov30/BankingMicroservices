@@ -78,6 +78,14 @@ public class AccountGrpcClient {
               .getAccountById(grpcMapper.toGetAccountByIdGrpcRequest(request)));
   }
 
+  public UUID getAccountOwnerAuthUserId(UUID accountId) {
+      GetAccountByIdGrpcResponse response = stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+              .getAccountById(grpcMapper.toGetAccountByIdGrpcRequest(
+                      new GetAccountByIdRequestDto(accountId)
+              ));
+      return UUID.fromString(response.getAccount().getAuthUserId());
+  }
+
   public GetAccountResponseDto topUpAccount(UpdateAccountBalanceRequestDto request) {
       return dtoMapper.toGetAccountResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS)
               .topUpAccount(grpcMapper.toUpdateAccountBalanceGrpcRequest(request)));

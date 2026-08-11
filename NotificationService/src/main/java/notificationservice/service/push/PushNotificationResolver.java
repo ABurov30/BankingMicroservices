@@ -34,6 +34,7 @@ public class PushNotificationResolver {
             case CARD_UNFROZEN -> "Card unfrozen";
             case TRANSACTION_FAILED -> "Transaction failed";
             case TRANSACTION_COMPLETED -> "Transaction completed";
+            case TRANSACTION_RECEIVED -> "Funds received";
         };
     }
 
@@ -72,7 +73,7 @@ public class PushNotificationResolver {
                 };
             }
 
-            case TRANSACTION_FAILED, TRANSACTION_COMPLETED -> {
+            case TRANSACTION_FAILED, TRANSACTION_COMPLETED, TRANSACTION_RECEIVED -> {
                 TransactionPushNotificationPayload transactionPayload = requirePayload(
                         type,
                         payload,
@@ -80,9 +81,11 @@ public class PushNotificationResolver {
                 );
 
                 yield switch (type) {
-                    case TRANSACTION_COMPLETED -> "Transaction for account " + transactionPayload.accountNumber()
+                    case TRANSACTION_RECEIVED -> "Your account " + transactionPayload.accountNumber()
+                            + " has been credited with " + transactionPayload.amount();
+                    case TRANSACTION_COMPLETED -> "The transaction from account " + transactionPayload.accountNumber()
                             + " in the amount of " + transactionPayload.amount()
-                            + " has succeed";
+                            + " has been completed";
                     case TRANSACTION_FAILED -> "Transaction for account " + transactionPayload.accountNumber()
                             + " in the amount of " + transactionPayload.amount()
                             + " has failed";

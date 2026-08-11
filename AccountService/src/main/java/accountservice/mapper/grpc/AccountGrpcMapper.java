@@ -11,11 +11,11 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface AccountGrpcMapper {
     default AccountResponse toAccountResponse(GetAccountResult value) {
-        return AccountResponse.newBuilder().setAccountId(value.accountId().toString()).setOwnerUserId(value.ownerUserId().toString()).setAccountNumber(value.accountNumber()).setType(value.type().name()).setStatus(value.status().name()).setAvailableBalance(value.availableBalance().longValue()).setReservedBalance(value.reservedBalance().longValue()).setCurrency(value.currency().name()).build();
+        return AccountResponse.newBuilder().setAccountId(value.accountId().toString()).setOwnerUserId(value.ownerUserId().toString()).setAuthUserId(value.authUserId().toString()).setAccountNumber(value.accountNumber()).setType(value.type().name()).setStatus(value.status().name()).setAvailableBalance(value.availableBalance().longValue()).setReservedBalance(value.reservedBalance().longValue()).setCurrency(value.currency().name()).build();
     }
 
     default AccountResponse toAccountResponse(CreateAccountResult value) {
-        return AccountResponse.newBuilder().setAccountId(value.accountId().toString()).setOwnerUserId(value.ownerUserId().toString()).setAccountNumber(value.accountNumber()).setType(value.type().name()).setStatus(value.status().name()).setAvailableBalance(value.availableBalance().longValue()).setReservedBalance(value.reservedBalance().longValue()).setCurrency(value.currency().name()).build();
+        return AccountResponse.newBuilder().setAccountId(value.accountId().toString()).setOwnerUserId(value.ownerUserId().toString()).setAuthUserId(value.authUserId().toString()).setAccountNumber(value.accountNumber()).setType(value.type().name()).setStatus(value.status().name()).setAvailableBalance(value.availableBalance().longValue()).setReservedBalance(value.reservedBalance().longValue()).setCurrency(value.currency().name()).build();
     }
 
     default CreateAccountGrpcResponse toCreateAccountGrpcResponse(CreateAccountResult value) {

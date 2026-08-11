@@ -10,6 +10,7 @@ import java.util.UUID;
 public record GetAccountResult(
         UUID accountId,
         UUID ownerUserId,
+        UUID authUserId,
         String accountNumber,
         AccountType type,
         AccountStatus status,

@@ -21,7 +21,7 @@ public interface TransferCommandMapper {
         return new ExecuteFundsTransferCommand(
                 command.transactionId(),
                 command.targetAccountId(),
-                command.authUserId(),
+                command.targetAuthUserId(),
                 accountHold
         );
     }

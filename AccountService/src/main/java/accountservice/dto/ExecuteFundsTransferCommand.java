@@ -7,7 +7,7 @@ import java.util.UUID;
 public record ExecuteFundsTransferCommand(
         UUID transactionId,
         UUID targetAccountId,
-        UUID authUserId,
+        UUID targetAuthUserId,
         AccountHoldEntity accountHold
 ) {
 }

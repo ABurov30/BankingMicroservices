@@ -8,7 +8,9 @@ import org.apache.avro.specific.SpecificRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import outboxsupport.KafkaOnSentHandler;
@@ -19,6 +21,7 @@ import java.util.Map;
 
 @Service
 public class AccountOutboxPublisher implements KafkaOnSentHandler {
+    public static final String TRANSACTION_NOTIFICATION_DIRECTION_HEADER = "transaction-notification-direction";
     private static final Logger log = LoggerFactory.getLogger(AccountOutboxPublisher.class);
     private final AccountOutboxEventRepository accountOutboxEventRepository;
     private final KafkaTemplate<String, SpecificRecord> kafkaTemplate;
@@ -46,7 +49,18 @@ public class AccountOutboxPublisher implements KafkaOnSentHandler {
                         event.getPayload()
                 );
 
-                kafkaTemplate.send(event.getTopic(), event.getEventKey(), payload)
+                var messageBuilder = MessageBuilder.withPayload(payload)
+                        .setHeader(KafkaHeaders.TOPIC, event.getTopic())
+                        .setHeader(KafkaHeaders.KEY, event.getEventKey());
+
+                if (event.getPayload().containsKey("transactionDirection")) {
+                    messageBuilder.setHeader(
+                            TRANSACTION_NOTIFICATION_DIRECTION_HEADER,
+                            event.getPayload().get("transactionDirection").toString()
+                    );
+                }
+
+                kafkaTemplate.send(messageBuilder.build())
                         .whenComplete((result, ex) -> {
                             if (ex == null) {
                                 onPublish(event.getId(), accountOutboxEventRepository);
