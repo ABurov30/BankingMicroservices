@@ -1,6 +1,7 @@
 package notificationservice.grpc;
 
 import io.grpc.*;
+import notificationservice.exception.InvalidPushNotificationPayloadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -32,7 +33,10 @@ public class GrpcExceptionInterceptor implements ServerInterceptor {
     }
 
     private Status mapException(Exception exception) {
-        if (exception instanceof IllegalArgumentException) {
+        if (
+                exception instanceof IllegalArgumentException ||
+                        exception instanceof InvalidPushNotificationPayloadException
+        ) {
             return Status.INVALID_ARGUMENT;
         }
 

@@ -5,6 +5,8 @@ import accountservice.mapper.eventpayload.AccountEventPayloadMapper;
 import accountservice.repository.AccountOutboxEventRepository;
 import kafkacontracts.account.AccountEventType;
 import org.apache.avro.specific.SpecificRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,7 @@ import java.util.Map;
 
 @Service
 public class AccountOutboxPublisher implements KafkaOnSentHandler {
+    private static final Logger log = LoggerFactory.getLogger(AccountOutboxPublisher.class);
     private final AccountOutboxEventRepository accountOutboxEventRepository;
     private final KafkaTemplate<String, SpecificRecord> kafkaTemplate;
     private final AccountEventPayloadMapper eventPayloadMapper;
@@ -52,6 +55,8 @@ public class AccountOutboxPublisher implements KafkaOnSentHandler {
                             }
                         });
             } catch (Exception e) {
+                log.error("Unable to publish account outbox event: eventId={}, eventType={}",
+                        event.getId(), event.getEventType(), e);
                 onFailed(event.getId(), e, accountOutboxEventRepository);
             }
         }
@@ -62,6 +67,8 @@ public class AccountOutboxPublisher implements KafkaOnSentHandler {
             case ACCOUNT_CREATED -> eventPayloadMapper.toAccountCreatedEventPayload(payload);
             case ACCOUNT_FROZEN -> eventPayloadMapper.toAccountFrozenEventPayload(payload);
             case ACCOUNT_UNFROZEN -> eventPayloadMapper.toAccountUnfrozenEventPayload(payload);
+            case TRANSACTION_COMPENSATED -> eventPayloadMapper.toTransactionCompensatedEventPayload(payload);
+            case TRANSACTION_COMPLETED -> eventPayloadMapper.toTransactionCompletedEventPayload(payload);
         };
     }
 }

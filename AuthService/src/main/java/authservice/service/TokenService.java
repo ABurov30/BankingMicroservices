@@ -5,6 +5,8 @@ import authservice.config.JwtProperties;
 import authservice.entity.AuthUserEntity;
 import enums.auth.Roles;
 import authservice.repository.AuthUserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
@@ -24,6 +26,7 @@ import java.util.UUID;
 
 @Service
 public class TokenService {
+    private static final Logger log = LoggerFactory.getLogger(TokenService.class);
     private final JwtEncoder encoder;
     private final JwtProperties jwtProperties;
     private final SecureRandom secureRandom = new SecureRandom();
@@ -66,6 +69,7 @@ public class TokenService {
             byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
             return Base64.getEncoder().encodeToString(hash);
         } catch (NoSuchAlgorithmException e) {
+            log.error("SHA-256 algorithm is unavailable", e);
             throw new IllegalStateException("SHA-256 algorithm not available", e);
         }
     }

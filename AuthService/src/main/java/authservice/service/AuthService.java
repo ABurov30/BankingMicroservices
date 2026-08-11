@@ -9,6 +9,8 @@ import enums.auth.Roles;
 import authservice.repository.*;
 import kafkacontracts.auth.AuthEventType;
 import kafkacontracts.common.KafkaTopics;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,7 @@ import java.util.UUID;
 
 @Service
 public class AuthService {
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
     private final AuthUserRepository authUserRepository;
     private final UserRoleRepository userRoleRepository;
     private final RoleRepository roleRepository;
@@ -74,6 +77,7 @@ public class AuthService {
         try {
             savedUser = authUserRepository.saveAndFlush(userEntity);
         } catch (DataIntegrityViolationException e) {
+            log.warn("Sign-up rejected because the email is already registered", e);
             throw new EmailAlreadyExistsException(signupCommand.email());
         }
 
@@ -218,10 +222,10 @@ public class AuthService {
     public void changePassword(ChangePasswordCommand changePasswordCommand) {
 
         AuthUserEntity authUser = authUserRepository.findById(changePasswordCommand.authUserId())
-                .orElseThrow(() -> new IllegalArgumentException("Auth user not found by id " + changePasswordCommand.authUserId()));
+                .orElseThrow(() -> new AuthUserNotFoundException(changePasswordCommand.authUserId()));
 
         if (!passwordEncoder.matches(changePasswordCommand.oldPassword(), authUser.getPasswordHash())) {
-            throw new IllegalArgumentException("Wrong old password");
+            throw new InvalidOldPasswordException();
         }
 
         authUser.setPasswordHash(passwordEncoder.encode(changePasswordCommand.newPassword()));
@@ -230,10 +234,10 @@ public class AuthService {
 
     public void blockUser(BlockAuthUserCommand blockAuthUserCommand) {
         AuthUserEntity authUser = authUserRepository.findById(blockAuthUserCommand.authUserId())
-                .orElseThrow(() -> new IllegalArgumentException("Auth user not found by id " + blockAuthUserCommand.authUserId()));
+                .orElseThrow(() -> new AuthUserNotFoundException(blockAuthUserCommand.authUserId()));
 
         if (authUser.getStatus() == AuthUserStatus.BLOCKED) {
-            throw new IllegalArgumentException("Auth user already blocked");
+            throw new AuthUserAlreadyBlockedException(authUser.getId());
         }
 
         authUser.setStatus(AuthUserStatus.BLOCKED);
@@ -257,10 +261,10 @@ public class AuthService {
 
     public void unlockUser(UnlockAuthUserCommand unlockAuthUserCommand) {
         AuthUserEntity authUser = authUserRepository.findById(unlockAuthUserCommand.authUserId())
-                .orElseThrow(() -> new IllegalArgumentException("Auth user not found by id " + unlockAuthUserCommand.authUserId()));
+                .orElseThrow(() -> new AuthUserNotFoundException(unlockAuthUserCommand.authUserId()));
 
         if (authUser.getStatus() == AuthUserStatus.ACTIVE) {
-            throw new IllegalArgumentException("Auth user already active");
+            throw new AuthUserAlreadyActiveException(authUser.getId());
         }
 
         authUser.setStatus(AuthUserStatus.ACTIVE);
@@ -353,7 +357,7 @@ public class AuthService {
     @Transactional
     public void verifyByPrivilegedRole(VerifyAuthUserByPrivilegeRoleCommand verifyAuthUserCommand) {
         if (!canVerifyWithoutCode(verifyAuthUserCommand.role().name())) {
-            throw new IllegalArgumentException("Only admin or manager can verify user without code");
+            throw new VerificationByRoleNotAllowedException();
         }
 
         AuthUserEntity authUser = getNotVerifiedAuthUser(verifyAuthUserCommand.authUserId());

@@ -1,53 +1,74 @@
 package accountservice.service;
 
 import accountservice.dto.*;
-import accountservice.entity.AccountEntity;
-import accountservice.entity.AccountOutboxEventEntity;
-import accountservice.entity.CurrencyEntity;
+import accountservice.entity.*;
 import accountservice.exception.AccountAlreadyFrozenException;
 import accountservice.exception.AccountClosedException;
 import accountservice.exception.AccountGenerationFailedException;
+import accountservice.exception.AccountHoldInvalidStatusException;
+import accountservice.exception.AccountHoldNotFoundException;
 import accountservice.exception.AccountNotFoundException;
 import accountservice.exception.AccountNotFrozenException;
 import accountservice.exception.AccountsNotFoundException;
+import accountservice.exception.FundsTransferFailedException;
 import accountservice.exception.InsufficientFundsException;
+import accountservice.exception.TransactionAlreadyProcessedException;
+import accountservice.mapper.command.AccountCommandMapper;
+import accountservice.mapper.command.TransferCommandMapper;
 import accountservice.mapper.result.AccountResultMapper;
+import accountservice.repository.AccountHoldRepository;
 import accountservice.repository.AccountOutboxEventRepository;
 import accountservice.repository.AccountRepository;
 import accountservice.repository.CurrencyRepository;
+import enums.account.AccountCurrency;
 import enums.account.AccountStatus;
+import enums.account.ReservationStatus;
 import jakarta.transaction.Transactional;
 import kafkacontracts.account.AccountEventType;
-import org.checkerframework.checker.units.qual.A;
+import kafkacontracts.transaction.TransactionEventType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class AccountService {
     private final AccountRepository accountRepository;
-    private final AccountOutboxEventRepository accountOutboxEventRepository;
     private static final int TRY_TO_GENERATE_ACCOUNT_NUMBER = 10;
     private final CurrencyRepository currencyRepository;
     private final AccountResultMapper resultMapper;
-    private static final Logger log = LoggerFactory.getLogger(CurrencyScheduler.class);
+    private final AccountHoldRepository accountHoldRepository;
+    private final TransferService transferService;
+    private final AccountCommandMapper accountCommandMapper;
+    private final TransferCommandMapper transferCommandMapper;
+    private static final Logger log = LoggerFactory.getLogger(AccountService.class);
+    private final AccountOutboxService accountOutboxService;
 
     public AccountService(
             AccountRepository accountRepository,
-            AccountOutboxEventRepository accountOutboxEventRepository,
             AccountResultMapper resultMapper,
-            CurrencyRepository currencyRepository
+            CurrencyRepository currencyRepository,
+            AccountHoldRepository accountHoldRepository,
+            TransferCommandMapper transferCommandMapper,
+            AccountCommandMapper accountCommandMapper,
+            AccountOutboxService accountOutboxService,
+            TransferService transferService
     ) {
         this.accountRepository = accountRepository;
-        this.accountOutboxEventRepository = accountOutboxEventRepository;
         this.resultMapper = resultMapper;
         this.currencyRepository = currencyRepository;
+        this.accountHoldRepository = accountHoldRepository;
+        this.transferCommandMapper = transferCommandMapper;
+        this.accountCommandMapper = accountCommandMapper;
+        this.accountOutboxService = accountOutboxService;
+        this.transferService =transferService;
     }
 
     private String generateUniqueAccountNumber() {
@@ -83,7 +104,7 @@ public class AccountService {
                 accountRepository.save(accountEntity);
                 return accountEntity;
             } catch (DataIntegrityViolationException e) {
-                log.error("account_number collision, retry " + e.getMessage());
+                log.warn("Account-number collision; retrying account creation: attempt={}", i + 1, e);
             }
         }
         throw new AccountGenerationFailedException("Failed to create account with unique account number");
@@ -93,21 +114,13 @@ public class AccountService {
     public CreateAccountResult createAccount(CreateAccountCommand createAccountCommand) {
         AccountEntity accountEntity = tryToCreateAccount(createAccountCommand);
 
-        AccountOutboxEventEntity accountOutboxEventEntity = new AccountOutboxEventEntity();
-        accountOutboxEventEntity.setAggregateType("ACCOUNT_TYPE");
-        accountOutboxEventEntity.setAggregateId(accountEntity.getId());
-        accountOutboxEventEntity.setEventType(AccountEventType.ACCOUNT_CREATED.name());
-        accountOutboxEventEntity.setTopic(AccountEventType.ACCOUNT_CREATED.getTopic());
-        accountOutboxEventEntity.setEventKey(accountEntity.getId() + ":" + AccountEventType.ACCOUNT_CREATED.name());
-        accountOutboxEventEntity.setSchemaVersion(AccountEventType.ACCOUNT_CREATED.getVersion());
-
-        accountOutboxEventEntity.setPayload(Map.of(
+        Map<String, Object> payload = Map.of(
                 "accountId", accountEntity.getId(),
                 "authUserId", accountEntity.getOwnerAuthUserId(),
                 "accountNumber", accountEntity.getAccountNumber()
-        ));
+        );
 
-        accountOutboxEventRepository.save(accountOutboxEventEntity);
+        accountOutboxService.saveAccountOutboxEvent(accountEntity.getId(), AccountEventType.ACCOUNT_CREATED, payload);
 
         return new CreateAccountResult(
                 accountEntity.getId(),
@@ -133,7 +146,7 @@ public class AccountService {
 
     public List<GetAccountResult> getAllAccounts() {
         List<AccountEntity> accountEntityList = accountRepository.findAll();
-        return  accountEntityList.stream()
+        return accountEntityList.stream()
                 .map(resultMapper::toGetAccountResult)
                 .toList();
     }
@@ -141,7 +154,7 @@ public class AccountService {
     @Transactional
     public void freezeAccountByUserId(FreezeAccountsByUserIdCommand command) {
         List<AccountEntity> accountEntityList = accountRepository.findAllByOwnerUserIdForUpdate(command.userId())
-                .orElseThrow(() ->new AccountsNotFoundException(command.userId()));
+                .orElseThrow(() -> new AccountsNotFoundException(command.userId()));
 
         accountEntityList.forEach((account) -> {
             FreezeAccountCommand freezeAccountCommand = new FreezeAccountCommand(account.getId(), null, null);
@@ -169,21 +182,13 @@ public class AccountService {
         account.setAccountStatus(AccountStatus.FROZEN);
         accountRepository.save(account);
 
-        AccountOutboxEventEntity accountOutboxEventEntity = new AccountOutboxEventEntity();
-        accountOutboxEventEntity.setAggregateType("ACCOUNT_TYPE");
-        accountOutboxEventEntity.setAggregateId(account.getId());
-        accountOutboxEventEntity.setEventType(AccountEventType.ACCOUNT_FROZEN.name());
-        accountOutboxEventEntity.setTopic(AccountEventType.ACCOUNT_FROZEN.getTopic());
-        accountOutboxEventEntity.setEventKey(account.getId() + ":" + AccountEventType.ACCOUNT_FROZEN.name());
-        accountOutboxEventEntity.setSchemaVersion(AccountEventType.ACCOUNT_FROZEN.getVersion());
-
-        accountOutboxEventEntity.setPayload(Map.of(
+        Map<String, Object> payload = Map.of(
                 "accountId", account.getId(),
                 "authUserId", account.getOwnerAuthUserId(),
                 "accountNumber", account.getAccountNumber()
-        ));
+        );
 
-        accountOutboxEventRepository.save(accountOutboxEventEntity);
+        accountOutboxService.saveAccountOutboxEvent(account.getId(), AccountEventType.ACCOUNT_FROZEN, payload);
     }
 
     @Transactional
@@ -206,22 +211,16 @@ public class AccountService {
         account.setAccountStatus(AccountStatus.ACTIVE);
         accountRepository.save(account);
 
-        AccountOutboxEventEntity accountOutboxEventEntity = new AccountOutboxEventEntity();
-        accountOutboxEventEntity.setAggregateType("ACCOUNT_TYPE");
-        accountOutboxEventEntity.setAggregateId(account.getId());
-        accountOutboxEventEntity.setEventType(AccountEventType.ACCOUNT_UNFROZEN.name());
-        accountOutboxEventEntity.setTopic(AccountEventType.ACCOUNT_UNFROZEN.getTopic());
-        accountOutboxEventEntity.setEventKey(account.getId() + ":" + AccountEventType.ACCOUNT_UNFROZEN.name());
-        accountOutboxEventEntity.setSchemaVersion(AccountEventType.ACCOUNT_UNFROZEN.getVersion());
 
-        accountOutboxEventEntity.setPayload(Map.of(
+        Map<String, Object> payload = Map.of(
                 "accountId", account.getId(),
                 "authUserId", account.getOwnerAuthUserId(),
                 "accountNumber", account.getAccountNumber()
-        ));
+        );
 
-        accountOutboxEventRepository.save(accountOutboxEventEntity);
+        accountOutboxService.saveAccountOutboxEvent(account.getId(), AccountEventType.ACCOUNT_UNFROZEN, payload);
     }
+
 
     private boolean canAccessAccount(AccountEntity account, FreezeAccountCommand command) {
         return canAccessAccount(account, command.authUserId(), command.role());
@@ -251,7 +250,7 @@ public class AccountService {
     }
 
     @Transactional
-    public GetAccountResult topUpAccount (UpdateAccountBalanceCommand command) {
+    public GetAccountResult topUpAccount(UpdateAccountBalanceCommand command) {
         AccountEntity account = accountRepository.findByIdForUpdate(command.accountId())
                 .orElseThrow(() -> new AccountNotFoundException(command.accountId()));
 
@@ -262,7 +261,7 @@ public class AccountService {
     }
 
     @Transactional
-    public GetAccountResult withdrawAccount (UpdateAccountBalanceCommand command) {
+    public GetAccountResult withdrawAccount(UpdateAccountBalanceCommand command) {
         AccountEntity account = accountRepository.findByIdForUpdate(command.accountId())
                 .orElseThrow(() -> new AccountNotFoundException(command.accountId()));
 
@@ -275,4 +274,32 @@ public class AccountService {
         accountRepository.save(account);
         return resultMapper.toGetAccountResult(account);
     }
+
+
+
+
+
+    public void transactionFundsRequest(TransactionFundsRequestCommand command) {
+        var accountHold = accountHoldRepository.findByTransactionId(command.transactionId())
+                .orElseThrow(() -> new AccountHoldNotFoundException(command.transactionId()));
+
+        try {
+            transferService.executeFundsTransfer(transferCommandMapper.toExecuteFundsTransferCommand(command, accountHold));
+        } catch (Exception ex) {
+            log.error("Transfer failed; starting compensation: transactionId={}",
+                    command.transactionId(), ex);
+
+            try {
+                transferService.compensateFunds(
+                        transferCommandMapper.toCompensationFundsCommand(accountHold)
+                );
+            } catch (Exception compensationEx) {
+                log.error("Compensation also failed: transactionId={}",
+                        command.transactionId(), compensationEx);
+                ex.addSuppressed(compensationEx);
+            }
+        }
+    }
+
+
 }

@@ -1,9 +1,7 @@
 package notificationservice.listener;
 
 
-import kafkacontracts.account.AccountCreatedEventPayload;
-import kafkacontracts.account.AccountFrozenEventPayload;
-import kafkacontracts.account.AccountUnfrozenEventPayload;
+import kafkacontracts.account.*;
 import kafkacontracts.auth.*;
 import kafkacontracts.card.CardCreatedEventPayload;
 import kafkacontracts.card.CardFrozenEventPayload;
@@ -131,6 +129,24 @@ public class NotificationKafkaListener {
     )
     public void handleCardUnfrozen(CardUnfrozenEventPayload payload,
                                    @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+        notificationService.createPushNotification(pushCommandMapper.toCreatePushNotificationCommand(payload));
+    }
+
+    @IdempotentKafkaEvent
+    @KafkaListener(
+            topics = "#{T(kafkacontracts.transaction.TransactionEventType).TRANSACTION_FAILED.getTopic()}"
+    )
+    public void handleTransactionFailed(TransactionFailedEventPayload payload,
+                                        @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+        notificationService.createPushNotification(pushCommandMapper.toCreatePushNotificationCommand(payload));
+    }
+
+    @IdempotentKafkaEvent
+    @KafkaListener(
+            topics = "#{T(kafkacontracts.account.AccountEventType).TRANSACTION_COMPLETED.getTopic()}"
+    )
+    public void handleTransactionCompleted(TransactionCompletedEventPayload payload,
+                                        @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
         notificationService.createPushNotification(pushCommandMapper.toCreatePushNotificationCommand(payload));
     }
 }

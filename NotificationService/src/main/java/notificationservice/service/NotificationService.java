@@ -72,8 +72,7 @@ public class NotificationService {
         pushNotification.setTitle(pushNotificationResolver.resolveTitle(command.type()));
         pushNotification.setBody(pushNotificationResolver.resolveBody(
                 command.type(),
-                command.accountNumber(),
-                command.cardNumber()
+                command.payload()
         ));
 
         Set<ConstraintViolation<PushNotificationDocument>> violations = validator.validate(pushNotification);

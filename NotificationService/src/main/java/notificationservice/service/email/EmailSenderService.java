@@ -3,6 +3,8 @@ package notificationservice.service.email;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import notificationservice.document.EmailNotificationDocument;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -14,6 +16,7 @@ import java.io.UnsupportedEncodingException;
 
 @Service
 public class EmailSenderService {
+    private static final Logger log = LoggerFactory.getLogger(EmailSenderService.class);
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
     private final EmailNotificationTemplateResolver templateResolver;
@@ -55,6 +58,7 @@ public class EmailSenderService {
             helper.setFrom("no-reply@buro-bank.ru", "Buro Bank");
             mailSender.send(message);
         } catch (MessagingException | UnsupportedEncodingException exception) {
+            log.error("Failed to send email notification: type={}", notification.getType(), exception);
             throw new RuntimeException("Failed to send email", exception);
         }
     }

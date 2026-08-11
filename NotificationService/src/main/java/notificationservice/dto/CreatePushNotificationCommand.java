@@ -6,14 +6,10 @@ import notificationservice.enums.push.PushNotificationType;
 import java.util.UUID;
 
 public record CreatePushNotificationCommand(
+        Object payload,
         @NotNull
-        UUID authUserId,
+        PushNotificationType type,
         @NotNull
-        UUID accountId,
-        @NotNull
-        String accountNumber,
-        String cardNumber,
-        @NotNull
-        PushNotificationType type
+        UUID authUserId
 ) {
 }

@@ -1,5 +1,5 @@
 --liquibase formatted sql
---changeset andrey:001-create-user-tables
+--changeset andrey:001-create-account-tables
 
 create table accounts
 (
@@ -52,9 +52,9 @@ create table account_outbox_events
     locked_by      varchar(255),
     correlation_id uuid,
 
-    constraint chk_auth_outbox_event_type
-        check (event_type in ('ACCOUNT_CREATED', 'ACCOUNT_FROZEN', 'ACCOUNT_UNFROZEN')),
+    constraint chk_account_outbox_event_type
+        check (event_type in ('ACCOUNT_CREATED', 'ACCOUNT_FROZEN', 'ACCOUNT_UNFROZEN', 'TRANSACTION_COMPENSATED', 'TRANSACTION_COMPLETED')),
 
-    constraint chk_auth_outbox_status
+    constraint chk_account_outbox_status
         check (status in ('PENDING', 'PUBLISHED', 'FAILED'))
 );

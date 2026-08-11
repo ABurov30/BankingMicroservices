@@ -2,8 +2,10 @@ package accountservice.mapper.command;
 
 import account.contract.v1.*;
 import accountservice.dto.*;
+import accountservice.entity.AccountHoldEntity;
 import enums.account.AccountCurrency;
 import enums.account.AccountType;
+import kafkacontracts.account.TransactionFundsRequestedEventPayload;
 import kafkacontracts.user.UserProfileBlockedEventPayload;
 import kafkacontracts.user.UserProfileCreatedEventPayload;
 import org.mapstruct.Mapper;
@@ -41,7 +43,15 @@ public interface AccountCommandMapper {
         return new GetAccountByIdCommand(UUID.fromString(request.getAccountId()));
     }
 
-    default UpdateAccountBalanceCommand toUpdateAccountBalanceCommand (UpdateAccountBalanceGrpcRequest request) {
+    default UpdateAccountBalanceCommand toUpdateAccountBalanceCommand(UpdateAccountBalanceGrpcRequest request) {
         return new UpdateAccountBalanceCommand(UUID.fromString(request.getAccountId()), BigDecimal.valueOf(request.getAmount()));
+    }
+
+    default TransactionFundsRequestCommand toTransactionFundsRequestCommand (TransactionFundsRequestedEventPayload payload) {
+        return new TransactionFundsRequestCommand(
+                payload.getTransactionId(),
+                payload.getTargetAccountId(),
+                payload.getAuthUserId()
+        );
     }
 }

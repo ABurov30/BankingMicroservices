@@ -1,22 +1,42 @@
 package apigateway.controller;
 
 import apigateway.client.TransactionGrpcClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import apigateway.config.CookieConfig;
+import apigateway.dto.card.CreateCardRequestDto;
+import apigateway.dto.transaction.CreateTransactionRequestDto;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/transaction")
 public class TransactionGatewayController {
 
     private final TransactionGrpcClient transactionClient;
+    private final CookieConfig cookieConfig;
 
-    public TransactionGatewayController(TransactionGrpcClient transactionClient) {
+    public TransactionGatewayController(
+            TransactionGrpcClient transactionClient,
+            CookieConfig cookieConfig
+    ) {
         this.transactionClient = transactionClient;
+        this.cookieConfig = cookieConfig;
     }
 
     @GetMapping("/health")
     public String getTransactionHealth() {
         return transactionClient.getTransactionHealth();
+    }
+
+    @PostMapping("/creat-transaction")
+    public void createTransaction(@Valid @RequestBody CreateTransactionRequestDto request,
+                                  HttpServletRequest httpRequest) {
+        Jwt jwt = cookieConfig.getAccessTokenJwt(httpRequest);
+        UUID authUserId = UUID.fromString(jwt.getSubject());
+
+        transactionClient.createTransaction(request, authUserId);
     }
 }

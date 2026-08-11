@@ -1,24 +1,31 @@
 package accountservice.service;
 
 import accountservice.exception.AccountsNotFoundException;
+import accountservice.repository.AccountHoldRepository;
 import accountservice.repository.AccountRepository;
 import enums.account.AccountType;
+import enums.account.ReservationStatus;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 
 @Service
 public class AccountScheduler {
     private final AccountRepository accountRepository;
+    private final AccountHoldRepository accountHoldRepository;
     private static final BigDecimal DEBIT_RATE = new BigDecimal("7");
 
     public AccountScheduler (
-            AccountRepository accountRepository
+            AccountRepository accountRepository,
+            AccountHoldRepository accountHoldRepository
     ) {
         this.accountRepository = accountRepository;
+        this.accountHoldRepository = accountHoldRepository;
     }
 
     @Scheduled(cron = "0 0 0 * * *", zone = "Europe/Paris")
@@ -43,5 +50,23 @@ public class AccountScheduler {
        });
 
        accountRepository.saveAll(accounts);
+    }
+
+    @Scheduled(fixedDelay = 5000)
+    @Transactional
+    public void releaseFundsForTransactionByTime() {
+        var accountHolds = accountHoldRepository.findForUpdateTop50ByReservationStatusAndExpiresAtLessThanEqualOrderByCreatedAtAsc(ReservationStatus.RESERVED, LocalDateTime.now(),  PageRequest.of(0, 50));
+
+        accountHolds.stream().forEach((accountHold) -> {
+            var account = accountRepository.findByIdForUpdate(accountHold.getAccountId())
+                    .orElseThrow(() -> new AccountsNotFoundException(accountHold.getAccountId()));
+
+            account.setReservedBalance(account.getReservedBalance().subtract(accountHold.getAmount()));
+            accountRepository.save(account);
+            accountHold.setStatus(ReservationStatus.RELEASED_BY_TIME);
+            accountHold.setReleasedAt(LocalDateTime.now());
+        });
+
+        accountHoldRepository.saveAll(accountHolds);
     }
 }

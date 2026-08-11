@@ -1,74 +1,156 @@
 package notificationservice.mapper.command;
 
-import kafkacontracts.account.AccountCreatedEventPayload;
-import kafkacontracts.account.AccountFrozenEventPayload;
-import kafkacontracts.account.AccountUnfrozenEventPayload;
+import kafkacontracts.account.*;
 import kafkacontracts.card.CardCreatedEventPayload;
 import kafkacontracts.card.CardFrozenEventPayload;
 import kafkacontracts.card.CardUnfrozenEventPayload;
+import notificationservice.dto.AccountPushNotificationPayload;
+import notificationservice.dto.CardPushNotificationPayload;
 import notificationservice.dto.CreatePushNotificationCommand;
+import notificationservice.dto.TransactionPushNotificationPayload;
 import notificationservice.enums.push.PushNotificationType;
 import org.mapstruct.Mapper;
 
+import org.apache.avro.Conversions;
+import org.apache.avro.Schema;
+
+import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+
 @Mapper(componentModel = "spring")
 public interface PushNotificationCommandMapper {
+    default AccountPushNotificationPayload toAccountPushNotificationPayload (AccountCreatedEventPayload payload) {
+        return new AccountPushNotificationPayload(
+                payload.getAccountId(),
+                payload.getAccountNumber()
+        );
+    }
+
+    default AccountPushNotificationPayload toAccountPushNotificationPayload (AccountFrozenEventPayload payload) {
+        return new AccountPushNotificationPayload(
+                payload.getAccountId(),
+                payload.getAccountNumber()
+        );
+    }
+
+    default AccountPushNotificationPayload toAccountPushNotificationPayload (AccountUnfrozenEventPayload payload) {
+        return new AccountPushNotificationPayload(
+                payload.getAccountId(),
+                payload.getAccountNumber()
+        );
+    }
+
     default CreatePushNotificationCommand toCreatePushNotificationCommand(AccountCreatedEventPayload payload) {
         return new CreatePushNotificationCommand(
-                payload.getAuthUserId(),
-                payload.getAccountId(),
-                payload.getAccountNumber(),
-                null,
-                PushNotificationType.ACCOUNT_CREATED
+                (AccountPushNotificationPayload) toAccountPushNotificationPayload(payload),
+                PushNotificationType.ACCOUNT_CREATED,
+                payload.getAuthUserId()
         );
     }
 
     default CreatePushNotificationCommand toCreatePushNotificationCommand(AccountFrozenEventPayload payload) {
         return new CreatePushNotificationCommand(
-                payload.getAuthUserId(),
-                payload.getAccountId(),
-                payload.getAccountNumber(),
-                null,
-                PushNotificationType.ACCOUNT_FROZEN
+                (AccountPushNotificationPayload)  toAccountPushNotificationPayload(payload),
+                PushNotificationType.ACCOUNT_FROZEN,
+                payload.getAuthUserId()
         );
     }
 
     default CreatePushNotificationCommand toCreatePushNotificationCommand(AccountUnfrozenEventPayload payload) {
         return new CreatePushNotificationCommand(
-                payload.getAuthUserId(),
+                (AccountPushNotificationPayload) toAccountPushNotificationPayload(payload),
+                PushNotificationType.ACCOUNT_UNFROZEN,
+                payload.getAuthUserId()
+        );
+    }
+
+    default CardPushNotificationPayload toCardPushNotificationPayload (CardCreatedEventPayload payload) {
+        return new CardPushNotificationPayload(
                 payload.getAccountId(),
                 payload.getAccountNumber(),
-                null,
-                PushNotificationType.ACCOUNT_UNFROZEN
+                payload.getCardNumber()
+        );
+    }
+
+    default CardPushNotificationPayload toCardPushNotificationPayload (CardFrozenEventPayload payload) {
+        return new CardPushNotificationPayload(
+                payload.getAccountId(),
+                payload.getAccountNumber(),
+                payload.getCardNumber()
+        );
+    }
+
+    default CardPushNotificationPayload toCardPushNotificationPayload (CardUnfrozenEventPayload payload) {
+        return new CardPushNotificationPayload(
+                payload.getAccountId(),
+                payload.getAccountNumber(),
+                payload.getCardNumber()
         );
     }
 
     default CreatePushNotificationCommand toCreatePushNotificationCommand(CardCreatedEventPayload payload) {
         return new CreatePushNotificationCommand(
-                payload.getAuthUserId(),
-                payload.getAccountId(),
-                payload.getAccountNumber(),
-                payload.getCardNumber(),
-                PushNotificationType.CARD_CREATED
+                toCardPushNotificationPayload(payload),
+                PushNotificationType.CARD_CREATED,
+                payload.getAuthUserId()
         );
     }
 
     default CreatePushNotificationCommand toCreatePushNotificationCommand(CardFrozenEventPayload payload) {
         return new CreatePushNotificationCommand(
-                payload.getAuthUserId(),
-                payload.getAccountId(),
-                payload.getAccountNumber(),
-                payload.getCardNumber(),
-                PushNotificationType.CARD_FROZEN
+                toCardPushNotificationPayload(payload),
+                PushNotificationType.CARD_FROZEN,
+                payload.getAuthUserId()
         );
     }
 
     default CreatePushNotificationCommand toCreatePushNotificationCommand(CardUnfrozenEventPayload payload) {
         return new CreatePushNotificationCommand(
-                payload.getAuthUserId(),
-                payload.getAccountId(),
+                toCardPushNotificationPayload(payload),
+                PushNotificationType.CARD_UNFROZEN,
+                payload.getAuthUserId()
+        );
+    }
+
+    default TransactionPushNotificationPayload toTransactionPushNotificationPayload (TransactionFailedEventPayload payload) {
+        return new TransactionPushNotificationPayload(
                 payload.getAccountNumber(),
-                payload.getCardNumber(),
-                PushNotificationType.CARD_UNFROZEN
+                toBigDecimal(payload.getAmount())
+        );
+    }
+
+    default TransactionPushNotificationPayload toTransactionPushNotificationPayload (TransactionCompletedEventPayload payload) {
+        return new TransactionPushNotificationPayload(
+                payload.getAccountNumber(),
+                toBigDecimal(payload.getAmount())
+        );
+    }
+
+    private BigDecimal toBigDecimal(ByteBuffer amount) {
+        Schema schema = TransactionFailedEventPayload.getClassSchema()
+                .getField("amount")
+                .schema();
+
+        return new Conversions.DecimalConversion().fromBytes(
+                amount.duplicate(),
+                schema,
+                schema.getLogicalType()
+        );
+    }
+
+    default CreatePushNotificationCommand toCreatePushNotificationCommand (TransactionFailedEventPayload payload) {
+        return new CreatePushNotificationCommand(
+                toTransactionPushNotificationPayload(payload),
+                PushNotificationType.TRANSACTION_FAILED,
+                payload.getAuthUserId()
+        );
+    }
+
+    default CreatePushNotificationCommand toCreatePushNotificationCommand (TransactionCompletedEventPayload payload) {
+        return new CreatePushNotificationCommand(
+                toTransactionPushNotificationPayload(payload),
+                PushNotificationType.TRANSACTION_COMPLETED,
+                payload.getAuthUserId()
         );
     }
 }

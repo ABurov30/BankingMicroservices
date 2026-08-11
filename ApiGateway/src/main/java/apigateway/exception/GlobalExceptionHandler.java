@@ -95,6 +95,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 
+    @ExceptionHandler(AccountNotActiveException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccountNotActiveException(
+            AccountNotActiveException exception
+    ) {
+        ApiErrorResponse response = new ApiErrorResponse(
+                Instant.now(),
+                HttpStatus.PRECONDITION_FAILED.value(),
+                HttpStatus.PRECONDITION_FAILED.getReasonPhrase(),
+                List.of(exception.getMessage())
+        );
+
+        return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).body(response);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidationException(
             MethodArgumentNotValidException exception

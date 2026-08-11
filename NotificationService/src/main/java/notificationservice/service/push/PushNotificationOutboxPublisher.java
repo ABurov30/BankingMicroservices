@@ -5,6 +5,8 @@ import notificationservice.entity.PushNotificationOutboxEventEntity;
 import notificationservice.mapper.eventpayload.PushNotificationEventPayloadMapper;
 import notificationservice.repository.PushNotificationOutboxEventRepository;
 import org.apache.avro.specific.SpecificRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import outboxsupport.KafkaOnSentHandler;
 import outboxsupport.OutboxEventStatus;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -17,6 +19,7 @@ import java.util.Map;
 
 @Service
 public class PushNotificationOutboxPublisher implements KafkaOnSentHandler {
+    private static final Logger log = LoggerFactory.getLogger(PushNotificationOutboxPublisher.class);
     private final PushNotificationOutboxEventRepository pushNotificationOutboxEventRepository;
     private final KafkaTemplate<String, SpecificRecord> kafkaTemplate;
     private final PushNotificationEventPayloadMapper eventPayloadMapper;
@@ -52,6 +55,8 @@ public class PushNotificationOutboxPublisher implements KafkaOnSentHandler {
                             }
                         });
             } catch (Exception e) {
+                log.error("Unable to publish push-notification outbox event: eventId={}, eventType={}",
+                        event.getId(), event.getEventType(), e);
                 onFailed(event.getId(), e, pushNotificationOutboxEventRepository);
             }
         }

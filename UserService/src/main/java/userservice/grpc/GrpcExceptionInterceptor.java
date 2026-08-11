@@ -9,6 +9,8 @@ import io.grpc.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import userservice.exception.UserProfileAlreadyActiveException;
+import userservice.exception.UserProfileAlreadyBlockedException;
 import userservice.exception.UserProfileAlreadyExist;
 import userservice.exception.UserProfileNotFoundException;
 
@@ -50,6 +52,13 @@ public class GrpcExceptionInterceptor implements ServerInterceptor {
 
         if (exception instanceof UserProfileNotFoundException) {
             return Status.NOT_FOUND;
+        }
+
+        if (
+                exception instanceof UserProfileAlreadyBlockedException ||
+                        exception instanceof UserProfileAlreadyActiveException
+        ) {
+            return Status.FAILED_PRECONDITION;
         }
 
         if (exception instanceof IllegalArgumentException) {

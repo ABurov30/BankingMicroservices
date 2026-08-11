@@ -6,6 +6,8 @@ import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.core.io.Resource;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
@@ -18,6 +20,7 @@ import java.security.interfaces.RSAPublicKey;
 
 @Configuration
 public class JwtConfig {
+    private static final Logger log = LoggerFactory.getLogger(JwtConfig.class);
     private final JwtProperties jwtProperties;
 
     public JwtConfig(JwtProperties jwtProperties) {
@@ -49,6 +52,7 @@ public class JwtConfig {
 
             return NimbusJwtEncoder.withKeyPair(publicKey, privateKey).build();
         } catch (Exception exception) {
+            log.error("Could not initialize JWT encoder from configured RSA key resources", exception);
             throw new IllegalStateException(
                     "Could not initialize JWT encoder from configured RSA key resources",
                     exception

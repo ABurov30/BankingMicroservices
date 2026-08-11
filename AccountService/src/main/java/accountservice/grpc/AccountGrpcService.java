@@ -5,8 +5,10 @@ import accountservice.dto.CreateAccountCommand;
 import accountservice.dto.GetAccountResult;
 import accountservice.dto.GetAccountsByOwnerUserIdCommand;
 import accountservice.mapper.command.AccountCommandMapper;
+import accountservice.mapper.command.TransferCommandMapper;
 import accountservice.mapper.grpc.AccountGrpcMapper;
 import accountservice.service.AccountService;
+import accountservice.service.TransferService;
 import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
 import org.springframework.stereotype.Service;
@@ -21,15 +23,21 @@ public class AccountGrpcService extends AccountRpcServiceGrpc.AccountRpcServiceI
     private final AccountCommandMapper commandMapper;
     private final AccountGrpcMapper grpcMapper;
     private final AccountService accountService;
+    private final TransferService transferService;
+    private final TransferCommandMapper transferCommandMapper;
 
     public AccountGrpcService(
             AccountCommandMapper commandMapper,
             AccountGrpcMapper grpcMapper,
-            AccountService accountService
+            AccountService accountService,
+            TransferService transferService,
+            TransferCommandMapper transferCommandMapper
     ) {
         this.commandMapper = commandMapper;
         this.grpcMapper = grpcMapper;
         this.accountService = accountService;
+        this.transferService = transferService;
+        this.transferCommandMapper = transferCommandMapper;
     }
 
     @Override
@@ -107,6 +115,14 @@ public class AccountGrpcService extends AccountRpcServiceGrpc.AccountRpcServiceI
     public void withdrawAccount(UpdateAccountBalanceGrpcRequest request, StreamObserver<AccountResponse> responseObserver) {
         GetAccountResult result = accountService.withdrawAccount(commandMapper.toUpdateAccountBalanceCommand(request));
         responseObserver.onNext(grpcMapper.toAccountResponse(result));
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void reserveFundsForTransaction(ReserveFundsForTransactionGrpcRequest request, StreamObserver<ReserveFundsForTransactionGrpcResponse> responseObserver) {
+        var result = transferService.reserveFundsForTransactional(transferCommandMapper.toReserveFundsForTransactionCommand(request));
+
+        responseObserver.onNext(grpcMapper.toReserveFundsForTransactionGrpcResponse(result));
         responseObserver.onCompleted();
     }
 }

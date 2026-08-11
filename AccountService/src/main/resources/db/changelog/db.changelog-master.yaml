@@ -9,3 +9,5 @@ databaseChangeLog:
       file: db/changelog/changes/004-create-currency-table.sql
   - include:
       file: db/changelog/changes/005-remove-credit-account-type.sql
+  - include:
+      file: db/changelog/changes/006-create-account-hold-table.sql

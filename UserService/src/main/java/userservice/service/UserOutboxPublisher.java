@@ -1,6 +1,8 @@
 package userservice.service;
 
 import org.apache.avro.specific.SpecificRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import outboxsupport.KafkaOnSentHandler;
 import outboxsupport.OutboxEventStatus;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -17,6 +19,7 @@ import java.util.Map;
 
 @Service
 public class UserOutboxPublisher implements KafkaOnSentHandler {
+    private static final Logger log = LoggerFactory.getLogger(UserOutboxPublisher.class);
     private final UserOutboxEventRepository userOutboxEventRepository;
     private final KafkaTemplate<String, SpecificRecord> kafkaTemplate;
     private final UserEventPayloadMapper eventPayloadMapper;
@@ -52,6 +55,8 @@ public class UserOutboxPublisher implements KafkaOnSentHandler {
                             }
                         });
             } catch (Exception e) {
+                log.error("Unable to publish user outbox event: eventId={}, eventType={}",
+                        event.getId(), event.getEventType(), e);
                 onFailed(event.getId(), e, userOutboxEventRepository);
             }
         }

@@ -7,6 +7,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 
@@ -16,6 +18,8 @@ import java.util.UUID;
 
 @Configuration
 public class CookieConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(CookieConfig.class);
 
     private final JwtDecoder jwtDecoder;
 
@@ -93,6 +97,7 @@ public class CookieConfig {
         try {
             UUID.fromString(jwt.getSubject());
         } catch (IllegalArgumentException exception) {
+            log.warn("Access token contains an invalid subject", exception);
             throw new InvalidAccessTokenException();
         }
 

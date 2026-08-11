@@ -1,10 +1,11 @@
 package accountservice.mapper.eventpayload;
 
-import kafkacontracts.account.AccountCreatedEventPayload;
-import kafkacontracts.account.AccountFrozenEventPayload;
-import kafkacontracts.account.AccountUnfrozenEventPayload;
+import kafkacontracts.account.*;
 import org.mapstruct.Mapper;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.UUID;
 
@@ -31,6 +32,39 @@ public interface AccountEventPayloadMapper {
                 .setAccountId(UUID.fromString(payload.get("accountId").toString()))
                 .setAuthUserId(UUID.fromString(payload.get("authUserId").toString()))
                 .setAccountNumber(payload.get("accountNumber").toString())
+                .build();
+    }
+
+    private static ByteBuffer toAvroDecimal(Object value) {
+        if (value == null) {
+            throw new IllegalArgumentException("Outbox payload field 'amount' is required");
+        }
+
+        BigDecimal amount = value instanceof BigDecimal decimal
+                ? decimal
+                : new BigDecimal(value.toString());
+
+        BigDecimal scaledAmount = amount.setScale(2, RoundingMode.UNNECESSARY);
+
+        if (scaledAmount.precision() > 19) {
+            throw new IllegalArgumentException("Amount exceeds Avro decimal(19,2): " + amount);
+        }
+
+        return ByteBuffer.wrap(scaledAmount.unscaledValue().toByteArray());
+    }
+
+    default TransactionCompletedEventPayload toTransactionCompletedEventPayload(Map<String, Object> payload) {
+        return TransactionCompletedEventPayload.newBuilder()
+                .setAccountNumber(payload.get("accountNumber").toString())
+                .setTransactionId(UUID.fromString(payload.get("transactionId").toString()))
+                .setAmount(toAvroDecimal(payload.get("amount")))
+                .setAuthUserId(UUID.fromString(payload.get("authUserId").toString()))
+                .build();
+    }
+
+    default TransactionCompensatedEventPayload toTransactionCompensatedEventPayload(Map<String, Object> payload) {
+        return TransactionCompensatedEventPayload.newBuilder()
+                .setTransactionId(UUID.fromString(payload.get("transactionId").toString()))
                 .build();
     }
 }

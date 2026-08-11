@@ -9,6 +9,8 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import outboxsupport.IdempotencyHandler;
@@ -20,6 +22,8 @@ import java.time.Instant;
 @Component
 @RequiredArgsConstructor
 public class IdempotentKafkaEventAspect implements IdempotencyHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(IdempotentKafkaEventAspect.class);
 
     private final ProcessedEventRepository processedEventRepository;
 
@@ -38,6 +42,7 @@ public class IdempotentKafkaEventAspect implements IdempotencyHandler {
         try {
             markAsProcessed(processedEvent, processedEventRepository);
         } catch (DataIntegrityViolationException e) {
+            log.warn("Skipping duplicate account Kafka event: eventKey={}", eventKey, e);
             return null;
         }
 

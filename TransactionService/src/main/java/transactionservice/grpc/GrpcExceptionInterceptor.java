@@ -9,6 +9,8 @@ import io.grpc.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import transactionservice.exception.FundsReservationFailedException;
+import transactionservice.exception.TransactionNotFoundException;
 
 @Component
 public class GrpcExceptionInterceptor implements ServerInterceptor {
@@ -40,6 +42,14 @@ public class GrpcExceptionInterceptor implements ServerInterceptor {
   }
 
   private Status mapException(Exception exception) {
+    if (exception instanceof TransactionNotFoundException) {
+      return Status.NOT_FOUND;
+    }
+
+    if (exception instanceof FundsReservationFailedException) {
+      return Status.FAILED_PRECONDITION;
+    }
+
     if (exception instanceof IllegalArgumentException) {
       return Status.INVALID_ARGUMENT;
     }

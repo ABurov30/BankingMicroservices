@@ -2,6 +2,8 @@ package notificationservice.service.email;
 
 import notificationservice.document.EmailNotificationDocument;
 import notificationservice.enums.email.EmailNotificationStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -15,6 +17,7 @@ import java.time.LocalDateTime;
 
 @Service
 public class EmailNotificationScheduler {
+    private static final Logger log = LoggerFactory.getLogger(EmailNotificationScheduler.class);
     private final EmailSenderService emailSenderService;
     private final MongoTemplate mongoTemplate;
     private static final int BATCH_SIZE = 50;
@@ -40,6 +43,7 @@ public class EmailNotificationScheduler {
                 emailSenderService.send(notification);
                 markSent(notification);
             } catch (Exception e) {
+                log.error("Email delivery failed; scheduling retry: notificationId={}", notification.getId(), e);
                 markSendFailed(notification, e);
             }
         }

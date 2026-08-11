@@ -5,6 +5,8 @@ import cardservice.mapper.eventpayload.CardEventPayloadMapper;
 import cardservice.repository.CardOutboxEventRepository;
 import kafkacontracts.card.CardEventType;
 import org.apache.avro.specific.SpecificRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,7 @@ import java.util.Map;
 
 @Service
 public class CardOutboxPublisher implements KafkaOnSentHandler {
+    private static final Logger log = LoggerFactory.getLogger(CardOutboxPublisher.class);
     private final CardOutboxEventRepository cardOutboxEventRepository;
     private final KafkaTemplate<String, SpecificRecord> kafkaTemplate;
     private final CardEventPayloadMapper eventPayloadMapper;
@@ -53,6 +56,8 @@ public class CardOutboxPublisher implements KafkaOnSentHandler {
                             }
                         });
             } catch (Exception e) {
+                log.error("Unable to publish card outbox event: eventId={}, eventType={}",
+                        event.getId(), event.getEventType(), e);
                 onFailed(event.getId(), e, cardOutboxEventRepository);
             }
         }

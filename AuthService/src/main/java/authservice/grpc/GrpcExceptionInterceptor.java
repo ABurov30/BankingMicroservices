@@ -1,16 +1,21 @@
 package authservice.grpc;
 
 import authservice.exception.AuthUserAlreadyVerifiedException;
+import authservice.exception.AuthUserAlreadyActiveException;
+import authservice.exception.AuthUserAlreadyBlockedException;
 import authservice.exception.AuthUserMustBeInForgetPasswordStatusException;
+import authservice.exception.AuthUserNotFoundByEmailException;
 import authservice.exception.AuthUserNotFoundException;
 import authservice.exception.AuthUserNotActiveException;
 import authservice.exception.EmailAlreadyExistsException;
 import authservice.exception.InvalidEmailOrPasswordException;
+import authservice.exception.InvalidOldPasswordException;
 import authservice.exception.InvalidVerificationCodeException;
 import authservice.exception.RefreshTokenAlreadyExpiredException;
 import authservice.exception.RefreshTokenAlreadyRevokedException;
 import authservice.exception.RefreshTokenNotFoundException;
 import authservice.exception.RoleNotFoundException;
+import authservice.exception.VerificationByRoleNotAllowedException;
 import io.grpc.ForwardingServerCallListener;
 import io.grpc.Metadata;
 import io.grpc.ServerCall;
@@ -64,7 +69,8 @@ public class GrpcExceptionInterceptor implements ServerInterceptor {
         if (
                 exception instanceof RefreshTokenNotFoundException ||
                         exception instanceof RoleNotFoundException ||
-                        exception instanceof AuthUserNotFoundException
+                        exception instanceof AuthUserNotFoundException ||
+                        exception instanceof AuthUserNotFoundByEmailException
         ) {
             return Status.NOT_FOUND;
         }
@@ -74,13 +80,22 @@ public class GrpcExceptionInterceptor implements ServerInterceptor {
                         exception instanceof RefreshTokenAlreadyRevokedException ||
                         exception instanceof AuthUserAlreadyVerifiedException ||
                         exception instanceof AuthUserMustBeInForgetPasswordStatusException ||
-                        exception instanceof AuthUserNotActiveException
+                        exception instanceof AuthUserNotActiveException ||
+                        exception instanceof AuthUserAlreadyBlockedException ||
+                        exception instanceof AuthUserAlreadyActiveException
         ) {
             return Status.FAILED_PRECONDITION;
         }
 
-        if (exception instanceof InvalidVerificationCodeException) {
+        if (
+                exception instanceof InvalidVerificationCodeException ||
+                        exception instanceof InvalidOldPasswordException
+        ) {
             return Status.INVALID_ARGUMENT;
+        }
+
+        if (exception instanceof VerificationByRoleNotAllowedException) {
+            return Status.PERMISSION_DENIED;
         }
 
         if (exception instanceof IllegalArgumentException) {

@@ -1,11 +1,9 @@
 package accountservice.mapper.grpc;
 
-import account.contract.v1.AccountResponse;
-import account.contract.v1.CreateAccountGrpcResponse;
-import account.contract.v1.GetAccountByIdGrpcResponse;
-import account.contract.v1.GetAccountsGrpcResponse;
+import account.contract.v1.*;
 import accountservice.dto.CreateAccountResult;
 import accountservice.dto.GetAccountResult;
+import accountservice.dto.ReserveFundsForTransactionResult;
 import org.mapstruct.Mapper;
 
 import java.util.List;
@@ -31,6 +29,13 @@ public interface AccountGrpcMapper {
     default GetAccountByIdGrpcResponse toGetAccountByIdGrpcResponse(AccountResponse response) {
         return GetAccountByIdGrpcResponse.newBuilder()
                 .setAccount(response)
+                .build();
+    }
+
+    default ReserveFundsForTransactionGrpcResponse toReserveFundsForTransactionGrpcResponse (ReserveFundsForTransactionResult result) {
+        return ReserveFundsForTransactionGrpcResponse.newBuilder()
+                .setStatus(result.status().name())
+                .setMessage(result.message())
                 .build();
     }
 }

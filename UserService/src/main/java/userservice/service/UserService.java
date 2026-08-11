@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import userservice.dto.*;
 import userservice.entity.UserOutboxEventEntity;
 import userservice.entity.UserProfileEntity;
+import userservice.exception.UserProfileAlreadyActiveException;
+import userservice.exception.UserProfileAlreadyBlockedException;
 import userservice.exception.UserProfileNotFoundException;
 import userservice.mapper.result.UserResultMapper;
 import userservice.repository.UserOutboxEventRepository;
@@ -89,7 +91,7 @@ public class UserService {
                 .orElseThrow(() -> new UserProfileNotFoundException(blockedUserCommand.authUserId()));
 
         if (userProfileEntity.getStatus() == UserProfileStatus.BLOCKED) {
-            throw new IllegalArgumentException("User profile already blocked");
+            throw new UserProfileAlreadyBlockedException(userProfileEntity.getAuthUserId());
         }
 
         userProfileEntity.setStatus(UserProfileStatus.BLOCKED);
@@ -113,7 +115,7 @@ public class UserService {
                 .orElseThrow(() -> new UserProfileNotFoundException(unlockUserCommand.authUserId()));
 
         if (userProfileEntity.getStatus() == UserProfileStatus.ACTIVE) {
-            throw new IllegalArgumentException("User profile already active");
+            throw new UserProfileAlreadyActiveException(userProfileEntity.getAuthUserId());
         }
 
         userProfileEntity.setStatus(UserProfileStatus.ACTIVE);

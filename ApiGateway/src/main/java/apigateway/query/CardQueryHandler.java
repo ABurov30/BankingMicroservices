@@ -7,6 +7,7 @@ import apigateway.dto.card.CreateCardRequestDto;
 import apigateway.dto.card.CreateCardResponseDto;
 import apigateway.dto.card.UpdateCardRequestDto;
 import apigateway.dto.card.UpdateCardResponseDto;
+import apigateway.exception.AccountNotActiveException;
 import enums.account.AccountStatus;
 import org.springframework.stereotype.Service;
 
@@ -38,7 +39,7 @@ public class CardQueryHandler {
     private void checkAccountStatus(UUID accountId) {
         var account = accountGrpcClient.getAccountById(new GetAccountByIdRequestDto(accountId));
         if (account.status() != AccountStatus.ACTIVE) {
-            throw new RuntimeException("Account should be in active status");
+            throw new AccountNotActiveException(accountId);
         }
     }
 }
