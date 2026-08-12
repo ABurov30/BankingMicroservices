@@ -1,10 +1,14 @@
 package apigateway.client;
 
+import account.contract.v1.AccountResponse;
+import apigateway.dto.account.GetAccountResponseDto;
 import apigateway.dto.transaction.CreateTransactionRequestDto;
+import apigateway.dto.transaction.TransactionResponseDto;
 import apigateway.mapper.grpc.TransactionGrpcMapper;
 import com.google.protobuf.Empty;
 
 import java.util.UUID;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.stereotype.Service;
@@ -37,5 +41,11 @@ public class TransactionGrpcClient {
     ) {
         stub.withDeadlineAfter(2, TimeUnit.SECONDS)
                 .createTransaction(grpcMapper.toCreateTransactionGrpcRequest(request, sourceAuthUserId, targetAuthUserId));
+    }
+
+    public List<TransactionResponseDto> getTransactionsByAccounts(List<AccountResponse> accounts) {
+        GetTransactionsByAccountsGrpcResponse response = stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+                .getTransactionsByAccounts(grpcMapper.toGetTransactionsByAccountsGrpcRequest(accounts));
+        return grpcMapper.toTransactionResponseDtos(response);
     }
 }

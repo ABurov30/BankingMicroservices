@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import transactionservice.dto.ReserveFudsForTransactionResponseDto;
 import transactionservice.mapper.dto.TransactionDtoMapper;
 
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 
@@ -23,5 +24,14 @@ public class AccountGrpcClient {
 
     public ReserveFudsForTransactionResponseDto reserveFundsForTransaction(ReserveFundsForTransactionGrpcRequest grpcRequest) {
         return dtoMapper.toReserveFudsForTransactionResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS).reserveFundsForTransaction(grpcRequest));
+    }
+
+    public AccountResponse getAccountById(UUID accountId) {
+        GetAccountByIdGrpcRequest request = GetAccountByIdGrpcRequest.newBuilder()
+                .setAccountId(accountId.toString())
+                .build();
+        return stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+                .getAccountById(request)
+                .getAccount();
     }
 }

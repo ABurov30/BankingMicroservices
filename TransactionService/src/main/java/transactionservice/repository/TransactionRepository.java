@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import transactionservice.entity.TransactionEntity;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -15,4 +17,12 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT tr from TransactionEntity tr WHERE tr.id = :transactionId")
     Optional<TransactionEntity> findByIdToUpdate(@Param("transactionId") UUID transactionId);
+
+    @Query("""
+            SELECT tr
+            FROM TransactionEntity tr
+            WHERE tr.sourceAccountId IN :accountIds OR tr.targetAccountId IN :accountIds
+            ORDER BY tr.createdAt DESC
+            """)
+    List<TransactionEntity> findByAccountIds(@Param("accountIds") Collection<UUID> accountIds);
 }

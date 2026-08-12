@@ -4,6 +4,7 @@ import apigateway.client.TransactionGrpcClient;
 import apigateway.config.CookieConfig;
 import apigateway.dto.card.CreateCardRequestDto;
 import apigateway.dto.transaction.CreateTransactionRequestDto;
+import apigateway.dto.transaction.TransactionResponseDto;
 import apigateway.query.TransactionQueryHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -11,6 +12,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import java.util.List;
 
 @RestController
 @RequestMapping("/transaction")
@@ -42,5 +44,10 @@ public class TransactionGatewayController {
         UUID authUserId = UUID.fromString(jwt.getSubject());
 
         transactionQueryHandler.startTransaction(request, authUserId);
+    }
+
+    @GetMapping("/user/{userId}")
+    public List<TransactionResponseDto> getTransactionsByUserId(@PathVariable UUID userId) {
+        return transactionQueryHandler.getTransactionsByUserId(userId);
     }
 }

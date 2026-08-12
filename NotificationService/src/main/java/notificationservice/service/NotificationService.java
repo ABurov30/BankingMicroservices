@@ -97,7 +97,8 @@ public class NotificationService {
         outboxEventEntity.setPayload(Map.of(
                 "authUserId", pushNotificationDocument.getAuthUserId(),
                 "title", pushNotificationDocument.getTitle(),
-                "body", pushNotificationDocument.getBody()
+                "body", pushNotificationDocument.getBody(),
+                "type", pushNotificationDocument.getType().name()
         ));
 
         pushNotificationOutboxEventRepository.save(outboxEventEntity);

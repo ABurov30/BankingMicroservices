@@ -17,7 +17,10 @@ import transactionservice.repository.TransactionOutboxEventRepository;
 import transactionservice.repository.TransactionRepository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class TransactionService {
@@ -97,6 +100,14 @@ public class TransactionService {
                         "authUserId", command.targetAuthUserId()
                 )
         );
+    }
+
+    public List<TransactionEntity> getTransactionsByAccountIds(Collection<UUID> accountIds) {
+        if (accountIds.isEmpty()) {
+            return List.of();
+        }
+
+        return transactionRepository.findByAccountIds(accountIds);
     }
 
     @Transactional

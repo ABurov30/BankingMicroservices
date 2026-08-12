@@ -18,6 +18,7 @@ public interface PushNotificationEventPayloadMapper {
                 .setAuthUserId(uuid(value.get("authUserId")))
                 .setTitle(value.get("title").toString())
                 .setBody(value.get("body").toString())
+                .setType(value.get("type").toString())
                 .build();
     }
 }
