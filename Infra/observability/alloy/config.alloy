@@ -1,0 +1,47 @@
+discovery.docker "bank" {
+  host             = "unix:///var/run/docker.sock"
+  refresh_interval = "5s"
+}
+
+discovery.relabel "bank" {
+  targets = []
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "service"
+  }
+}
+
+loki.source.docker "bank" {
+  host             = "unix:///var/run/docker.sock"
+  targets          = discovery.docker.bank.targets
+  relabel_rules    = discovery.relabel.bank.rules
+  forward_to       = [loki.process.bank.receiver]
+  refresh_interval = "5s"
+}
+
+loki.process "bank" {
+  stage.static_labels {
+    values = {
+      env = "dev",
+    }
+  }
+
+  forward_to = [loki.write.bank.receiver]
+}
+
+loki.write "bank" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
+
+livedebugging {
+  enabled = true
+}

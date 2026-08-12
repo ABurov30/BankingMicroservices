@@ -24,6 +24,14 @@ spec:
               value: {{ .Values.apiGateway.name | quote }}
             - name: API_GATEWAY_PORT
               value: {{ .Values.apiGateway.port | quote }}
+{{- if .Values.jaeger.enabled }}
+            - name: TRACING_SAMPLING_PROBABILITY
+              value: {{ .Values.jaeger.tracing.samplingProbability | quote }}
+            - name: OTLP_TRACING_ENDPOINT
+              value: "http://{{ .Values.jaeger.name }}:{{ .Values.jaeger.otlpHttpPort }}/v1/traces"
+            - name: MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED
+              value: {{ .Values.jaeger.tracing.metricsExportEnabled | quote }}
+{{- end }}
 
             - name: AUTH_GRPC_HOST
               value: {{ .Values.services.auth.name | quote }}

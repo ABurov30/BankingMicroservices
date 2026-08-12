@@ -283,6 +283,8 @@ jobs:
           KAFKA_BOOTSTRAP_SERVERS: kafka:${{ vars.KAFKA_CONTAINER_PORT }}
           SCHEMA_REGISTRY_PORT: ${{ vars.SCHEMA_REGISTRY_PORT }}
           SCHEMA_REGISTRY_URL: http://schema-registry:8081
+          GF_SECURITY_ADMIN_USER: ${{ vars.GF_SECURITY_ADMIN_USER || 'admin' }}
+          GF_SECURITY_ADMIN_PASSWORD: ${{ secrets.GF_SECURITY_ADMIN_PASSWORD || 'admin' }}
 
           API_GATEWAY_NAME: ${{ vars.API_GATEWAY_NAME }}
           API_GATEWAY_PORT: ${{ vars.API_GATEWAY_PORT }}
@@ -372,7 +374,22 @@ jobs:
 
           JWT_PRIVATE_KEY_PATH: ${{ vars.JWT_PRIVATE_KEY_PATH }}
           JWT_PUBLIC_KEY_PATH: ${{ vars.JWT_PUBLIC_KEY_PATH }}
-        run: docker compose up --build -d
+        run: |
+          docker compose up --build -d
+
+          for service in jaeger prometheus loki grafana alloy; do
+            container_id="$(docker compose ps -q "$service")"
+            if [ -z "$container_id" ]; then
+              echo "Observability service '$service' was not created"
+              exit 1
+            fi
+
+            if [ "$(docker inspect -f '{{.State.Running}}' "$container_id")" != "true" ]; then
+              echo "Observability service '$service' is not running"
+              docker compose logs "$service"
+              exit 1
+            fi
+          done
 
       - name: Show Docker Compose status
         working-directory: Infra
@@ -386,6 +403,8 @@ jobs:
           KAFKA_BOOTSTRAP_SERVERS: kafka:${{ vars.KAFKA_CONTAINER_PORT }}
           SCHEMA_REGISTRY_PORT: ${{ vars.SCHEMA_REGISTRY_PORT }}
           SCHEMA_REGISTRY_URL: http://schema-registry:8081
+          GF_SECURITY_ADMIN_USER: ${{ vars.GF_SECURITY_ADMIN_USER || 'admin' }}
+          GF_SECURITY_ADMIN_PASSWORD: ${{ secrets.GF_SECURITY_ADMIN_PASSWORD || 'admin' }}
 
           API_GATEWAY_NAME: ${{ vars.API_GATEWAY_NAME }}
           API_GATEWAY_PORT: ${{ vars.API_GATEWAY_PORT }}
@@ -490,6 +509,8 @@ jobs:
           KAFKA_BOOTSTRAP_SERVERS: kafka:${{ vars.KAFKA_CONTAINER_PORT }}
           SCHEMA_REGISTRY_PORT: ${{ vars.SCHEMA_REGISTRY_PORT }}
           SCHEMA_REGISTRY_URL: http://schema-registry:8081
+          GF_SECURITY_ADMIN_USER: ${{ vars.GF_SECURITY_ADMIN_USER || 'admin' }}
+          GF_SECURITY_ADMIN_PASSWORD: ${{ secrets.GF_SECURITY_ADMIN_PASSWORD || 'admin' }}
 
           API_GATEWAY_NAME: ${{ vars.API_GATEWAY_NAME }}
           API_GATEWAY_PORT: ${{ vars.API_GATEWAY_PORT }}

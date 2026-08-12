@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: Bank Microservices
+    orgId: 1
+    folder: Bank Microservices
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

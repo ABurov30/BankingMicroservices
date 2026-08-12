@@ -29,7 +29,8 @@ public class SecurityConfig {
     "/v3/api-docs/**",
     "/swagger-ui/**",
     "/swagger-ui.html",
-    "/actuator/health"
+    "/actuator/health",
+    "/actuator/prometheus"
   };
 
   private final CookieConfig cookieConfig;
@@ -125,6 +126,7 @@ public class SecurityConfig {
         || path.startsWith("/v3/api-docs/")
         || path.equals("/swagger-ui.html")
         || path.startsWith("/swagger-ui/")
-        || path.equals("/actuator/health");
+        || path.equals("/actuator/health")
+        || path.equals("/actuator/prometheus");
   }
 }

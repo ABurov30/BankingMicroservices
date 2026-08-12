@@ -38,6 +38,14 @@ spec:
               value: {{ $.Values.kafka.bootstrapServers | quote }}
             - name: SCHEMA_REGISTRY_URL
               value: {{ $.Values.kafka.schemaRegistry.url | quote }}
+{{- if $.Values.jaeger.enabled }}
+            - name: TRACING_SAMPLING_PROBABILITY
+              value: {{ $.Values.jaeger.tracing.samplingProbability | quote }}
+            - name: OTLP_TRACING_ENDPOINT
+              value: "http://{{ $.Values.jaeger.name }}:{{ $.Values.jaeger.otlpHttpPort }}/v1/traces"
+            - name: MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED
+              value: {{ $.Values.jaeger.tracing.metricsExportEnabled | quote }}
+{{- end }}
 {{- if $svc.postgres }}
             - name: SPRING_DATASOURCE_URL
               value: "jdbc:postgresql://{{ $svc.postgres.host }}:5432/{{ $svc.postgres.db }}"

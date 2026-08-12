@@ -115,3 +115,42 @@ apiGateway:
   name: api-gateway
   port: 8080
   serviceType: NodePort
+
+prometheus:
+  image: prom/prometheus:v2.55.1
+  port: 9090
+  storage: 1Gi
+  scrapeInterval: 15s
+
+grafana:
+  image: grafana/grafana:11.4.0
+  port: 3000
+  serviceType: ClusterIP
+  storage: 1Gi
+  adminUser: admin
+  adminPassword: admin
+
+jaeger:
+  enabled: true
+  name: jaeger
+  image: cr.jaegertracing.io/jaegertracing/jaeger:2.20.0
+  serviceType: ClusterIP
+  uiPort: 16686
+  otlpGrpcPort: 4317
+  otlpHttpPort: 4318
+  samplingPort: 5778
+  zipkinPort: 9411
+  tracing:
+    samplingProbability: "1.0"
+    metricsExportEnabled: false
+
+loki:
+  image: grafana/loki:3.7.0
+  port: 3100
+  grpcPort: 9096
+  storage: 1Gi
+  retention: 168h
+
+alloy:
+  image: grafana/alloy:latest
+  port: 12345
