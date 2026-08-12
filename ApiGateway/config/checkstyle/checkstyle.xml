@@ -106,7 +106,7 @@
                     INTERFACE_DEF, LAMBDA, LITERAL_CATCH,
                     LITERAL_DO, LITERAL_ELSE, LITERAL_FINALLY, LITERAL_FOR, LITERAL_IF,
                     LITERAL_SWITCH, LITERAL_SYNCHRONIZED, LITERAL_TRY, LITERAL_WHILE, METHOD_DEF,
-                    OBJBLOCK, STATIC_INIT, RECORD_DEF, COMPACT_CTOR_DEF, SWITCH_RULE"/>
+                    OBJBLOCK, STATIC_INIT, RECORD_DEF, COMPACT_CTOR_DEF"/>
     </module>
     <module name="LeftCurly">
       <property name="id" value="LeftCurlyNl"/>
@@ -136,7 +136,7 @@
       <property name="tokens"
                value="CLASS_DEF, METHOD_DEF, CTOR_DEF, LITERAL_FOR, LITERAL_WHILE, STATIC_INIT,
                     INSTANCE_INIT, ANNOTATION_DEF, ENUM_DEF, INTERFACE_DEF, RECORD_DEF,
-                    COMPACT_CTOR_DEF, LITERAL_SWITCH, LITERAL_CASE, LITERAL_DEFAULT,
+                    COMPACT_CTOR_DEF, LITERAL_SWITCH, LITERAL_CASE,
                     LITERAL_FINALLY, LITERAL_CATCH"/>
     </module>
     <module name="SuppressionXpathSingleFilter">
@@ -256,7 +256,12 @@
       <message key="name.invalidPattern"
              value="Type name ''{0}'' must match pattern ''{1}''."/>
     </module>
-    <module name="GoogleNonConstantFieldName"/>
+    <module name="MemberName">
+      <property name="format"
+        value="^(?![a-z]$)(?![a-z][A-Z])[a-z][a-zA-Z0-9]*(?:_[0-9]+)*$"/>
+      <message key="name.invalidPattern"
+             value="Member name ''{0}'' must match pattern ''{1}''."/>
+    </module>
     <module name="ParameterName">
       <property name="format" value="^[a-z]([a-z0-9][a-zA-Z0-9]*)?$"/>
       <message key="name.invalidPattern"
@@ -326,6 +331,10 @@
       <property name="lineWrappingIndentation" value="4"/>
       <property name="arrayInitIndent" value="2"/>
     </module>
+    <module name="SuppressionXpathSingleFilter">
+      <property name="checks" value="Indentation"/>
+      <property name="query" value="//LITERAL_SWITCH[ancestor::SWITCH_RULE]//*"/>
+    </module>
 
     <module name="AbbreviationAsWordInName">
       <property name="ignoreFinal" value="false"/>
@@ -376,11 +385,6 @@
                     LT, MINUS, MOD, NOT_EQUAL, PLUS, QUESTION, SL, SR, STAR, METHOD_REF,
                     TYPE_EXTENSION_AND "/>
     </module>
-    <module name="OperatorWrap">
-      <property name="id" value="OperatorWrapEOL"/>
-      <property name="option" value="EOL"/>
-      <property name="tokens" value="LAMBDA"/>
-    </module>
     <module name="AnnotationLocation">
       <property name="id" value="AnnotationLocationTypeAndPackage"/>
       <property name="tokens"
@@ -397,7 +401,6 @@
       <property name="tokens" value="VARIABLE_DEF"/>
       <property name="allowSamelineMultipleAnnotations" value="true"/>
     </module>
-    <module name="MissingOverrideOnRecordAccessor"/>
     <module name="NonEmptyAtclauseDescription"/>
     <module name="InvalidJavadocPosition"/>
     <module name="JavadocTagContinuationIndentation"/>
