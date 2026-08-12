@@ -1,0 +1,37 @@
+# AuthService Data and Persistence
+
+[Docs Index](README.md)
+
+## Storage
+
+Primary storage is PostgreSQL. Schema changes are managed by Liquibase under `src/main/resources/db/changelog`.
+
+## Entities
+
+| Entity | Purpose |
+| --- | --- |
+| `AuthUserEntity` | Auth user credentials, verification state, and status |
+| `RefreshTokenEntity` | Refresh token state and revocation/expiration data |
+| `RoleEntity` | Available roles |
+| `UserRoleEntity` | Auth user to role relation |
+| `AuthOutboxEventEntity` | Outbox rows for Kafka publishing |
+
+## Repositories
+
+- `AuthUserRepository`
+- `RefreshTokenRepository`
+- `RoleRepository`
+- `UserRoleRepository`
+- `AuthOutboxEventRepository`
+
+## Migration Files
+
+- `001-create-auth-tables.sql`
+- `002-update-auth-verification-events.sql`
+- `003-add-auth-user-role-changed-event.sql`
+- `004-update-auth-user-status-constraint.sql`
+- `005-drop-auth-outbox-event-key-unique-constraint.sql`
+
+## Data Integrity Notes
+
+Refresh token and user status changes affect security. Avoid bypassing service methods that enforce token revocation, status checks, and event publication.
