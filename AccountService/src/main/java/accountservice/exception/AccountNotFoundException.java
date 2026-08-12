@@ -3,7 +3,7 @@ package accountservice.exception;
 import java.util.UUID;
 
 public class AccountNotFoundException extends RuntimeException {
-    public AccountNotFoundException(UUID accountId) {
-        super("Account not found " + accountId);
-    }
+  public AccountNotFoundException(UUID accountId) {
+    super("Account not found " + accountId);
+  }
 }

@@ -7,7 +7,15 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface CardResultMapper {
-    @Mapping(target = "cardId", source = "id") @Mapping(target = "status", source = "cardStatus") CreateCardResult toCreateCardResult(CardEntity value);
-    @Mapping(target = "cardId", source = "id") @Mapping(target = "status", source = "cardStatus") UpdateCardResult toUpdateCardResult(CardEntity value);
-    @Mapping(target = "cardId", source = "id") @Mapping(target = "status", source = "cardStatus") GetCardResult toGetCardResult(CardEntity value);
+  @Mapping(target = "cardId", source = "id")
+  @Mapping(target = "status", source = "cardStatus")
+  CreateCardResult toCreateCardResult(CardEntity value);
+
+  @Mapping(target = "cardId", source = "id")
+  @Mapping(target = "status", source = "cardStatus")
+  UpdateCardResult toUpdateCardResult(CardEntity value);
+
+  @Mapping(target = "cardId", source = "id")
+  @Mapping(target = "status", source = "cardStatus")
+  GetCardResult toGetCardResult(CardEntity value);
 }

@@ -7,6 +7,6 @@ import userservice.entity.UserProfileEntity;
 
 @Mapper(componentModel = "spring")
 public interface UserResultMapper {
-    @Mapping(target = "userProfileId", source = "id")
-    GetUserInfoResult toGetUserInfoResult(UserProfileEntity userProfileEntity);
+  @Mapping(target = "userProfileId", source = "id")
+  GetUserInfoResult toGetUserInfoResult(UserProfileEntity userProfileEntity);
 }

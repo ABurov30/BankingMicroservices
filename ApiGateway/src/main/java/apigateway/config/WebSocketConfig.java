@@ -11,22 +11,23 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    private final JwtHandshakeHandler jwtHandshakeHandler;
+  private final JwtHandshakeHandler jwtHandshakeHandler;
 
-    public WebSocketConfig(JwtHandshakeHandler jwtHandshakeHandler) {
-        this.jwtHandshakeHandler = jwtHandshakeHandler;
-    }
+  public WebSocketConfig(JwtHandshakeHandler jwtHandshakeHandler) {
+    this.jwtHandshakeHandler = jwtHandshakeHandler;
+  }
 
-    @Override
-    public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws")
-                .setHandshakeHandler(jwtHandshakeHandler)
-                .setAllowedOriginPatterns("http://localhost:*", "https://buro-bank.ru");
-    }
+  @Override
+  public void registerStompEndpoints(StompEndpointRegistry registry) {
+    registry
+        .addEndpoint("/ws")
+        .setHandshakeHandler(jwtHandshakeHandler)
+        .setAllowedOriginPatterns("http://localhost:*", "https://buro-bank.ru");
+  }
 
-    @Override
-    public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.enableSimpleBroker("/queue");
-        registry.setUserDestinationPrefix("/user");
-    }
+  @Override
+  public void configureMessageBroker(MessageBrokerRegistry registry) {
+    registry.enableSimpleBroker("/queue");
+    registry.setUserDestinationPrefix("/user");
+  }
 }

@@ -6,41 +6,39 @@ import apigateway.client.UserGrpcClient;
 import apigateway.dto.transaction.CreateTransactionRequestDto;
 import apigateway.dto.transaction.TransactionResponseDto;
 import apigateway.mapper.grpc.AccountGrpcMapper;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.UUID;
+import org.springframework.stereotype.Service;
 
 @Service
 public class TransactionQueryHandler {
-    private final AccountGrpcClient accountGrpcClient;
-    private final UserGrpcClient userGrpcClient;
-    private final TransactionGrpcClient transactionGrpcClient;
-    private final AccountGrpcMapper accountGrpcMapper;
+  private final AccountGrpcClient accountGrpcClient;
+  private final UserGrpcClient userGrpcClient;
+  private final TransactionGrpcClient transactionGrpcClient;
+  private final AccountGrpcMapper accountGrpcMapper;
 
-    public TransactionQueryHandler (
-            AccountGrpcClient accountGrpcClient,
-            UserGrpcClient userGrpcClient,
-            TransactionGrpcClient transactionGrpcClient,
-            AccountGrpcMapper accountGrpcMapper
-    ) {
-        this.accountGrpcClient = accountGrpcClient;
-        this.userGrpcClient = userGrpcClient;
-        this.transactionGrpcClient = transactionGrpcClient;
-        this.accountGrpcMapper = accountGrpcMapper;
-    }
+  public TransactionQueryHandler(
+      AccountGrpcClient accountGrpcClient,
+      UserGrpcClient userGrpcClient,
+      TransactionGrpcClient transactionGrpcClient,
+      AccountGrpcMapper accountGrpcMapper) {
+    this.accountGrpcClient = accountGrpcClient;
+    this.userGrpcClient = userGrpcClient;
+    this.transactionGrpcClient = transactionGrpcClient;
+    this.accountGrpcMapper = accountGrpcMapper;
+  }
 
-    public void startTransaction(CreateTransactionRequestDto request, UUID authUserId) {
-        UUID targetAuthUserId = accountGrpcClient.getAccountOwnerAuthUserId(request.targetAccountId());
-        transactionGrpcClient.createTransaction(request, authUserId, targetAuthUserId);
-    }
+  public void startTransaction(CreateTransactionRequestDto request, UUID authUserId) {
+    UUID targetAuthUserId = accountGrpcClient.getAccountOwnerAuthUserId(request.targetAccountId());
+    transactionGrpcClient.createTransaction(request, authUserId, targetAuthUserId);
+  }
 
-    public List<TransactionResponseDto> getTransactionsByUserId(UUID userId) {
-        var accounts =accountGrpcClient.getAccountsByOwnerId(userId)
-                .stream()
-                .map(accountGrpcMapper::toAccountResponse)
-                .toList();
+  public List<TransactionResponseDto> getTransactionsByUserId(UUID userId) {
+    var accounts =
+        accountGrpcClient.getAccountsByOwnerId(userId).stream()
+            .map(accountGrpcMapper::toAccountResponse)
+            .toList();
 
-        return transactionGrpcClient.getTransactionsByAccounts(accounts);
-    }
+    return transactionGrpcClient.getTransactionsByAccounts(accounts);
+  }
 }

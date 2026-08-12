@@ -10,15 +10,15 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class GrpcClientConfig {
 
-    @Bean(destroyMethod = "shutdown")
-    ManagedChannel accountChannel(
-            @Value("${ACCOUNT_GRPC_HOST}") String host, @Value("${ACCOUNT_GRPC_PORT}") int port) {
+  @Bean(destroyMethod = "shutdown")
+  ManagedChannel accountChannel(
+      @Value("${ACCOUNT_GRPC_HOST}") String host, @Value("${ACCOUNT_GRPC_PORT}") int port) {
 
-        return ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
-    }
+    return ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
+  }
 
-    @Bean
-    AccountRpcServiceGrpc.AccountRpcServiceBlockingStub accountStub(ManagedChannel accountChannel) {
-        return AccountRpcServiceGrpc.newBlockingStub(accountChannel);
-    }
+  @Bean
+  AccountRpcServiceGrpc.AccountRpcServiceBlockingStub accountStub(ManagedChannel accountChannel) {
+    return AccountRpcServiceGrpc.newBlockingStub(accountChannel);
+  }
 }

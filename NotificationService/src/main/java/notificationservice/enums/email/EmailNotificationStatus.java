@@ -1,8 +1,8 @@
 package notificationservice.enums.email;
 
 public enum EmailNotificationStatus {
-    PENDING,
-    PROCESSING,
-    SENT,
-    FAILED
+  PENDING,
+  PROCESSING,
+  SENT,
+  FAILED
 }

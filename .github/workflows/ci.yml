@@ -58,6 +58,18 @@ jobs:
           java-version: 17
           cache: maven
 
+      - name: Check formatting
+        working-directory: ${{ matrix.path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+        run: mvn -s .mvn/settings-docker.xml spotless:check
+
+      - name: Run Checkstyle
+        working-directory: ${{ matrix.path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+        run: mvn -s .mvn/settings-docker.xml checkstyle:check
+
       - name: Generate ephemeral JWT keys
         working-directory: Infra
         if: matrix.keys_required == true

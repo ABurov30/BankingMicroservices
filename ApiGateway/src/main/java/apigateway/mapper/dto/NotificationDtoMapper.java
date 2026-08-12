@@ -6,11 +6,8 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface NotificationDtoMapper {
-    default NotificationResponseDto toNotificationResponseDto (NotificationCreatedEventPayload payload) {
-        return  new NotificationResponseDto(
-                payload.getTitle(),
-                payload.getBody(),
-                payload.getType()
-        );
-    }
+  default NotificationResponseDto toNotificationResponseDto(
+      NotificationCreatedEventPayload payload) {
+    return new NotificationResponseDto(payload.getTitle(), payload.getBody(), payload.getType());
+  }
 }

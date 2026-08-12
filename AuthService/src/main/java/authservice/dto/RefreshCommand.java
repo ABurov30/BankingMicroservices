@@ -1,6 +1,3 @@
 package authservice.dto;
 
-public record RefreshCommand(
-        String refreshToken
-) {
-}
+public record RefreshCommand(String refreshToken) {}

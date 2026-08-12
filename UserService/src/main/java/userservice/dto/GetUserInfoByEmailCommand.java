@@ -1,6 +1,3 @@
 package userservice.dto;
 
-public record GetUserInfoByEmailCommand(
-        String email
-) {
-}
+public record GetUserInfoByEmailCommand(String email) {}

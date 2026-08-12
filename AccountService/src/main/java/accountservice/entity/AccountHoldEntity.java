@@ -1,50 +1,48 @@
 package accountservice.entity;
 
-
 import enums.account.AccountCurrency;
 import enums.account.ReservationStatus;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Getter
 @Setter
 @Entity
 @Table(name = "account_holds")
 public class AccountHoldEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
-    @Column(name = "account_id", nullable = false)
-    private UUID accountId;
+  @Column(name = "account_id", nullable = false)
+  private UUID accountId;
 
-    @Column(name = "transaction_id", nullable = false)
-    private UUID transactionId;
+  @Column(name = "transaction_id", nullable = false)
+  private UUID transactionId;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "currency", nullable = false)
-    private AccountCurrency currency;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "currency", nullable = false)
+  private AccountCurrency currency;
 
-    @Column(name = "amount", nullable = false)
-    private BigDecimal amount;
+  @Column(name = "amount", nullable = false)
+  private BigDecimal amount;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private ReservationStatus status;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "status", nullable = false)
+  private ReservationStatus status;
 
-    @Column(name = "expires_at", updatable = false)
-    private LocalDateTime expiresAt;
+  @Column(name = "expires_at", updatable = false)
+  private LocalDateTime expiresAt;
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+  @CreationTimestamp
+  @Column(name = "created_at", nullable = false, updatable = false)
+  private LocalDateTime createdAt;
 
-    @Column(name = "released_at")
-    private LocalDateTime releasedAt;
+  @Column(name = "released_at")
+  private LocalDateTime releasedAt;
 }

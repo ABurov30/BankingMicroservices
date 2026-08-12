@@ -2,9 +2,4 @@ package accountservice.dto;
 
 import java.util.UUID;
 
-public record FreezeAccountCommand(
-        UUID accountId,
-        UUID authUserId,
-        String role
-) {
-}
+public record FreezeAccountCommand(UUID accountId, UUID authUserId, String role) {}

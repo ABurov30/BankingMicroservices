@@ -2,44 +2,43 @@ package authservice.entity;
 
 import enums.auth.AuthUserStatus;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Getter
 @Setter
 @Entity
 @Table(name = "auth_users")
 public class AuthUserEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
-    @Column(name = "password_hash", nullable = false)
-    private String passwordHash;
+  @Column(name = "password_hash", nullable = false)
+  private String passwordHash;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private AuthUserStatus status = AuthUserStatus.PENDING;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "status", nullable = false)
+  private AuthUserStatus status = AuthUserStatus.PENDING;
 
-    @Column(name = "email", nullable = false, unique = true)
-    private String email;
+  @Column(name = "email", nullable = false, unique = true)
+  private String email;
 
-    @Column(name = "email_verified", nullable = false)
-    private boolean emailVerified = false;
+  @Column(name = "email_verified", nullable = false)
+  private boolean emailVerified = false;
 
-    @Column(name = "verification_code_hash", nullable = false)
-    private String verificationCodeHash;
+  @Column(name = "verification_code_hash", nullable = false)
+  private String verificationCodeHash;
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+  @CreationTimestamp
+  @Column(name = "created_at", nullable = false, updatable = false)
+  private LocalDateTime createdAt;
 
-    @UpdateTimestamp
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+  @UpdateTimestamp
+  @Column(name = "updated_at", nullable = false)
+  private LocalDateTime updatedAt;
 }

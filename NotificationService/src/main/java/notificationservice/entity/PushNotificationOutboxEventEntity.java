@@ -6,5 +6,4 @@ import outboxsupport.OutboxEventEntity;
 
 @Entity
 @Table(name = "push_notification_outbox_events")
-public class PushNotificationOutboxEventEntity extends OutboxEventEntity {
-}
+public class PushNotificationOutboxEventEntity extends OutboxEventEntity {}

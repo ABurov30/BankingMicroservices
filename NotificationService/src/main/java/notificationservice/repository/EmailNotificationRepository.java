@@ -1,9 +1,8 @@
 package notificationservice.repository;
 
+import java.util.UUID;
 import notificationservice.document.EmailNotificationDocument;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-import java.util.UUID;
-
-public interface EmailNotificationRepository extends MongoRepository<EmailNotificationDocument, UUID> {
-}
+public interface EmailNotificationRepository
+    extends MongoRepository<EmailNotificationDocument, UUID> {}

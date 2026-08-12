@@ -8,138 +8,134 @@ import enums.auth.Roles;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthGatewayController {
 
-    private final AuthGrpcClient authClient;
-    private final CookieConfig cookieConfig;
+  private final AuthGrpcClient authClient;
+  private final CookieConfig cookieConfig;
 
+  public AuthGatewayController(AuthGrpcClient authClient, CookieConfig cookieConfig) {
+    this.cookieConfig = cookieConfig;
+    this.authClient = authClient;
+  }
 
-    public AuthGatewayController(
-            AuthGrpcClient authClient,
-            CookieConfig cookieConfig
-    ) {
-        this.cookieConfig = cookieConfig;
-        this.authClient = authClient;
+  @ResponseStatus(HttpStatus.OK)
+  @PostMapping("/signup")
+  public void signup(@Valid @RequestBody SignupRequestDto request) {
+    authClient.signup(request);
+  }
+
+  @PostMapping("/login")
+  public void login(@Valid @RequestBody LoginRequestDto request, HttpServletResponse response) {
+    LoginResponseDto loginResponse = authClient.login(request);
+
+    cookieConfig.setCookieTokens(
+        response,
+        loginResponse.accessToken(),
+        (int) loginResponse.accessTokenMinutesTtl(),
+        loginResponse.refreshToken(),
+        (int) loginResponse.refreshTokenDaysTtl());
+  }
+
+  @DeleteMapping("/logout")
+  public void logout(HttpServletRequest request, HttpServletResponse response) {
+    String refreshToken = cookieConfig.getCookieByKey(request, "rt");
+
+    if (refreshToken == null || refreshToken.isBlank()) {
+      throw new MissingRefreshTokenException();
     }
 
-    @ResponseStatus(HttpStatus.OK)
-    @PostMapping("/signup")
-    public void Signup(@Valid @RequestBody SignupRequestDto request) {
-        authClient.signup(request);
+    authClient.logout(new LogoutRequestDto(refreshToken));
+    cookieConfig.clearCookieTokens(response);
+  }
+
+  @PostMapping("/refresh")
+  public void refresh(HttpServletRequest request, HttpServletResponse response) {
+    String refreshToken = cookieConfig.getCookieByKey(request, "rt");
+
+    if (refreshToken == null || refreshToken.isBlank()) {
+      throw new MissingRefreshTokenException();
     }
 
-    @PostMapping("/login")
-    public void Login(@Valid @RequestBody LoginRequestDto request, HttpServletResponse response) {
-        LoginResponseDto loginResponse = authClient.login(request);
+    RefreshResponseDto refreshResponse = authClient.refresh(new RefreshRequestDto(refreshToken));
 
-        cookieConfig.setCookieTokens(
-                response,
-                loginResponse.accessToken(),
-                (int) loginResponse.accessTokenMinutesTtl(),
-                loginResponse.refreshToken(),
-                (int) loginResponse.refreshTokenDaysTtl());
-    }
+    cookieConfig.setCookieTokens(
+        response,
+        refreshResponse.accessToken(),
+        (int) refreshResponse.accessTokenMinutesTtl(),
+        refreshResponse.refreshToken(),
+        (int) refreshResponse.refreshTokenDaysTtl());
+  }
 
-    @DeleteMapping("/logout")
-    public void Logout(HttpServletRequest request, HttpServletResponse response) {
-        String refreshToken = cookieConfig.getCookieByKey(request, "rt");
+  @PutMapping("/change-password")
+  public void changePassword(@Valid @RequestBody ChangePasswordRequestDto request) {
+    authClient.changePassword(request);
+  }
 
-        if (refreshToken == null || refreshToken.isBlank()) {
-            throw new MissingRefreshTokenException();
-        }
+  @PutMapping("/verify-user")
+  public void verifyUser(
+      @Valid @RequestBody VerifyAuthUserByCodeRequestDto request, HttpServletResponse response) {
+    VerifyAuthUserByCodeResponseDto verifyResponse = authClient.verifyByCode(request);
 
-        authClient.logout(new LogoutRequestDto(refreshToken));
-        cookieConfig.clearCookieTokens(response);
-    }
+    cookieConfig.setCookieTokens(
+        response,
+        verifyResponse.accessToken(),
+        (int) verifyResponse.accessTokenMinutesTtl(),
+        verifyResponse.refreshToken(),
+        (int) verifyResponse.refreshTokenDaysTtl());
+  }
 
-    @PostMapping("/refresh")
-    public void Refresh(HttpServletRequest request, HttpServletResponse response) {
-        String refreshToken = cookieConfig.getCookieByKey(request, "rt");
+  @PostMapping("/forget-password")
+  public void forgetPassword(@Valid @RequestBody ForgetPasswordRequestDto request) {
+    authClient.forgetPassword(request);
+  }
 
-        if (refreshToken == null || refreshToken.isBlank()) {
-            throw new MissingRefreshTokenException();
-        }
+  @PutMapping("/reset-password")
+  public void resetPassword(
+      @Valid @RequestBody ResetPasswordRequestDto request, HttpServletResponse response) {
+    ResetPasswordsResponseDto resetPasswordResponse = authClient.resetPassword(request);
 
-        RefreshResponseDto refreshResponse = authClient.refresh(new RefreshRequestDto(refreshToken));
+    cookieConfig.setCookieTokens(
+        response,
+        resetPasswordResponse.accessToken(),
+        (int) resetPasswordResponse.accessTokenMinutesTtl(),
+        resetPasswordResponse.refreshToken(),
+        (int) resetPasswordResponse.refreshTokenDaysTtl());
+  }
 
-        cookieConfig.setCookieTokens(
-                response,
-                refreshResponse.accessToken(),
-                (int) refreshResponse.accessTokenMinutesTtl(),
-                refreshResponse.refreshToken(),
-                (int) refreshResponse.refreshTokenDaysTtl());
-    }
+  @GetMapping("/health")
+  public String getAuthHealth() {
+    return authClient.getAuthHealth();
+  }
 
-    @PutMapping("/change-password")
-    public void ChangePassword(@Valid @RequestBody ChangePasswordRequestDto request) {
-        authClient.changePassword(request);
-    }
+  @PutMapping("/manager/block-user")
+  public void blockUserByManager(@Valid @RequestBody BlockAuthUserRequestDto request) {
+    authClient.blockUser(request);
+  }
 
-    @PutMapping("/verify-user")
-    public void VerifyUser(@Valid @RequestBody VerifyAuthUserByCodeRequestDto request, HttpServletResponse response){
-        VerifyAuthUserByCodeResponseDto verifyResponse = authClient.verifyByCode(request);
+  @PutMapping("/manager/unlock-user")
+  public void unlockUserByManager(@Valid @RequestBody UnlockAuthUserRequestDto request) {
+    authClient.unlockUser(request);
+  }
 
-        cookieConfig.setCookieTokens(
-                response,
-                verifyResponse.accessToken(),
-                (int) verifyResponse.accessTokenMinutesTtl(),
-                verifyResponse.refreshToken(),
-                (int) verifyResponse.refreshTokenDaysTtl());
-    }
+  @PutMapping("/manager/verify-user/{authUserId}")
+  public void verifyUserByManager(@PathVariable UUID authUserId, HttpServletRequest httpRequest) {
+    Jwt jwt = cookieConfig.getAccessTokenJwt(httpRequest);
+    VerifyAuthUserByPrivilegeRoleRequestDto request =
+        new VerifyAuthUserByPrivilegeRoleRequestDto(
+            authUserId, Roles.valueOf(cookieConfig.extractRole(jwt)));
 
-    @PostMapping("/forget-password")
-    public void ForgetPassword(@Valid @RequestBody ForgetPasswordRequestDto request) {
-        authClient.forgetPassword(request);
-    }
+    authClient.verifyByPrivilegedRole(request);
+  }
 
-    @PutMapping("/reset-password")
-    public void ResetPassword(@Valid @RequestBody ResetPasswordRequestDto request , HttpServletResponse response) {
-        ResetPasswordsResponseDto resetPasswordResponse = authClient.resetPassword(request);
-
-        cookieConfig.setCookieTokens(
-                response,
-                resetPasswordResponse.accessToken(),
-                (int) resetPasswordResponse.accessTokenMinutesTtl(),
-                resetPasswordResponse.refreshToken(),
-                (int) resetPasswordResponse.refreshTokenDaysTtl());
-    }
-
-    @GetMapping("/health")
-    public String getAuthHealth() {
-        return authClient.getAuthHealth();
-    }
-
-    @PutMapping("/manager/block-user")
-    public void BlockUserByManager(@Valid @RequestBody BlockAuthUserRequestDto request) {
-        authClient.blockUser(request);
-    }
-
-    @PutMapping("/manager/unlock-user")
-    public void UnlockUserByManager(@Valid @RequestBody UnlockAuthUserRequestDto request) {
-        authClient.unlockUser(request);
-    }
-
-    @PutMapping("/manager/verify-user/{authUserId}")
-    public void VerifyUserByManager(@PathVariable UUID authUserId, HttpServletRequest httpRequest){
-        Jwt jwt = cookieConfig.getAccessTokenJwt(httpRequest);
-       VerifyAuthUserByPrivilegeRoleRequestDto request = new VerifyAuthUserByPrivilegeRoleRequestDto(
-                authUserId,
-                Roles.valueOf(cookieConfig.extractRole(jwt))
-        );
-
-        authClient.verifyByPrivilegedRole(request);
-    }
-
-    @PutMapping("/admin/change-auth-user-role")
-    public void ChangeAuthUserRole(@Valid @RequestBody ChangeAuthUserRoleRequestDto request) {
-        authClient.changeAuthUserRole(request);
-    }
+  @PutMapping("/admin/change-auth-user-role")
+  public void changeAuthUserRole(@Valid @RequestBody ChangeAuthUserRoleRequestDto request) {
+    authClient.changeAuthUserRole(request);
+  }
 }

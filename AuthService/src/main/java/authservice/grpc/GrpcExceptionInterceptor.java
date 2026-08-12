@@ -1,12 +1,12 @@
 package authservice.grpc;
 
-import authservice.exception.AuthUserAlreadyVerifiedException;
 import authservice.exception.AuthUserAlreadyActiveException;
 import authservice.exception.AuthUserAlreadyBlockedException;
+import authservice.exception.AuthUserAlreadyVerifiedException;
 import authservice.exception.AuthUserMustBeInForgetPasswordStatusException;
+import authservice.exception.AuthUserNotActiveException;
 import authservice.exception.AuthUserNotFoundByEmailException;
 import authservice.exception.AuthUserNotFoundException;
-import authservice.exception.AuthUserNotActiveException;
 import authservice.exception.EmailAlreadyExistsException;
 import authservice.exception.InvalidEmailOrPasswordException;
 import authservice.exception.InvalidOldPasswordException;
@@ -28,84 +28,74 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class GrpcExceptionInterceptor implements ServerInterceptor {
-    private static final Logger log = LoggerFactory.getLogger(GrpcExceptionInterceptor.class);
+  private static final Logger log = LoggerFactory.getLogger(GrpcExceptionInterceptor.class);
 
-    @Override
-    public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
-            ServerCall<ReqT, RespT> call,
-            Metadata headers,
-            ServerCallHandler<ReqT, RespT> next
-    ) {
-        ServerCall.Listener<ReqT> listener = next.startCall(call, headers);
+  @Override
+  public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
+      ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next) {
+    ServerCall.Listener<ReqT> listener = next.startCall(call, headers);
 
-        return new ForwardingServerCallListener.SimpleForwardingServerCallListener<>(listener) {
-            @Override
-            public void onHalfClose() {
-                try {
-                    super.onHalfClose();
-                } catch (Exception exception) {
-                    Status status = mapException(exception);
-                    log.error(
-                            "Unhandled gRPC exception: method={}, status={}",
-                            call.getMethodDescriptor().getFullMethodName(),
-                            status.getCode(),
-                            exception
-                    );
-                    call.close(status.withDescription(exception.getMessage()), new Metadata());
-                }
-            }
-        };
+    return new ForwardingServerCallListener.SimpleForwardingServerCallListener<>(listener) {
+      @Override
+      public void onHalfClose() {
+        try {
+          super.onHalfClose();
+        } catch (Exception exception) {
+          Status status = mapException(exception);
+          log.error(
+              "Unhandled gRPC exception: method={}, status={}",
+              call.getMethodDescriptor().getFullMethodName(),
+              status.getCode(),
+              exception);
+          call.close(status.withDescription(exception.getMessage()), new Metadata());
+        }
+      }
+    };
+  }
+
+  private Status mapException(Exception exception) {
+    if (exception instanceof EmailAlreadyExistsException) {
+      return Status.ALREADY_EXISTS;
     }
 
-    private Status mapException(Exception exception) {
-        if (exception instanceof EmailAlreadyExistsException) {
-            return Status.ALREADY_EXISTS;
-        }
-
-        if (exception instanceof InvalidEmailOrPasswordException) {
-            return Status.UNAUTHENTICATED;
-        }
-
-        if (
-                exception instanceof RefreshTokenNotFoundException ||
-                        exception instanceof RoleNotFoundException ||
-                        exception instanceof AuthUserNotFoundException ||
-                        exception instanceof AuthUserNotFoundByEmailException
-        ) {
-            return Status.NOT_FOUND;
-        }
-
-        if (
-                exception instanceof RefreshTokenAlreadyExpiredException ||
-                        exception instanceof RefreshTokenAlreadyRevokedException ||
-                        exception instanceof AuthUserAlreadyVerifiedException ||
-                        exception instanceof AuthUserMustBeInForgetPasswordStatusException ||
-                        exception instanceof AuthUserNotActiveException ||
-                        exception instanceof AuthUserAlreadyBlockedException ||
-                        exception instanceof AuthUserAlreadyActiveException
-        ) {
-            return Status.FAILED_PRECONDITION;
-        }
-
-        if (
-                exception instanceof InvalidVerificationCodeException ||
-                        exception instanceof InvalidOldPasswordException
-        ) {
-            return Status.INVALID_ARGUMENT;
-        }
-
-        if (exception instanceof VerificationByRoleNotAllowedException) {
-            return Status.PERMISSION_DENIED;
-        }
-
-        if (exception instanceof IllegalArgumentException) {
-            return Status.INVALID_ARGUMENT;
-        }
-
-        if (exception instanceof IllegalStateException) {
-            return Status.FAILED_PRECONDITION;
-        }
-
-        return Status.INTERNAL;
+    if (exception instanceof InvalidEmailOrPasswordException) {
+      return Status.UNAUTHENTICATED;
     }
+
+    if (exception instanceof RefreshTokenNotFoundException
+        || exception instanceof RoleNotFoundException
+        || exception instanceof AuthUserNotFoundException
+        || exception instanceof AuthUserNotFoundByEmailException) {
+      return Status.NOT_FOUND;
+    }
+
+    if (exception instanceof RefreshTokenAlreadyExpiredException
+        || exception instanceof RefreshTokenAlreadyRevokedException
+        || exception instanceof AuthUserAlreadyVerifiedException
+        || exception instanceof AuthUserMustBeInForgetPasswordStatusException
+        || exception instanceof AuthUserNotActiveException
+        || exception instanceof AuthUserAlreadyBlockedException
+        || exception instanceof AuthUserAlreadyActiveException) {
+      return Status.FAILED_PRECONDITION;
+    }
+
+    if (exception instanceof InvalidVerificationCodeException
+        || exception instanceof InvalidOldPasswordException) {
+      return Status.INVALID_ARGUMENT;
+    }
+
+    if (exception instanceof VerificationByRoleNotAllowedException) {
+      return Status.PERMISSION_DENIED;
+    }
+
+    if (exception instanceof IllegalArgumentException) {
+      return Status.INVALID_ARGUMENT;
+    }
+
+    if (exception instanceof IllegalStateException) {
+      return Status.FAILED_PRECONDITION;
+    }
+
+    return Status.INTERNAL;
+  }
 }

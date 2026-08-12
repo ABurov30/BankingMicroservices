@@ -6,5 +6,4 @@ import outboxsupport.OutboxEventEntity;
 
 @Entity
 @Table(name = "transaction_outbox_events")
-public class TransactionOutboxEventEntity extends OutboxEventEntity {
-}
+public class TransactionOutboxEventEntity extends OutboxEventEntity {}

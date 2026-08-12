@@ -3,5 +3,5 @@ package accountservice.repository;
 import accountservice.entity.ProcessedEventEntity;
 import outboxsupport.BaseProcessedEventRepository;
 
-public interface ProcessedEventRepository extends BaseProcessedEventRepository<ProcessedEventEntity> {
-}
+public interface ProcessedEventRepository
+    extends BaseProcessedEventRepository<ProcessedEventEntity> {}

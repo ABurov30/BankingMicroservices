@@ -16,36 +16,34 @@ import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
 @Component
 public class JwtHandshakeHandler extends DefaultHandshakeHandler {
 
-    private final JwtDecoder jwtDecoder;
+  private final JwtDecoder jwtDecoder;
 
-    public JwtHandshakeHandler(JwtDecoder jwtDecoder) {
-        this.jwtDecoder = jwtDecoder;
+  public JwtHandshakeHandler(JwtDecoder jwtDecoder) {
+    this.jwtDecoder = jwtDecoder;
+  }
+
+  @Override
+  protected Principal determineUser(
+      ServerHttpRequest request, WebSocketHandler wsHandler, Map<String, Object> attributes) {
+    if (!(request instanceof ServletServerHttpRequest servletRequest)) {
+      return null;
     }
 
-    @Override
-    protected Principal determineUser(
-            ServerHttpRequest request,
-            WebSocketHandler wsHandler,
-            Map<String, Object> attributes
-    ) {
-        if (!(request instanceof ServletServerHttpRequest servletRequest)) {
-            return null;
-        }
+    HttpServletRequest httpRequest = servletRequest.getServletRequest();
 
-        HttpServletRequest httpRequest = servletRequest.getServletRequest();
+    String accessToken =
+        Arrays.stream(httpRequest.getCookies() == null ? new Cookie[0] : httpRequest.getCookies())
+            .filter(cookie -> "at".equals(cookie.getName()))
+            .map(Cookie::getValue)
+            .findFirst()
+            .orElse(null);
 
-        String accessToken = Arrays.stream(httpRequest.getCookies() == null ? new Cookie[0] : httpRequest.getCookies())
-                .filter(cookie -> "at".equals(cookie.getName()))
-                .map(Cookie::getValue)
-                .findFirst()
-                .orElse(null);
-
-        if (accessToken == null || accessToken.isBlank()) {
-            return null;
-        }
-
-        Jwt jwt = jwtDecoder.decode(accessToken);
-
-        return new AuthUserPrincipal(jwt.getSubject());
+    if (accessToken == null || accessToken.isBlank()) {
+      return null;
     }
+
+    Jwt jwt = jwtDecoder.decode(accessToken);
+
+    return new AuthUserPrincipal(jwt.getSubject());
+  }
 }
