@@ -7,15 +7,17 @@ import transaction.contract.v1.TransactionResponse;
 import transactionservice.entity.TransactionEntity;
 
 import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 
 @Mapper(componentModel = "spring")
 public interface TransactionGrpcMapper {
-    default ReserveFundsForTransactionGrpcRequest toReserveFundsForTransactionGrpcRequest (TransactionEntity transactionEntity) {
+    default ReserveFundsForTransactionGrpcRequest toReserveFundsForTransactionGrpcRequest (TransactionEntity transactionEntity, UUID sourceAuthUserId) {
         return  ReserveFundsForTransactionGrpcRequest.newBuilder()
                 .setTransactionId(transactionEntity.getId().toString())
                 .setAmount(transactionEntity.getAmount().longValue())
                 .setSourceAccountId(transactionEntity.getSourceAccountId().toString())
                 .setTargetAccountId(transactionEntity.getTargetAccountId().toString())
+                .setSourceAuthUserId(sourceAuthUserId.toString())
                 .build();
     }
 

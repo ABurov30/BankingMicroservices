@@ -69,7 +69,7 @@ public class TransactionService {
     @Transactional
     public void createTransaction(CreateTransactionCommand command) {
         var transaction = saveTransaction(command);
-        var reservationResponse = accountGrpcClient.reserveFundsForTransaction(grpcMapper.toReserveFundsForTransactionGrpcRequest(transaction));
+        var reservationResponse = accountGrpcClient.reserveFundsForTransaction(grpcMapper.toReserveFundsForTransactionGrpcRequest(transaction, command.sourceAuthUserId()));
 
         if (reservationResponse.status() == ReservationStatus.FAILED) {
             transaction.setErrorMessage(reservationResponse.message());

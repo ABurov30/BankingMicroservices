@@ -2,6 +2,7 @@ package apigateway.query;
 
 import apigateway.client.AccountGrpcClient;
 import apigateway.client.TransactionGrpcClient;
+import apigateway.client.UserGrpcClient;
 import apigateway.dto.transaction.CreateTransactionRequestDto;
 import apigateway.dto.transaction.TransactionResponseDto;
 import apigateway.mapper.grpc.AccountGrpcMapper;
@@ -13,15 +14,18 @@ import java.util.UUID;
 @Service
 public class TransactionQueryHandler {
     private final AccountGrpcClient accountGrpcClient;
+    private final UserGrpcClient userGrpcClient;
     private final TransactionGrpcClient transactionGrpcClient;
     private final AccountGrpcMapper accountGrpcMapper;
 
     public TransactionQueryHandler (
             AccountGrpcClient accountGrpcClient,
+            UserGrpcClient userGrpcClient,
             TransactionGrpcClient transactionGrpcClient,
             AccountGrpcMapper accountGrpcMapper
     ) {
         this.accountGrpcClient = accountGrpcClient;
+        this.userGrpcClient = userGrpcClient;
         this.transactionGrpcClient = transactionGrpcClient;
         this.accountGrpcMapper = accountGrpcMapper;
     }

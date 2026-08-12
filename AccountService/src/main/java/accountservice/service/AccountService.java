@@ -9,6 +9,7 @@ import accountservice.exception.AccountHoldInvalidStatusException;
 import accountservice.exception.AccountHoldNotFoundException;
 import accountservice.exception.AccountNotFoundException;
 import accountservice.exception.AccountNotFrozenException;
+import accountservice.exception.AccountOwnershipException;
 import accountservice.exception.AccountsNotFoundException;
 import accountservice.exception.FundsTransferFailedException;
 import accountservice.exception.InsufficientFundsException;
@@ -46,7 +47,6 @@ public class AccountService {
     private final AccountResultMapper resultMapper;
     private final AccountHoldRepository accountHoldRepository;
     private final TransferService transferService;
-    private final AccountCommandMapper accountCommandMapper;
     private final TransferCommandMapper transferCommandMapper;
     private static final Logger log = LoggerFactory.getLogger(AccountService.class);
     private final AccountOutboxService accountOutboxService;
@@ -66,7 +66,6 @@ public class AccountService {
         this.currencyRepository = currencyRepository;
         this.accountHoldRepository = accountHoldRepository;
         this.transferCommandMapper = transferCommandMapper;
-        this.accountCommandMapper = accountCommandMapper;
         this.accountOutboxService = accountOutboxService;
         this.transferService =transferService;
     }
@@ -255,6 +254,10 @@ public class AccountService {
         AccountEntity account = accountRepository.findByIdForUpdate(command.accountId())
                 .orElseThrow(() -> new AccountNotFoundException(command.accountId()));
 
+        if (!account.getOwnerAuthUserId().equals(command.authUserId())) {
+            throw new AccountOwnershipException();
+        }
+
         account.setAvailableBalance(account.getAvailableBalance().add(command.amount()));
 
         accountRepository.save(account);
@@ -266,6 +269,10 @@ public class AccountService {
         AccountEntity account = accountRepository.findByIdForUpdate(command.accountId())
                 .orElseThrow(() -> new AccountNotFoundException(command.accountId()));
 
+        if (!account.getOwnerAuthUserId().equals(command.authUserId())) {
+            throw new AccountOwnershipException();
+        }
+
         if (account.getAvailableBalance().compareTo(command.amount()) < 0) {
             throw new InsufficientFundsException(account.getId());
         }
@@ -275,10 +282,6 @@ public class AccountService {
         accountRepository.save(account);
         return resultMapper.toGetAccountResult(account);
     }
-
-
-
-
 
     public void transactionFundsRequest(TransactionFundsRequestCommand command) {
         var accountHold = accountHoldRepository.findByTransactionId(command.transactionId())

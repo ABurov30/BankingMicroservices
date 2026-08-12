@@ -126,6 +126,10 @@ public class TransferService {
             var targetAccount = accountRepository.findById(command.targetAccountId())
                     .orElseThrow(() -> new AccountNotFoundException(command.targetAccountId()));
 
+            if (!sourceAccount.getOwnerAuthUserId().equals(command.sourceAuthUserId())) {
+                throw new AccountOwnershipException();
+            }
+
             if (accountHoldRepository.existsByTransactionId(command.transactionId())) {
                 throw new TransactionAlreadyProcessedException(command.transactionId());
             }

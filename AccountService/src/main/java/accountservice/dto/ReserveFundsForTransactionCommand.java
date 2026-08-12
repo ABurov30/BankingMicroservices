@@ -7,6 +7,7 @@ public record ReserveFundsForTransactionCommand(
         UUID sourceAccountId,
         UUID targetAccountId,
         BigDecimal amount,
-        UUID transactionId
+        UUID transactionId,
+        UUID sourceAuthUserId
 ) {
 }

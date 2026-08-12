@@ -31,7 +31,8 @@ public interface TransferCommandMapper {
                 UUID.fromString(request.getSourceAccountId()),
                 UUID.fromString(request.getTargetAccountId()),
                 BigDecimal.valueOf(request.getAmount()),
-                UUID.fromString(request.getTransactionId())
+                UUID.fromString(request.getTransactionId()),
+                UUID.fromString(request.getSourceAuthUserId())
         );
     }
 }

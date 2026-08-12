@@ -25,10 +25,11 @@ public interface AccountGrpcMapper {
                 .build();
     }
 
-    default UpdateAccountBalanceGrpcRequest toUpdateAccountBalanceGrpcRequest (UpdateAccountBalanceRequestDto request) {
+    default UpdateAccountBalanceGrpcRequest toUpdateAccountBalanceGrpcRequest(UpdateAccountBalanceRequestDto request, UUID authUserId) {
         return UpdateAccountBalanceGrpcRequest.newBuilder()
                 .setAccountId(request.accountId().toString())
                 .setAmount(request.amount().longValue())
+                .setAuthUserId(authUserId.toString())
                 .build();
     }
 

@@ -73,12 +73,20 @@ public class AccountGatewayController {
     }
 
     @PostMapping("/topUp")
-    public GetAccountResponseDto topUpAccount (@Valid @RequestBody UpdateAccountBalanceRequestDto request) {
-        return accountClient.topUpAccount(request);
+    public GetAccountResponseDto topUpAccount(
+            @Valid @RequestBody UpdateAccountBalanceRequestDto request,
+            HttpServletRequest httpRequest
+    ) {
+        Jwt jwt = cookieConfig.getAccessTokenJwt(httpRequest);
+        return accountClient.topUpAccount(request, UUID.fromString(jwt.getSubject()));
     }
 
     @PostMapping("/withdraw")
-    public GetAccountResponseDto withdrawAccount (@Valid @RequestBody UpdateAccountBalanceRequestDto request) {
-        return accountClient.withdrawAccount(request);
+    public GetAccountResponseDto withdrawAccount(
+            @Valid @RequestBody UpdateAccountBalanceRequestDto request,
+            HttpServletRequest httpRequest
+    ) {
+        Jwt jwt = cookieConfig.getAccessTokenJwt(httpRequest);
+        return accountClient.withdrawAccount(request, UUID.fromString(jwt.getSubject()));
     }
 }

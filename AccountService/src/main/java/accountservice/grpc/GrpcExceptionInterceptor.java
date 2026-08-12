@@ -7,6 +7,7 @@ import accountservice.exception.AccountHoldInvalidStatusException;
 import accountservice.exception.AccountHoldNotFoundException;
 import accountservice.exception.AccountNotFoundException;
 import accountservice.exception.AccountNotFrozenException;
+import accountservice.exception.AccountOwnershipException;
 import accountservice.exception.AccountsNotFoundException;
 import accountservice.exception.InsufficientFundsException;
 import accountservice.exception.TransactionAlreadyProcessedException;
@@ -66,6 +67,7 @@ public class GrpcExceptionInterceptor implements ServerInterceptor {
                         exception instanceof AccountNotFrozenException ||
                         exception instanceof AccountGenerationFailedException ||
                         exception instanceof InsufficientFundsException ||
+                        exception instanceof AccountOwnershipException ||
                         exception instanceof TransactionAlreadyProcessedException ||
                         exception instanceof AccountHoldInvalidStatusException
         ) {

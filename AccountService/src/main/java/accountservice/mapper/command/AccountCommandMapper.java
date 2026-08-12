@@ -44,7 +44,11 @@ public interface AccountCommandMapper {
     }
 
     default UpdateAccountBalanceCommand toUpdateAccountBalanceCommand(UpdateAccountBalanceGrpcRequest request) {
-        return new UpdateAccountBalanceCommand(UUID.fromString(request.getAccountId()), BigDecimal.valueOf(request.getAmount()));
+        return new UpdateAccountBalanceCommand(
+                UUID.fromString(request.getAccountId()),
+                BigDecimal.valueOf(request.getAmount()),
+                UUID.fromString(request.getAuthUserId())
+        );
     }
 
     default TransactionFundsRequestCommand toTransactionFundsRequestCommand (TransactionFundsRequestedEventPayload payload) {

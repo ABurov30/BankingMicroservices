@@ -5,6 +5,7 @@ import java.util.UUID;
 
 public record UpdateAccountBalanceCommand(
         UUID accountId,
-        BigDecimal amount
+        BigDecimal amount,
+        UUID authUserId
 ) {
 }

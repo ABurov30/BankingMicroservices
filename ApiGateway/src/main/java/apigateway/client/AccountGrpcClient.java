@@ -86,13 +86,13 @@ public class AccountGrpcClient {
       return UUID.fromString(response.getAccount().getAuthUserId());
   }
 
-  public GetAccountResponseDto topUpAccount(UpdateAccountBalanceRequestDto request) {
+  public GetAccountResponseDto topUpAccount(UpdateAccountBalanceRequestDto request, UUID authUserId) {
       return dtoMapper.toGetAccountResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS)
-              .topUpAccount(grpcMapper.toUpdateAccountBalanceGrpcRequest(request)));
+              .topUpAccount(grpcMapper.toUpdateAccountBalanceGrpcRequest(request, authUserId)));
   }
 
-  public GetAccountResponseDto withdrawAccount(UpdateAccountBalanceRequestDto request) {
+  public GetAccountResponseDto withdrawAccount(UpdateAccountBalanceRequestDto request, UUID authUserId) {
       return dtoMapper.toGetAccountResponseDto(stub.withDeadlineAfter(2, TimeUnit.SECONDS)
-              .withdrawAccount(grpcMapper.toUpdateAccountBalanceGrpcRequest(request)));
+              .withdrawAccount(grpcMapper.toUpdateAccountBalanceGrpcRequest(request, authUserId)));
   }
 }
