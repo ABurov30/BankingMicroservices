@@ -349,6 +349,7 @@ services:
       - transaction-service
       - notification-service
       - jaeger
+      - redis
     environment:
       API_GATEWAY_NAME: ${API_GATEWAY_NAME}
       API_GATEWAY_PORT: ${API_GATEWAY_PORT}
@@ -371,6 +372,8 @@ services:
       TRACING_SAMPLING_PROBABILITY: "1.0"
       OTLP_TRACING_ENDPOINT: http://jaeger:4318/v1/traces
       MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED: "false"
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
     volumes:
       - ./secrets/public.pem:${JWT_PUBLIC_KEY_PATH}:ro
 
@@ -433,6 +436,12 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     depends_on:
       - loki
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: redis
+    ports:
+      - "${REDIS_PORT}:6379"
 
 volumes:
   auth_postgres_data:

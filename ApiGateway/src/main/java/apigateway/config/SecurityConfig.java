@@ -1,7 +1,11 @@
 package apigateway.config;
 
+import apigateway.ratelimit.RateLimitFilter;
+import apigateway.ratelimit.RateLimitProperties;
+import apigateway.ratelimit.RedisRateLimitService;
 import enums.auth.AuthUserStatus;
 import enums.auth.Roles;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authorization.AuthorizationDecision;
@@ -13,7 +17,9 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import tools.jackson.databind.json.JsonMapper;
 
 @Configuration
 public class SecurityConfig {
@@ -40,7 +46,21 @@ public class SecurityConfig {
   }
 
   @Bean
-  SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+  FilterRegistrationBean<RateLimitFilter> rateLimitFilterRegistration(RateLimitFilter filter) {
+    FilterRegistrationBean<RateLimitFilter> registration = new FilterRegistrationBean<>(filter);
+    registration.setEnabled(false);
+    return registration;
+  }
+
+  @Bean
+  RateLimitFilter rateLimitFilter(
+      RedisRateLimitService service, RateLimitProperties properties, JsonMapper jsonMapper) {
+    return new RateLimitFilter(service, properties, jsonMapper);
+  }
+
+  @Bean
+  SecurityFilterChain securityFilterChain(
+      HttpSecurity httpSecurity, RateLimitFilter rateLimitFilter) throws Exception {
     return httpSecurity
         .csrf(AbstractHttpConfigurer::disable)
         .sessionManagement(
@@ -81,6 +101,7 @@ public class SecurityConfig {
                           return cookieConfig.getCookieByKey(request, "at");
                         })
                     .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
+        .addFilterAfter(rateLimitFilter, BearerTokenAuthenticationFilter.class)
         .build();
   }
 
