@@ -9,6 +9,8 @@
 | `ACCOUNT_CREATED` | `AccountService` | Create or update account ownership projection |
 | `ACCOUNT_FROZEN` | `AccountService` | Freeze related card availability |
 | `ACCOUNT_UNFROZEN` | `AccountService` | Restore related card availability |
+| `TRANSACTION_COMPLETED` | `AccountService` | Mark card limit reservation as released after a completed transaction |
+| `TRANSACTION_COMPENSATED` | `AccountService` | Release reserved card limits for a compensated transaction |
 
 ## Produced Events
 
@@ -26,4 +28,8 @@ Known produced event categories include:
 
 ## Agent Notes
 
+Kafka consumers treat stale account/card state and card-limit hold events as no-ops: they log the current state and return instead of retrying the same event.
+
 If account event semantics change, update both the projection listener and any card status logic that depends on account state.
+
+If transaction completion or compensation semantics change, update card limit hold release behavior and the scheduler assumptions together.

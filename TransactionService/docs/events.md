@@ -18,10 +18,14 @@ Known produced event categories include:
 - transaction created or started
 - transaction failed
 
+`TRANSACTION_FAILED` uses `TransactionFailedEventPayload` from `kafka-contracts`; payload contains `authUserId` and `amount`.
+
 ## Consumers
 
 `AccountService` and `NotificationService` are sensitive to transaction event semantics.
 
 ## Agent Notes
+
+Kafka consumers treat stale status events for missing transactions or terminal statuses as no-ops: they log the current state and return instead of retrying the same event.
 
 If transaction statuses or event payloads change, update AccountService compensation handling and NotificationService transaction notification handling.

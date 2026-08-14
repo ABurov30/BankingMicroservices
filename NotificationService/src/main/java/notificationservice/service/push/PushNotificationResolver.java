@@ -84,11 +84,7 @@ public class PushNotificationResolver {
                   + transactionPayload.amount()
                   + " has been completed";
           case TRANSACTION_FAILED ->
-              "Transaction for account "
-                  + transactionPayload.accountNumber()
-                  + " in the amount of "
-                  + transactionPayload.amount()
-                  + " has failed";
+              "Transaction in the amount of " + transactionPayload.amount() + " has failed";
           default -> throw new IllegalStateException();
         };
       }

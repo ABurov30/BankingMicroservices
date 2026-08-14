@@ -124,8 +124,7 @@ public interface PushNotificationCommandMapper {
 
   default TransactionPushNotificationPayload toTransactionPushNotificationPayload(
       TransactionFailedEventPayload payload) {
-    return new TransactionPushNotificationPayload(
-        payload.getAccountNumber(), toBigDecimal(payload.getAmount()));
+    return new TransactionPushNotificationPayload(null, toBigDecimal(payload.getAmount()));
   }
 
   default TransactionPushNotificationPayload toTransactionPushNotificationPayload(

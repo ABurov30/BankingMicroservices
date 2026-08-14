@@ -3,9 +3,13 @@ package cardservice.grpc;
 import cardservice.exception.CardBlockedException;
 import cardservice.exception.CardExpiredException;
 import cardservice.exception.CardGenerationFailedException;
+import cardservice.exception.CardLimitHoldAlreadyExistsException;
 import cardservice.exception.CardNotFoundException;
 import cardservice.exception.CardsNotFoundException;
+import cardservice.exception.InsufficientDailyCardLimitException;
+import cardservice.exception.InsufficientMonthlyCardLimitException;
 import cardservice.exception.InvalidCardLimitException;
+import cardservice.exception.InvalidTransactionAmountException;
 import io.grpc.ForwardingServerCallListener;
 import io.grpc.Metadata;
 import io.grpc.ServerCall;
@@ -51,11 +55,15 @@ public class GrpcExceptionInterceptor implements ServerInterceptor {
     if (exception instanceof CardBlockedException
         || exception instanceof CardExpiredException
         || exception instanceof CardGenerationFailedException
+        || exception instanceof CardLimitHoldAlreadyExistsException
+        || exception instanceof InsufficientDailyCardLimitException
+        || exception instanceof InsufficientMonthlyCardLimitException
         || exception instanceof InvalidCardLimitException) {
       return Status.FAILED_PRECONDITION;
     }
 
-    if (exception instanceof IllegalArgumentException) {
+    if (exception instanceof InvalidTransactionAmountException
+        || exception instanceof IllegalArgumentException) {
       return Status.INVALID_ARGUMENT;
     }
 

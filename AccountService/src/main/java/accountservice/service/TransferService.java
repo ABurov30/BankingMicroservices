@@ -52,13 +52,23 @@ public class TransferService {
 
   @Transactional
   public void executeFundsTransfer(ExecuteFundsTransferCommand command) {
-    var accountHold =
-        accountHoldRepository
-            .findByIdForUpdate(command.accountHold().getId())
-            .orElseThrow(() -> new AccountHoldNotFoundException(command.accountHold().getId()));
+    var optionalAccountHold =
+        accountHoldRepository.findByIdForUpdate(command.accountHold().getId());
+
+    if (optionalAccountHold.isEmpty()) {
+      log.warn(
+          "Skipping funds transfer: accountHoldId={} not found", command.accountHold().getId());
+      return;
+    }
+
+    var accountHold = optionalAccountHold.get();
 
     if (accountHold.getStatus() != ReservationStatus.RESERVED) {
-      throw new AccountHoldInvalidStatusException(accountHold.getStatus());
+      log.info(
+          "Skipping funds transfer: transactionId={}, status={}",
+          accountHold.getTransactionId(),
+          accountHold.getStatus());
+      return;
     }
 
     var targetAccount =
@@ -174,10 +184,22 @@ public class TransferService {
 
   @Transactional
   public void compensateFunds(CompensationFundsCommand command) {
-    var accountHold =
-        accountHoldRepository
-            .findByIdForUpdate(command.accountHoldId())
-            .orElseThrow(() -> new AccountHoldNotFoundException(command.accountHoldId()));
+    var optionalAccountHold = accountHoldRepository.findByIdForUpdate(command.accountHoldId());
+
+    if (optionalAccountHold.isEmpty()) {
+      log.warn("Skipping funds compensation: accountHoldId={} not found", command.accountHoldId());
+      return;
+    }
+
+    var accountHold = optionalAccountHold.get();
+
+    if (accountHold.getStatus() != ReservationStatus.RESERVED) {
+      log.info(
+          "Skipping funds compensation: transactionId={}, status={}",
+          accountHold.getTransactionId(),
+          accountHold.getStatus());
+      return;
+    }
 
     var sourceAccount =
         accountRepository

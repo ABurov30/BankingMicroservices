@@ -29,4 +29,6 @@ Downstream consumers include `CardService`, `TransactionService`, and `Notificat
 
 ## Agent Notes
 
+Kafka consumers treat stale funds-transfer events for missing or non-reserved holds as no-ops: they log the current state and return instead of retrying the same event.
+
 When changing funds reservation or compensation events, update `TransactionService` and `NotificationService` expectations.

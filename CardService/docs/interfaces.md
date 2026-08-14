@@ -12,6 +12,9 @@ Service implementation: `CardGrpcService`.
 | `createCard` | Create a card for an account |
 | `updateCard` | Update card details or limits |
 | `getCardsByAccountId` | Read cards linked to an account |
+| `reserveLimitsForTransaction` | Reserve daily and monthly card limit spend for a transaction |
+
+`CardResponse` includes the configured limits and current spend counters: `dailyLimit`, `monthlyLimit`, `spendDailyLimit`, and `spendMonthlyLimit`.
 
 ## REST Exposure
 

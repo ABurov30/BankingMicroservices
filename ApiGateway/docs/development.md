@@ -29,5 +29,5 @@ GITHUB_TOKEN=replace_me ./mvnw -s .mvn/settings-docker.xml test
 
 - Route changes: update the relevant controller and security rules.
 - Authentication changes: update `SecurityConfig`, `CookieConfig`, and tests.
-- gRPC mapping changes: update client and mapper classes together.
+- gRPC mapping changes: update client, mapper classes, REST DTOs, and service docs together.
 - Push notification changes: update Kafka listener, DTO mapper, and WebSocket behavior.

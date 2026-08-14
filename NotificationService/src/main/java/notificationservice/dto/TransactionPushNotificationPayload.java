@@ -1,8 +1,7 @@
 package notificationservice.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
 public record TransactionPushNotificationPayload(
-    @NotBlank String accountNumber, @NotNull BigDecimal amount) {}
+    String accountNumber, @NotNull BigDecimal amount) {}

@@ -12,4 +12,6 @@ public record UpdateCardResponseDto(
     CardStatus status,
     BigDecimal dailyLimit,
     BigDecimal monthlyLimit,
-    LocalDateTime expiresAt) {}
+    LocalDateTime expiresAt,
+    BigDecimal spendDailyLimit,
+    BigDecimal spendMonthlyLimit) {}

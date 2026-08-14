@@ -2,10 +2,12 @@ package transactionservice.mapper.grpc;
 
 import account.contract.v1.AccountResponse;
 import account.contract.v1.ReserveFundsForTransactionGrpcRequest;
+import card.contract.v1.ReserveLimitsForTransactionGrpcRequest;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 import org.mapstruct.Mapper;
 import transaction.contract.v1.TransactionResponse;
+import transactionservice.dto.CreateTransactionCommand;
 import transactionservice.entity.TransactionEntity;
 
 @Mapper(componentModel = "spring")
@@ -18,6 +20,16 @@ public interface TransactionGrpcMapper {
         .setSourceAccountId(transactionEntity.getSourceAccountId().toString())
         .setTargetAccountId(transactionEntity.getTargetAccountId().toString())
         .setSourceAuthUserId(sourceAuthUserId.toString())
+        .build();
+  }
+
+  default ReserveLimitsForTransactionGrpcRequest toReserveLimitsForTransactionGrpcRequest(
+      TransactionEntity transactionEntity, CreateTransactionCommand command) {
+    return ReserveLimitsForTransactionGrpcRequest.newBuilder()
+        .setTransactionId(transactionEntity.getId().toString())
+        .setAmount(transactionEntity.getAmount().longValue())
+        .setSourceAuthUserId(command.sourceAuthUserId().toString())
+        .setSourceCardId(command.sourceCardId().toString())
         .build();
   }
 

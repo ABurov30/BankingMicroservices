@@ -9,14 +9,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import kafkacontracts.transaction.TransactionEventType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import transactionservice.client.AccountGrpcClient;
+import transactionservice.client.CardGrpcClient;
 import transactionservice.dto.CreateTransactionCommand;
 import transactionservice.dto.MarkAsCommand;
+import transactionservice.dto.ReservationResponseDto;
 import transactionservice.entity.TransactionEntity;
 import transactionservice.entity.TransactionOutboxEventEntity;
 import transactionservice.exception.FundsReservationFailedException;
-import transactionservice.exception.TransactionNotFoundException;
 import transactionservice.mapper.grpc.TransactionGrpcMapper;
 import transactionservice.repository.TransactionOutboxEventRepository;
 import transactionservice.repository.TransactionRepository;
@@ -27,16 +30,20 @@ public class TransactionService {
   private final TransactionOutboxEventRepository transactionOutboxEventRepository;
   private final TransactionRepository transactionRepository;
   private final TransactionGrpcMapper grpcMapper;
+  private final CardGrpcClient cardGrpcClient;
+  private static final Logger log = LoggerFactory.getLogger(TransactionService.class);
 
   public TransactionService(
       AccountGrpcClient accountGrpcClient,
       TransactionOutboxEventRepository transactionOutboxEventRepository,
       TransactionRepository transactionRepository,
-      TransactionGrpcMapper grpcMapper) {
+      TransactionGrpcMapper grpcMapper,
+      CardGrpcClient cardGrpcClient) {
     this.accountGrpcClient = accountGrpcClient;
     this.transactionRepository = transactionRepository;
     this.transactionOutboxEventRepository = transactionOutboxEventRepository;
     this.grpcMapper = grpcMapper;
+    this.cardGrpcClient = cardGrpcClient;
   }
 
   private TransactionEntity saveTransaction(CreateTransactionCommand command) {
@@ -63,27 +70,47 @@ public class TransactionService {
     return transactionOutboxEventRepository.save(transactionOutboxEvent);
   }
 
+  private void onReservationFailed(
+      TransactionEntity transaction,
+      ReservationResponseDto reservationResponse,
+      CreateTransactionCommand command,
+      String exceptionMessage) {
+    transaction.setErrorMessage(reservationResponse.message());
+    transaction.setStatus(TransactionStatus.FAILED);
+    transaction.setErrorMessage(reservationResponse.message());
+    transactionRepository.save(transaction);
+    saveTransactionOutboxEvent(
+        transaction,
+        TransactionEventType.TRANSACTION_FAILED,
+        Map.of(
+            "amount", transaction.getAmount(),
+            "authUserId", command.sourceAuthUserId()));
+    throw new FundsReservationFailedException(exceptionMessage + " " + transaction.getId());
+  }
+
   @Transactional
   public void createTransaction(CreateTransactionCommand command) {
     var transaction = saveTransaction(command);
-    var reservationResponse =
+    var reservationLimitsResponse =
+        cardGrpcClient.reserveLimitsForTransaction(
+            grpcMapper.toReserveLimitsForTransactionGrpcRequest(transaction, command));
+
+    if (reservationLimitsResponse.status() == ReservationStatus.FAILED) {
+      onReservationFailed(
+          transaction, reservationLimitsResponse, command, "Reservation limits failed");
+    }
+
+    var reservationFundsResponse =
         accountGrpcClient.reserveFundsForTransaction(
             grpcMapper.toReserveFundsForTransactionGrpcRequest(
                 transaction, command.sourceAuthUserId()));
 
-    if (reservationResponse.status() == ReservationStatus.FAILED) {
-      transaction.setErrorMessage(reservationResponse.message());
-      transaction.setStatus(TransactionStatus.FAILED);
-      transaction.setErrorMessage(reservationResponse.message());
-      transactionRepository.save(transaction);
-      saveTransactionOutboxEvent(
+    if (reservationFundsResponse.reservationResponse().status() == ReservationStatus.FAILED) {
+      onReservationFailed(
           transaction,
-          TransactionEventType.TRANSACTION_FAILED,
-          Map.of(
-              "accountNumber", reservationResponse.targetAccount().accountNumber(),
-              "amount", transaction.getAmount(),
-              "authUserId", command.sourceAuthUserId()));
-      throw new FundsReservationFailedException("Funds reservation failed");
+          reservationFundsResponse.reservationResponse(),
+          command,
+          "Reservation funds failed");
     }
 
     transaction.setStatus(TransactionStatus.FUNDS_REQUESTED);
@@ -107,15 +134,42 @@ public class TransactionService {
 
   @Transactional
   public void markAs(MarkAsCommand command) {
-    var transaction =
-        transactionRepository
-            .findByIdToUpdate(command.transactionId())
-            .orElseThrow(() -> new TransactionNotFoundException(command.transactionId()));
-    if (transaction.getStatus() == command.status()) {
+    var transaction = transactionRepository.findByIdToUpdate(command.transactionId());
+
+    if (transaction.isEmpty()) {
+      log.warn(
+          "Skipping transaction status update: transactionId={} not found",
+          command.transactionId());
       return;
     }
-    transaction.setCompletedAdt(LocalDateTime.now());
-    transaction.setStatus(command.status());
-    transactionRepository.save(transaction);
+
+    var transactionEntity = transaction.get();
+    if (transactionEntity.getStatus() == command.status()) {
+      log.info(
+          "Skipping transaction status update: transactionId={}, status={}",
+          command.transactionId(),
+          transactionEntity.getStatus());
+      return;
+    }
+
+    if (isTerminalStatus(transactionEntity.getStatus())) {
+      log.info(
+          "Skipping transaction status update: "
+              + "transactionId={}, currentStatus={}, requestedStatus={}",
+          command.transactionId(),
+          transactionEntity.getStatus(),
+          command.status());
+      return;
+    }
+
+    transactionEntity.setCompletedAdt(LocalDateTime.now());
+    transactionEntity.setStatus(command.status());
+    transactionRepository.save(transactionEntity);
+  }
+
+  private boolean isTerminalStatus(TransactionStatus status) {
+    return status == TransactionStatus.COMPLETED
+        || status == TransactionStatus.COMPENSATED
+        || status == TransactionStatus.FAILED;
   }
 }

@@ -23,7 +23,9 @@ public interface CardDtoMapper {
         CardStatus.valueOf(card.getStatus()),
         BigDecimal.valueOf(card.getDailyLimit()),
         BigDecimal.valueOf(card.getMonthlyLimit()),
-        LocalDateTime.parse(card.getExpiresAt()));
+        LocalDateTime.parse(card.getExpiresAt()),
+        BigDecimal.valueOf(card.getSpendDailyLimit()),
+        BigDecimal.valueOf(card.getSpendMonthlyLimit()));
   }
 
   default UpdateCardResponseDto toUpdateCardResponseDto(UpdateCardGrpcResponse response) {
@@ -35,7 +37,9 @@ public interface CardDtoMapper {
         CardStatus.valueOf(card.getStatus()),
         BigDecimal.valueOf(card.getDailyLimit()),
         BigDecimal.valueOf(card.getMonthlyLimit()),
-        LocalDateTime.parse(card.getExpiresAt()));
+        LocalDateTime.parse(card.getExpiresAt()),
+        BigDecimal.valueOf(card.getSpendDailyLimit()),
+        BigDecimal.valueOf(card.getSpendMonthlyLimit()));
   }
 
   default GetCardByAccountIdResponseDto toGetCardByAccountIdResponseDto(CardResponse card) {
@@ -46,6 +50,8 @@ public interface CardDtoMapper {
         CardStatus.valueOf(card.getStatus()),
         BigDecimal.valueOf(card.getDailyLimit()),
         BigDecimal.valueOf(card.getMonthlyLimit()),
-        LocalDateTime.parse(card.getExpiresAt()));
+        LocalDateTime.parse(card.getExpiresAt()),
+        BigDecimal.valueOf(card.getSpendDailyLimit()),
+        BigDecimal.valueOf(card.getSpendMonthlyLimit()));
   }
 }

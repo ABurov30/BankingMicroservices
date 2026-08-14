@@ -35,6 +35,12 @@ public class CardEntity {
   @Column(name = "monthly_limit")
   private BigDecimal monthlyLimit;
 
+  @Column(name = "spend_daily_limit", nullable = false)
+  private BigDecimal spendDailyLimit = BigDecimal.ZERO;
+
+  @Column(name = "spend_monthly_limit", nullable = false)
+  private BigDecimal spendMonthlyLimit = BigDecimal.ZERO;
+
   @Column(name = "expires_at", nullable = false, updatable = false)
   private LocalDateTime expiresAt;
 

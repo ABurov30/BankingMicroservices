@@ -2,6 +2,7 @@ package transactionservice.mapper.dto;
 
 import account.contract.v1.AccountResponse;
 import account.contract.v1.ReserveFundsForTransactionGrpcResponse;
+import card.contract.v1.ReserveLimitsForTransactionGrpcResponse;
 import enums.account.AccountCurrency;
 import enums.account.AccountStatus;
 import enums.account.AccountType;
@@ -10,6 +11,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 import org.mapstruct.Mapper;
 import transactionservice.dto.AccountResponseDto;
+import transactionservice.dto.ReservationResponseDto;
 import transactionservice.dto.ReserveFudsForTransactionResponseDto;
 
 @Mapper(componentModel = "spring")
@@ -36,7 +38,16 @@ public interface TransactionDtoMapper {
     return new ReserveFudsForTransactionResponseDto(
         response.hasSourceAccount() ? toAccountResponseDto(response.getSourceAccount()) : null,
         response.hasTargetAccount() ? toAccountResponseDto(response.getTargetAccount()) : null,
-        ReservationStatus.valueOf(response.getStatus()),
-        response.getMessage());
+        toReservationResponseDto(response.getStatus(), response.getMessage()));
+  }
+
+  default ReservationResponseDto toReservationResponseDto(String status, String message) {
+    return new ReservationResponseDto(ReservationStatus.valueOf(status), message);
+  }
+
+  default ReservationResponseDto toReservationResponseDto(
+      ReserveLimitsForTransactionGrpcResponse response) {
+    return new ReservationResponseDto(
+        ReservationStatus.valueOf(response.getStatus()), response.getMessage());
   }
 }

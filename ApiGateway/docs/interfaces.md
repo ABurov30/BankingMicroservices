@@ -42,6 +42,12 @@ All other routes require an active user or an admin role unless a narrower manag
 | `TransactionGrpcClient` | `TransactionService` |
 | `NotificationGrpcClient` | `NotificationService` |
 
+## DTO Notes
+
+- Card responses map `CardResponse` from `CardService`, including configured limits and spend counters: `dailyLimit`, `monthlyLimit`, `spendDailyLimit`, and `spendMonthlyLimit`.
+- Transaction creation requests require `sourceCardId`; the transaction flow uses it for card limit reservation before account funds are requested.
+- `POST /user/user-info` returns user accounts with cards but omits account `availableBalance` and `reservedBalance`.
+
 ## WebSocket
 
 The gateway maps authenticated users to WebSocket principals and sends push notifications to `/queue/notifications`.

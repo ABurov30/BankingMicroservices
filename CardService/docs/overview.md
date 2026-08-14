@@ -4,7 +4,7 @@
 
 ## Responsibility
 
-`CardService` owns card lifecycle state. It creates cards, updates cards, reads cards by account, and reacts to account lifecycle events.
+`CardService` owns card lifecycle state. It creates cards, updates cards, reads cards by account, tracks spend against card limits, and reacts to account lifecycle events.
 
 ## Runtime Role
 
@@ -14,13 +14,14 @@
 - Stores card and account ownership projection state in PostgreSQL.
 - Consumes account events.
 - Publishes card events through an outbox.
+- Reserves and releases card spend limits for transaction creation.
 
 ## Important Packages
 
 - `grpc` - card gRPC API implementation.
 - `listener` - Kafka consumers for account events.
-- `service` - card business logic and outbox publishing.
-- `entity` - card, account ownership projection, processed event, and outbox entities.
+- `service` - card business logic, limit reservation, schedulers, and outbox publishing.
+- `entity` - card, card limit hold, account ownership projection, processed event, and outbox entities.
 - `repository` - database access.
 - `mapper` - command, result, event payload, and gRPC mapping.
 

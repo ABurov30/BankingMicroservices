@@ -28,5 +28,6 @@ GITHUB_TOKEN=replace_me ./mvnw -s .mvn/settings-docker.xml test
 ## Common Change Areas
 
 - Card fields: update entity, migrations, DTOs, and mappers.
+- Card limit reservation: update `CardEntity`, `CardLimitHoldEntity`, repositories, schedulers, gRPC mapping, and docs together.
 - Account projection behavior: update listener and idempotency logic.
 - Event publication: update outbox payload mapper and notification consumers.

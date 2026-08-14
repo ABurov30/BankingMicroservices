@@ -4,6 +4,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import java.io.UnsupportedEncodingException;
 import notificationservice.document.EmailNotificationDocument;
+import notificationservice.exception.EmailSendFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -57,7 +58,7 @@ public class EmailSenderService {
       mailSender.send(message);
     } catch (MessagingException | UnsupportedEncodingException exception) {
       log.error("Failed to send email notification: type={}", notification.getType(), exception);
-      throw new RuntimeException("Failed to send email", exception);
+      throw new EmailSendFailedException(exception);
     }
   }
 

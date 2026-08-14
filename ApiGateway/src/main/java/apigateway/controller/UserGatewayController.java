@@ -39,7 +39,7 @@ public class UserGatewayController {
   @PostMapping("/user-info")
   public GetUserInfoWithAccountResponseDto getUserInfoWithAccountsByEmail(
       @Valid @RequestBody GetUserInfoByEmailRequestDto request) {
-    return userInfoQueryHandler.getUserInfoWithAccountByEmail(request);
+    return userInfoQueryHandler.getUserInfoWithAccountsAndCardsByEmail(request);
   }
 
   @GetMapping("/health")

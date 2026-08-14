@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public record CreateTransactionRequestDto(
     @NotNull UUID sourceAccountId,
+    @NotNull UUID sourceCardId,
     @NotNull UUID targetAccountId,
     @NotNull BigDecimal amount,
     @NotNull AccountCurrency currency,

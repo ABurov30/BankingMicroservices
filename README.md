@@ -16,8 +16,8 @@ Training banking microservices project built with Spring Boot. `ApiGateway` expo
 | `AuthService` | Signup, login, refresh/logout, roles, verification, JWT issuing | `8081` | `8090` | [AuthService/docs/README.md](AuthService/docs/README.md) |
 | `UserService` | User profiles and reactions to auth events | `8082` | `8091` | [UserService/docs/README.md](UserService/docs/README.md) |
 | `AccountService` | Accounts, balances, holds, freezes, and funds reservation | `8083` | `8092` | [AccountService/docs/README.md](AccountService/docs/README.md) |
-| `CardService` | Cards, limits, statuses, and account ownership projection | `8084` | `8093` | [CardService/docs/README.md](CardService/docs/README.md) |
-| `TransactionService` | Transaction creation and account funds reservation flow | `8085` | `8094` | [TransactionService/docs/README.md](TransactionService/docs/README.md) |
+| `CardService` | Cards, limits, spend counters, statuses, and account ownership projection | `8084` | `8093` | [CardService/docs/README.md](CardService/docs/README.md) |
+| `TransactionService` | Transaction creation and card/account reservation flow | `8085` | `8094` | [TransactionService/docs/README.md](TransactionService/docs/README.md) |
 | `NotificationService` | Email and push notifications from Kafka events | `8086` | `8095` | [NotificationService/docs/README.md](NotificationService/docs/README.md) |
 
 `Infra` contains the shared Docker Compose setup, Kafka, Schema Registry, PostgreSQL, MongoDB, and development Helm manifests.

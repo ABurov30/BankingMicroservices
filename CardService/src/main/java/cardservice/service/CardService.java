@@ -3,25 +3,35 @@ package cardservice.service;
 import cardservice.dto.*;
 import cardservice.entity.AccountOwnershipProjectionEntity;
 import cardservice.entity.CardEntity;
+import cardservice.entity.CardLimitHoldEntity;
 import cardservice.entity.CardOutboxEventEntity;
 import cardservice.exception.CardBlockedException;
 import cardservice.exception.CardExpiredException;
 import cardservice.exception.CardGenerationFailedException;
+import cardservice.exception.CardLimitHoldAlreadyExistsException;
 import cardservice.exception.CardNotFoundException;
 import cardservice.exception.CardsNotFoundException;
+import cardservice.exception.InsufficientDailyCardLimitException;
+import cardservice.exception.InsufficientMonthlyCardLimitException;
 import cardservice.exception.InvalidCardLimitException;
+import cardservice.exception.InvalidTransactionAmountException;
 import cardservice.mapper.result.CardResultMapper;
 import cardservice.repository.AccountOwnershipProjectionRepository;
+import cardservice.repository.CardLimitHoldRepository;
 import cardservice.repository.CardOutboxEventRepository;
 import cardservice.repository.CardRepository;
+import enums.account.ReservationStatus;
 import enums.card.CardStatus;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import kafkacontracts.card.CardEventType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,21 +40,26 @@ public class CardService {
   private final CardRepository cardRepository;
   private final AccountOwnershipProjectionRepository accountOwnershipProjectionRepository;
   private final CardOutboxEventRepository cardOutboxEventRepository;
+  private final CardLimitHoldRepository cardLimitHoldRepository;
   private final CardResultMapper resultMapper;
   private static final int CARD_EXPIRATION_YEARS = 5;
   private static final String CARD_BIN = "400000";
   private static final int PAN_LENGTH = 16;
   private static final int ATTEMPTS_TO_GENERATE_PAN = 10;
+  private static final long HOLD_TTL_MINUTES = 5;
+  private static final Logger log = LoggerFactory.getLogger(CardService.class);
 
   public CardService(
       CardRepository cardRepository,
       AccountOwnershipProjectionRepository accountOwnershipProjectionRepository,
       CardOutboxEventRepository cardOutboxEventRepository,
-      CardResultMapper resultMapper) {
+      CardResultMapper resultMapper,
+      CardLimitHoldRepository cardLimitHoldRepository) {
     this.cardRepository = cardRepository;
     this.accountOwnershipProjectionRepository = accountOwnershipProjectionRepository;
     this.cardOutboxEventRepository = cardOutboxEventRepository;
     this.resultMapper = resultMapper;
+    this.cardLimitHoldRepository = cardLimitHoldRepository;
   }
 
   private String generateUniquePan() {
@@ -153,46 +168,70 @@ public class CardService {
 
   @Transactional
   public void freezeCards(FreezeCardsCommand freezeCardsCommand) {
-    List<CardEntity> cardEntityList =
-        cardRepository
-            .findAllByAccountId(freezeCardsCommand.accountId())
-            .orElseThrow(() -> new CardsNotFoundException(freezeCardsCommand.accountId()));
+    var cards = cardRepository.findAllByAccountId(freezeCardsCommand.accountId());
 
-    cardEntityList.forEach(
-        card -> {
-          if (card.getCardStatus() != CardStatus.BLOCKED) {
-            changeCardStatus(card, CardStatus.FROZEN);
-            createCardOutboxEvent(
-                CardEventType.CARD_FROZEN,
-                card,
-                freezeCardsCommand.authUserId(),
-                freezeCardsCommand.accountNumber());
-          }
-        });
+    if (cards.isEmpty() || cards.get().isEmpty()) {
+      log.warn(
+          "Skipping cards freeze: accountId={} cards not found", freezeCardsCommand.accountId());
+      return;
+    }
 
-    cardRepository.saveAll(cardEntityList);
+    cards
+        .get()
+        .forEach(
+            card -> {
+              if (card.getCardStatus() == CardStatus.BLOCKED
+                  || card.getCardStatus() == CardStatus.FROZEN) {
+                log.info(
+                    "Skipping card freeze: cardId={}, status={}",
+                    card.getId(),
+                    card.getCardStatus());
+                return;
+              }
+
+              changeCardStatus(card, CardStatus.FROZEN);
+              createCardOutboxEvent(
+                  CardEventType.CARD_FROZEN,
+                  card,
+                  freezeCardsCommand.authUserId(),
+                  freezeCardsCommand.accountNumber());
+            });
+
+    cardRepository.saveAll(cards.get());
   }
 
   @Transactional
   public void unfreezeCards(UnfreezeCardsCommand unfreezeCardsCommand) {
-    List<CardEntity> cardEntityList =
-        cardRepository
-            .findAllByAccountId(unfreezeCardsCommand.accountId())
-            .orElseThrow(() -> new CardsNotFoundException(unfreezeCardsCommand.accountId()));
+    var cards = cardRepository.findAllByAccountId(unfreezeCardsCommand.accountId());
 
-    cardEntityList.forEach(
-        card -> {
-          if (card.getCardStatus() == CardStatus.FROZEN) {
-            changeCardStatus(card, CardStatus.ACTIVE);
-            createCardOutboxEvent(
-                CardEventType.CARD_UNFROZEN,
-                card,
-                unfreezeCardsCommand.authUserId(),
-                unfreezeCardsCommand.accountNumber());
-          }
-        });
+    if (cards.isEmpty() || cards.get().isEmpty()) {
+      log.warn(
+          "Skipping cards unfreeze: accountId={} cards not found",
+          unfreezeCardsCommand.accountId());
+      return;
+    }
 
-    cardRepository.saveAll(cardEntityList);
+    cards
+        .get()
+        .forEach(
+            card -> {
+              if (card.getCardStatus() != CardStatus.FROZEN) {
+                log.info(
+                    "Skipping card unfreeze: cardId={}, status={}",
+                    card.getId(),
+                    card.getCardStatus());
+                return;
+              }
+
+              changeCardStatus(card, CardStatus.ACTIVE);
+              createCardOutboxEvent(
+                  CardEventType.CARD_UNFROZEN,
+                  card,
+                  unfreezeCardsCommand.authUserId(),
+                  unfreezeCardsCommand.accountNumber());
+            });
+
+    cardRepository.saveAll(cards.get());
   }
 
   @Transactional
@@ -283,5 +322,146 @@ public class CardService {
             "cardNumber", card.getPan()));
 
     cardOutboxEventRepository.save(outboxEvent);
+  }
+
+  public ReserveLimitsForTransactionResult reserveLimitsForTransaction(
+      ReserveLimitsForTransactionCommand command) {
+    try {
+      if (cardLimitHoldRepository.existsByTransactionId(command.transactionId())) {
+        throw new CardLimitHoldAlreadyExistsException(command.transactionId());
+      }
+
+      var isAmountNegative = command.amount().compareTo(BigDecimal.ZERO) < 0;
+
+      if (isAmountNegative) {
+        throw new InvalidTransactionAmountException(command.transactionId());
+      }
+
+      var card =
+          cardRepository
+              .findById(command.sourceCardId())
+              .orElseThrow(() -> new CardNotFoundException(command.sourceCardId()));
+
+      validateLimitsForTransaction(command, card);
+
+      createCardLimitHold(command, card);
+
+      reserveLimitOnCard(command, card);
+
+      return new ReserveLimitsForTransactionResult(
+          ReservationStatus.RESERVED, "Limits reserved for transaction " + command.transactionId());
+    } catch (Exception e) {
+      log.error("Failed to reserve limits: transactionId={}", command.transactionId(), e);
+      return new ReserveLimitsForTransactionResult(ReservationStatus.FAILED, e.getMessage());
+    }
+  }
+
+  private void validateLimitsForTransaction(
+      ReserveLimitsForTransactionCommand command, CardEntity card) {
+    var availableDailyLimits = card.getDailyLimit().subtract(card.getSpendDailyLimit());
+    var availableMonthlyLimits = card.getMonthlyLimit().subtract(card.getSpendMonthlyLimit());
+
+    if (availableDailyLimits.compareTo(command.amount()) < 0) {
+      throw new InsufficientDailyCardLimitException(command.transactionId());
+    }
+
+    if (availableMonthlyLimits.compareTo(command.amount()) < 0) {
+      throw new InsufficientMonthlyCardLimitException(command.transactionId());
+    }
+  }
+
+  private void createCardLimitHold(ReserveLimitsForTransactionCommand command, CardEntity card) {
+    var carLimitHold = new CardLimitHoldEntity();
+    carLimitHold.setCardId(card.getId());
+    carLimitHold.setAmount(command.amount());
+    carLimitHold.setTransactionId(command.transactionId());
+    carLimitHold.setStatus(ReservationStatus.RESERVED);
+    carLimitHold.setExpiresAt(LocalDateTime.now().plusMinutes(HOLD_TTL_MINUTES));
+    cardLimitHoldRepository.save(carLimitHold);
+  }
+
+  private void reserveLimitOnCard(ReserveLimitsForTransactionCommand command, CardEntity card) {
+    card.setSpendDailyLimit(card.getSpendDailyLimit().add(command.amount()));
+    card.setSpendMonthlyLimit(card.getSpendMonthlyLimit().add(command.amount()));
+    cardRepository.save(card);
+  }
+
+  @Transactional
+  public void compensateLimitsForTransaction(CompensateLimitsForTransactionCommand command) {
+    var cardLimitHold =
+        cardLimitHoldRepository.findByTransactionIdForUpdate(command.transactionId());
+
+    if (cardLimitHold.isEmpty()) {
+      log.warn("Card limit hold not found: transactionId={}", command.transactionId());
+      return;
+    }
+
+    var limitHold = cardLimitHold.get();
+
+    if (limitHold.getStatus() != ReservationStatus.RESERVED) {
+      log.info(
+          "Skipping card limit compensation: transactionId={}, status={}",
+          command.transactionId(),
+          limitHold.getStatus());
+      return;
+    }
+
+    var card =
+        cardRepository
+            .findByIdForUpdate(limitHold.getCardId())
+            .orElseThrow(() -> new CardNotFoundException(limitHold.getCardId()));
+    var releasedAt = LocalDateTime.now();
+
+    releaseReservedLimits(card, limitHold, releasedAt);
+    limitHold.setStatus(ReservationStatus.COMPENSATED);
+    limitHold.setReleasedAt(releasedAt);
+
+    cardRepository.save(card);
+    cardLimitHoldRepository.save(limitHold);
+  }
+
+  @Transactional
+  public void markLimitReservationAsReleased(MarkLimitReservationAsReleasedCommand command) {
+    var cardLimitHold =
+        cardLimitHoldRepository.findByTransactionIdForUpdate(command.transactionId());
+
+    if (cardLimitHold.isEmpty()) {
+      log.warn("Card limit hold not found: transactionId={}", command.transactionId());
+      return;
+    }
+
+    var limitHold = cardLimitHold.get();
+
+    if (limitHold.getStatus() != ReservationStatus.RESERVED) {
+      log.info(
+          "Skipping card limit release: transactionId={}, status={}",
+          command.transactionId(),
+          limitHold.getStatus());
+      return;
+    }
+
+    limitHold.setStatus(ReservationStatus.RELEASED);
+    limitHold.setReleasedAt(LocalDateTime.now());
+
+    cardLimitHoldRepository.save(limitHold);
+  }
+
+  private void releaseReservedLimits(
+      CardEntity card, CardLimitHoldEntity limitHold, LocalDateTime releasedAt) {
+    if (isSameDay(limitHold.getCreatedAt(), releasedAt)) {
+      card.setSpendDailyLimit(card.getSpendDailyLimit().subtract(limitHold.getAmount()));
+    }
+
+    if (isSameMonth(limitHold.getCreatedAt(), releasedAt)) {
+      card.setSpendMonthlyLimit(card.getSpendMonthlyLimit().subtract(limitHold.getAmount()));
+    }
+  }
+
+  private boolean isSameDay(LocalDateTime createdAt, LocalDateTime releasedAt) {
+    return createdAt == null || createdAt.toLocalDate().equals(releasedAt.toLocalDate());
+  }
+
+  private boolean isSameMonth(LocalDateTime createdAt, LocalDateTime releasedAt) {
+    return createdAt == null || YearMonth.from(createdAt).equals(YearMonth.from(releasedAt));
   }
 }

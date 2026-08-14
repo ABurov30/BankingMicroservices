@@ -30,7 +30,8 @@ public interface TransactionGrpcMapper {
         .setCurrency(request.currency().name())
         .setIdempotencyKey(request.idempotencyKey().toString())
         .setSourceAuthUserId(sourceAuthUserId.toString())
-        .setSourceTargetAuthUserId(targetAuthUserId.toString())
+        .setTargetAuthUserId(targetAuthUserId.toString())
+        .setSourceCardId(request.sourceCardId().toString())
         .build();
   }
 

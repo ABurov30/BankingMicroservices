@@ -3,9 +3,11 @@ package cardservice.mapper.grpc;
 import card.contract.v1.CardResponse;
 import card.contract.v1.CreateCardGrpcResponse;
 import card.contract.v1.GetCardsGrpcResponse;
+import card.contract.v1.ReserveLimitsForTransactionGrpcResponse;
 import card.contract.v1.UpdateCardGrpcResponse;
 import cardservice.dto.CreateCardResult;
 import cardservice.dto.GetCardResult;
+import cardservice.dto.ReserveLimitsForTransactionResult;
 import cardservice.dto.UpdateCardResult;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -30,6 +32,8 @@ public interface CardGrpcMapper {
         .setDailyLimit(value.dailyLimit().longValue())
         .setMonthlyLimit(value.monthlyLimit().longValue())
         .setExpiresAt(value.expiresAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+        .setSpendDailyLimit(value.spendDailyLimit().longValue())
+        .setSpendMonthlyLimit(value.spendMonthlyLimit().longValue())
         .build();
   }
 
@@ -42,6 +46,8 @@ public interface CardGrpcMapper {
         .setDailyLimit(value.dailyLimit().longValue())
         .setMonthlyLimit(value.monthlyLimit().longValue())
         .setExpiresAt(value.expiresAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+        .setSpendDailyLimit(value.spendDailyLimit().longValue())
+        .setSpendMonthlyLimit(value.spendMonthlyLimit().longValue())
         .build();
   }
 
@@ -54,10 +60,20 @@ public interface CardGrpcMapper {
         .setDailyLimit(value.dailyLimit().longValue())
         .setMonthlyLimit(value.monthlyLimit().longValue())
         .setExpiresAt(value.expiresAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+        .setSpendDailyLimit(value.spendDailyLimit().longValue())
+        .setSpendMonthlyLimit(value.spendMonthlyLimit().longValue())
         .build();
   }
 
   default GetCardsGrpcResponse toGetCardsGrpcResponse(List<CardResponse> values) {
     return GetCardsGrpcResponse.newBuilder().addAllCards(values).build();
+  }
+
+  default ReserveLimitsForTransactionGrpcResponse toReserveLimitsGrpcResponse(
+      ReserveLimitsForTransactionResult value) {
+    return ReserveLimitsForTransactionGrpcResponse.newBuilder()
+        .setStatus(value.status().name())
+        .setMessage(value.message())
+        .build();
   }
 }

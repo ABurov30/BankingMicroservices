@@ -9,7 +9,7 @@ cp .env.example .env.local
 make dev
 ```
 
-Local runtime needs PostgreSQL, Kafka, Schema Registry, and a reachable `AccountService` gRPC endpoint.
+Local runtime needs PostgreSQL, Kafka, Schema Registry, and reachable `CardService` and `AccountService` gRPC endpoints.
 
 ## Checks
 
@@ -27,6 +27,6 @@ GITHUB_TOKEN=replace_me ./mvnw -s .mvn/settings-docker.xml test
 
 ## Common Change Areas
 
-- Transaction creation: verify AccountService reserve flow.
+- Transaction creation: verify CardService limit reservation and AccountService funds reservation flows.
 - Transaction query behavior: update DTO and gRPC mappers.
 - State transitions: update event payloads, listeners, and tests.

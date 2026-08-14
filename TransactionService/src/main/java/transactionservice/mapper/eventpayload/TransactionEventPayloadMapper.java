@@ -14,7 +14,6 @@ public interface TransactionEventPayloadMapper {
       Map<String, Object> payload) {
     return TransactionFailedEventPayload.newBuilder()
         .setAuthUserId(UUID.fromString(payload.get("authUserId").toString()))
-        .setAccountNumber(payload.get("accountNumber").toString())
         .setAmount((ByteBuffer) payload.get("amount"))
         .build();
   }

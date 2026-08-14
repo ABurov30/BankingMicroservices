@@ -24,4 +24,6 @@ Known produced event categories include:
 
 ## Agent Notes
 
+Kafka consumers treat stale or already-applied auth state events as no-ops: they log the current state and return instead of throwing for retry.
+
 If an auth event changes shape, update the listener, command mapper, and idempotency behavior together.

@@ -5,12 +5,12 @@ import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Map;
 import kafkacontracts.user.UserEventType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import userservice.dto.*;
 import userservice.entity.UserOutboxEventEntity;
 import userservice.entity.UserProfileEntity;
-import userservice.exception.UserProfileAlreadyActiveException;
-import userservice.exception.UserProfileAlreadyBlockedException;
 import userservice.exception.UserProfileNotFoundException;
 import userservice.mapper.result.UserResultMapper;
 import userservice.repository.UserOutboxEventRepository;
@@ -21,6 +21,7 @@ public class UserService {
   private final UserProfileRepository userProfileRepository;
   private final UserOutboxEventRepository userOutboxEventRepository;
   private final UserResultMapper resultMapper;
+  private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
   public UserService(
       UserProfileRepository userProfileRepository,
@@ -89,13 +90,22 @@ public class UserService {
   }
 
   public void blockUser(BlockedUserCommand blockedUserCommand) {
-    UserProfileEntity userProfileEntity =
-        userProfileRepository
-            .findByAuthUserId(blockedUserCommand.authUserId())
-            .orElseThrow(() -> new UserProfileNotFoundException(blockedUserCommand.authUserId()));
+    var userProfile = userProfileRepository.findByAuthUserId(blockedUserCommand.authUserId());
+
+    if (userProfile.isEmpty()) {
+      log.warn(
+          "Skipping user profile block: authUserId={} not found", blockedUserCommand.authUserId());
+      return;
+    }
+
+    UserProfileEntity userProfileEntity = userProfile.get();
 
     if (userProfileEntity.getStatus() == UserProfileStatus.BLOCKED) {
-      throw new UserProfileAlreadyBlockedException(userProfileEntity.getAuthUserId());
+      log.info(
+          "Skipping user profile block: authUserId={}, status={}",
+          userProfileEntity.getAuthUserId(),
+          userProfileEntity.getStatus());
+      return;
     }
 
     userProfileEntity.setStatus(UserProfileStatus.BLOCKED);
@@ -116,13 +126,22 @@ public class UserService {
   }
 
   public void unlockUser(UnlockUserCommand unlockUserCommand) {
-    UserProfileEntity userProfileEntity =
-        userProfileRepository
-            .findByAuthUserId(unlockUserCommand.authUserId())
-            .orElseThrow(() -> new UserProfileNotFoundException(unlockUserCommand.authUserId()));
+    var userProfile = userProfileRepository.findByAuthUserId(unlockUserCommand.authUserId());
+
+    if (userProfile.isEmpty()) {
+      log.warn(
+          "Skipping user profile unlock: authUserId={} not found", unlockUserCommand.authUserId());
+      return;
+    }
+
+    UserProfileEntity userProfileEntity = userProfile.get();
 
     if (userProfileEntity.getStatus() == UserProfileStatus.ACTIVE) {
-      throw new UserProfileAlreadyActiveException(userProfileEntity.getAuthUserId());
+      log.info(
+          "Skipping user profile unlock: authUserId={}, status={}",
+          userProfileEntity.getAuthUserId(),
+          userProfileEntity.getStatus());
+      return;
     }
 
     userProfileEntity.setStatus(UserProfileStatus.ACTIVE);
@@ -143,10 +162,16 @@ public class UserService {
   }
 
   public void verifyUser(VerifyUserCommand verifyUserCommand) {
-    UserProfileEntity userProfileEntity =
-        userProfileRepository
-            .findByAuthUserId(verifyUserCommand.authUserId())
-            .orElseThrow(() -> new UserProfileNotFoundException(verifyUserCommand.authUserId()));
+    var userProfile = userProfileRepository.findByAuthUserId(verifyUserCommand.authUserId());
+
+    if (userProfile.isEmpty()) {
+      log.warn(
+          "Skipping user profile verification: authUserId={} not found",
+          verifyUserCommand.authUserId());
+      return;
+    }
+
+    UserProfileEntity userProfileEntity = userProfile.get();
 
     userProfileEntity.setStatus(UserProfileStatus.ACTIVE);
     userProfileRepository.save(userProfileEntity);
@@ -154,11 +179,16 @@ public class UserService {
 
   @Transactional
   public void changeUserRole(ChangeUserRoleCommand changeUserRoleCommand) {
-    UserProfileEntity userProfileEntity =
-        userProfileRepository
-            .findByAuthUserId(changeUserRoleCommand.authUserId())
-            .orElseThrow(
-                () -> new UserProfileNotFoundException(changeUserRoleCommand.authUserId()));
+    var userProfile = userProfileRepository.findByAuthUserId(changeUserRoleCommand.authUserId());
+
+    if (userProfile.isEmpty()) {
+      log.warn(
+          "Skipping user profile role change: authUserId={} not found",
+          changeUserRoleCommand.authUserId());
+      return;
+    }
+
+    UserProfileEntity userProfileEntity = userProfile.get();
 
     userProfileEntity.setRole(changeUserRoleCommand.role());
     userProfileRepository.save(userProfileEntity);

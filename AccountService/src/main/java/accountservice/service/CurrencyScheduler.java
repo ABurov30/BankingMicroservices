@@ -2,6 +2,7 @@ package accountservice.service;
 
 import accountservice.dto.CurrencyRateResponse;
 import accountservice.entity.CurrencyEntity;
+import accountservice.exception.CurrencyExchangeRateUpdateException;
 import accountservice.repository.CurrencyRepository;
 import enums.account.AccountCurrency;
 import java.math.BigDecimal;
@@ -50,7 +51,7 @@ public class CurrencyScheduler {
             .body(CurrencyRateResponse[].class);
 
     if (response == null) {
-      throw new RuntimeException("Response empty unavailable to update currency exchange rate");
+      throw new CurrencyExchangeRateUpdateException();
     }
 
     List<CurrencyRateResponse> rates = new ArrayList<>(Arrays.asList(response));

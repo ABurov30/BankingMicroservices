@@ -3,6 +3,8 @@ package apigateway.query;
 import apigateway.client.AccountGrpcClient;
 import apigateway.client.AuthGrpcClient;
 import apigateway.client.UserGrpcClient;
+import apigateway.dto.account.GetAccountResponseDto;
+import apigateway.dto.account.GetAccountWithCardsResponseDto;
 import apigateway.dto.user.*;
 import java.util.List;
 import java.util.UUID;
@@ -13,14 +15,17 @@ public class UserInfoQueryHandler {
   private final AuthGrpcClient authGrpcClient;
   private final UserGrpcClient userGrpcClient;
   private final AccountGrpcClient accountGrpcClient;
+  private final AccountQueryHandler accountQueryHandler;
 
   public UserInfoQueryHandler(
       AuthGrpcClient authGrpcClient,
       UserGrpcClient userGrpcClient,
-      AccountGrpcClient accountGrpcClient) {
+      AccountGrpcClient accountGrpcClient,
+      AccountQueryHandler accountQueryHandler) {
     this.authGrpcClient = authGrpcClient;
     this.userGrpcClient = userGrpcClient;
     this.accountGrpcClient = accountGrpcClient;
+    this.accountQueryHandler = accountQueryHandler;
   }
 
   public GetUserInfoWithAuthInfoResponseDto getUserInfoWithAuthInfo(UUID autUserId) {
@@ -47,10 +52,28 @@ public class UserInfoQueryHandler {
         .toList();
   }
 
-  public GetUserInfoWithAccountResponseDto getUserInfoWithAccountByEmail(
+  public GetUserInfoWithAccountResponseDto getUserInfoWithAccountsAndCardsByEmail(
       GetUserInfoByEmailRequestDto request) {
     var userInfo = userGrpcClient.getUserInfoByEmail(request);
-    var accounts = accountGrpcClient.getAccountsByOwnerId(userInfo.userProfileId());
-    return new GetUserInfoWithAccountResponseDto(userInfo, accounts);
+    var accounts = accountQueryHandler.getAccountsWithCardsByOwnerId(userInfo.userProfileId());
+    return new GetUserInfoWithAccountResponseDto(
+        userInfo, accounts.stream().map(this::toUserInfoAccountWithCardsResponseDto).toList());
+  }
+
+  private GetUserInfoAccountWithCardsResponseDto toUserInfoAccountWithCardsResponseDto(
+      GetAccountWithCardsResponseDto accountWithCards) {
+    return new GetUserInfoAccountWithCardsResponseDto(
+        toUserInfoAccountResponseDto(accountWithCards.account()), accountWithCards.cards());
+  }
+
+  private GetUserInfoAccountResponseDto toUserInfoAccountResponseDto(
+      GetAccountResponseDto account) {
+    return new GetUserInfoAccountResponseDto(
+        account.accountId(),
+        account.ownerUserId(),
+        account.accountNumber(),
+        account.type(),
+        account.status(),
+        account.currency());
   }
 }

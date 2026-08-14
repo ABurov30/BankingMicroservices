@@ -9,7 +9,7 @@ Service implementation: `TransactionGrpcService`.
 | Operation | Purpose |
 | --- | --- |
 | `getTransactionHealth` | Health check |
-| `createTransaction` | Create a transaction and start funds reservation |
+| `createTransaction` | Create a transaction, reserve card limits, and start funds reservation |
 | `getTransactionsByAccounts` | Read transactions for account ids |
 
 ## REST Exposure
@@ -24,9 +24,11 @@ Gateway route groups include:
 
 The route name `creat-transaction` is currently spelled that way in code.
 
+`POST /transaction/creat-transaction` requires `sourceCardId` in addition to source account, target account, amount, currency, and idempotency key.
+
 ## External gRPC Calls
 
-`TransactionService` calls `AccountService` through `AccountGrpcClient` for funds reservation.
+`TransactionService` calls `CardService` through `CardGrpcClient` for card limit reservation, then calls `AccountService` through `AccountGrpcClient` for funds reservation.
 
 ## Contracts
 

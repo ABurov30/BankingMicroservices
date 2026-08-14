@@ -1,10 +1,7 @@
 package cardservice.grpc;
 
 import card.contract.v1.*;
-import cardservice.dto.CreatedCardCommand;
-import cardservice.dto.GetCardResult;
-import cardservice.dto.GetCardsByAccountIdCommand;
-import cardservice.dto.UpdateCardCommand;
+import cardservice.dto.*;
 import cardservice.mapper.command.CardCommandMapper;
 import cardservice.mapper.grpc.CardGrpcMapper;
 import cardservice.service.CardService;
@@ -70,6 +67,17 @@ public class CardGrpcService extends CardRpcServiceGrpc.CardRpcServiceImplBase {
     List<CardResponse> response = results.stream().map(grpcMapper::toCardResponse).toList();
 
     responseObserver.onNext(grpcMapper.toGetCardsGrpcResponse(response));
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void reserveLimitsForTransaction(
+      ReserveLimitsForTransactionGrpcRequest request,
+      StreamObserver<ReserveLimitsForTransactionGrpcResponse> responseObserver) {
+    var command = commandMapper.toReserveLimitsForTransactionCommand(request);
+    var result = cardService.reserveLimitsForTransaction(command);
+    var response = grpcMapper.toReserveLimitsGrpcResponse(result);
+    responseObserver.onNext(response);
     responseObserver.onCompleted();
   }
 }

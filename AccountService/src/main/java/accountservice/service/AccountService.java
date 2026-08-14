@@ -5,7 +5,6 @@ import accountservice.entity.*;
 import accountservice.exception.AccountAlreadyFrozenException;
 import accountservice.exception.AccountClosedException;
 import accountservice.exception.AccountGenerationFailedException;
-import accountservice.exception.AccountHoldNotFoundException;
 import accountservice.exception.AccountNotFoundException;
 import accountservice.exception.AccountNotFrozenException;
 import accountservice.exception.AccountOwnershipException;
@@ -18,6 +17,7 @@ import accountservice.repository.AccountHoldRepository;
 import accountservice.repository.AccountRepository;
 import accountservice.repository.CurrencyRepository;
 import enums.account.AccountStatus;
+import enums.account.ReservationStatus;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
@@ -141,17 +141,37 @@ public class AccountService {
 
   @Transactional
   public void freezeAccountByUserId(FreezeAccountsByUserIdCommand command) {
-    List<AccountEntity> accountEntityList =
-        accountRepository
-            .findAllByOwnerUserIdForUpdate(command.userId())
-            .orElseThrow(() -> new AccountsNotFoundException(command.userId()));
+    var accounts = accountRepository.findAllByOwnerUserIdForUpdate(command.userId());
 
-    accountEntityList.forEach(
-        (account) -> {
-          FreezeAccountCommand freezeAccountCommand =
-              new FreezeAccountCommand(account.getId(), null, null);
-          this.freezeAccount(freezeAccountCommand);
-        });
+    if (accounts.isEmpty() || accounts.get().isEmpty()) {
+      log.warn("Skipping user accounts freeze: userId={} accounts not found", command.userId());
+      return;
+    }
+
+    accounts.get().forEach(this::freezeAccountFromUserBlockedEvent);
+  }
+
+  private void freezeAccountFromUserBlockedEvent(AccountEntity account) {
+    if (account.getAccountStatus() == AccountStatus.CLOSED
+        || account.getAccountStatus() == AccountStatus.FROZEN) {
+      log.info(
+          "Skipping account freeze from user event: accountId={}, status={}",
+          account.getId(),
+          account.getAccountStatus());
+      return;
+    }
+
+    account.setAccountStatus(AccountStatus.FROZEN);
+    accountRepository.save(account);
+
+    Map<String, Object> payload =
+        Map.of(
+            "accountId", account.getId(),
+            "authUserId", account.getOwnerAuthUserId(),
+            "accountNumber", account.getAccountNumber());
+
+    accountOutboxService.saveAccountOutboxEvent(
+        account.getId(), AccountEventType.ACCOUNT_FROZEN, payload);
   }
 
   @Transactional
@@ -286,10 +306,22 @@ public class AccountService {
   }
 
   public void transactionFundsRequest(TransactionFundsRequestCommand command) {
-    var accountHold =
-        accountHoldRepository
-            .findByTransactionId(command.transactionId())
-            .orElseThrow(() -> new AccountHoldNotFoundException(command.transactionId()));
+    var optionalAccountHold = accountHoldRepository.findByTransactionId(command.transactionId());
+
+    if (optionalAccountHold.isEmpty()) {
+      log.warn("Skipping funds transfer: transactionId={} hold not found", command.transactionId());
+      return;
+    }
+
+    var accountHold = optionalAccountHold.get();
+
+    if (accountHold.getStatus() != ReservationStatus.RESERVED) {
+      log.info(
+          "Skipping funds transfer: transactionId={}, status={}",
+          command.transactionId(),
+          accountHold.getStatus());
+      return;
+    }
 
     try {
       transferService.executeFundsTransfer(
