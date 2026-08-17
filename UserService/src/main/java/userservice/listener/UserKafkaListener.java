@@ -1,10 +1,6 @@
 package userservice.listener;
 
-import kafkacontracts.auth.AuthUserBlockedEventPayload;
-import kafkacontracts.auth.AuthUserCreatedEventPayload;
-import kafkacontracts.auth.AuthUserRoleChangedEventPayload;
-import kafkacontracts.auth.AuthUserUnlockEventPayload;
-import kafkacontracts.auth.AuthUserVerifiedEventPayload;
+import kafkacontracts.auth.*;
 import kafkacontracts.common.KafkaTopics;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -64,5 +60,16 @@ public class UserKafkaListener {
       AuthUserRoleChangedEventPayload payload,
       @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
     userService.changeUserRole(commandMapper.toChangeUserRoleCommand(payload));
+  }
+
+  @IdempotentKafkaEvent
+  @KafkaListener(
+      topics =
+          "#{T(kafkacontracts.auth.AuthEventType).AUTH_SOCIAL_ACCOUNT_AUTH_USER_CREATED.getTopic()}")
+  public void handleAuthSocialAccountAuthUserCreated(
+      AuthSocialAccountAuthUserCreatedEventPayload payload,
+      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+    userService.createUserFromSocialAccount(
+        commandMapper.toCreateUserFromSocialAccountCommand(payload));
   }
 }

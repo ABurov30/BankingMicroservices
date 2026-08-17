@@ -32,6 +32,15 @@ public interface AuthDtoMapper {
         tokens.getRefreshTokenDaysTtl());
   }
 
+  default LoginResponseDto toLoginResponseDto(SocialLoginGrpcResponse value) {
+    AuthTokenResponse tokens = value.getTokens();
+    return new LoginResponseDto(
+        tokens.getAccessToken(),
+        tokens.getRefreshToken(),
+        tokens.getAccessTokenMinutesTtl(),
+        tokens.getRefreshTokenDaysTtl());
+  }
+
   default RefreshResponseDto toRefreshResponseDto(RefreshAuthGrpcResponse value) {
     AuthTokenResponse tokens = value.getTokens();
     return new RefreshResponseDto(

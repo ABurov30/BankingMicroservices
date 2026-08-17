@@ -14,6 +14,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.util.StringUtils;
 
 @Configuration
 public class CookieConfig {
@@ -21,9 +22,11 @@ public class CookieConfig {
   private static final Logger log = LoggerFactory.getLogger(CookieConfig.class);
 
   private final JwtDecoder jwtDecoder;
+  private final AuthCookieProperties cookieProperties;
 
-  public CookieConfig(JwtDecoder jwtDecoder) {
+  public CookieConfig(JwtDecoder jwtDecoder, AuthCookieProperties cookieProperties) {
     this.jwtDecoder = jwtDecoder;
+    this.cookieProperties = cookieProperties;
   }
 
   public void setCookieTokens(
@@ -33,46 +36,19 @@ public class CookieConfig {
       String refreshToken,
       int refreshTokenDaysTtl) {
 
-    ResponseCookie atCookie =
-        ResponseCookie.from("at", accessToken)
-            .maxAge(accessTokenMinutesTtl * 60L)
-            .path("/")
-            .httpOnly(true)
-            .secure(true)
-            //                .sameSite("Strict")
-            .build();
+    ResponseCookie atCookie = createTokenCookie("at", accessToken, accessTokenMinutesTtl * 60L);
 
     ResponseCookie rtCookie =
-        ResponseCookie.from("rt", refreshToken)
-            .maxAge(refreshTokenDaysTtl * 24L * 60 * 60)
-            .path("/")
-            .httpOnly(true)
-            .secure(true)
-            //                .sameSite("Strict")
-            .build();
+        createTokenCookie("rt", refreshToken, refreshTokenDaysTtl * 24L * 60 * 60);
 
     response.addHeader(HttpHeaders.SET_COOKIE, rtCookie.toString());
     response.addHeader(HttpHeaders.SET_COOKIE, atCookie.toString());
   }
 
   public void clearCookieTokens(HttpServletResponse response) {
-    ResponseCookie atCookie =
-        ResponseCookie.from("at", "")
-            .maxAge(0)
-            .path("/")
-            .httpOnly(true)
-            .secure(true)
-            //                .sameSite("Strict")
-            .build();
+    ResponseCookie atCookie = createTokenCookie("at", "", 0);
 
-    ResponseCookie rtCookie =
-        ResponseCookie.from("rt", "")
-            .maxAge(0)
-            .path("/")
-            .httpOnly(true)
-            .secure(true)
-            //                .sameSite("Strict")
-            .build();
+    ResponseCookie rtCookie = createTokenCookie("rt", "", 0);
 
     response.addHeader(HttpHeaders.SET_COOKIE, rtCookie.toString());
     response.addHeader(HttpHeaders.SET_COOKIE, atCookie.toString());
@@ -115,5 +91,24 @@ public class CookieConfig {
     }
 
     return jwt.getClaimAsString("role");
+  }
+
+  private ResponseCookie createTokenCookie(String name, String value, long maxAge) {
+    ResponseCookie.ResponseCookieBuilder builder =
+        ResponseCookie.from(name, value)
+            .maxAge(maxAge)
+            .path("/")
+            .httpOnly(true)
+            .secure(cookieProperties.isSecure());
+
+    if (StringUtils.hasText(cookieProperties.getDomain())) {
+      builder.domain(cookieProperties.getDomain());
+    }
+
+    if (StringUtils.hasText(cookieProperties.getSameSite())) {
+      builder.sameSite(cookieProperties.getSameSite());
+    }
+
+    return builder.build();
   }
 }

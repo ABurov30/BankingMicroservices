@@ -4,6 +4,7 @@ import authservice.config.JwtProperties;
 import authservice.dto.*;
 import authservice.entity.*;
 import authservice.exception.*;
+import authservice.mapper.result.AuthResultMapper;
 import authservice.repository.*;
 import enums.auth.AuthUserStatus;
 import enums.auth.Roles;
@@ -13,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import kafkacontracts.auth.AuthEventType;
-import kafkacontracts.common.KafkaTopics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -33,6 +33,8 @@ public class AuthService {
   private final JwtProperties jwtProperties;
   private final AuthOutboxEventRepository authOutboxEventRepository;
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+  private final AuthSocialAccountsRepository authSocialAccountsRepository;
+  private final AuthResultMapper authResultMapper;
 
   public AuthService(
       AuthUserRepository authUserRepository,
@@ -42,7 +44,9 @@ public class AuthService {
       RoleRepository roleRepository,
       RefreshTokenRepository refreshTokenRepository,
       JwtProperties jwtProperties,
-      AuthOutboxEventRepository authOutboxEventRepository) {
+      AuthOutboxEventRepository authOutboxEventRepository,
+      AuthSocialAccountsRepository authSocialAccountsRepository,
+      AuthResultMapper authResultMapper) {
     this.authUserRepository = authUserRepository;
     this.userRoleRepository = userRoleRepository;
     this.passwordEncoder = passwordEncoder;
@@ -51,6 +55,8 @@ public class AuthService {
     this.refreshTokenRepository = refreshTokenRepository;
     this.jwtProperties = jwtProperties;
     this.authOutboxEventRepository = authOutboxEventRepository;
+    this.authSocialAccountsRepository = authSocialAccountsRepository;
+    this.authResultMapper = authResultMapper;
   }
 
   private String generateVerificationCode() {
@@ -88,28 +94,11 @@ public class AuthService {
     userRoleEntity.setRole(roleEntity);
     UserRoleEntity savedUserRole = userRoleRepository.save(userRoleEntity);
 
-    String accessToken =
-        tokenService
-            .generateAccessToken(savedUser, savedUserRole.getRole().getName())
-            .getTokenValue();
-    String refreshToken = tokenService.generateRefreshToken();
-    String refreshTokenHash = tokenService.hashToken(refreshToken);
+    TokenPair tokenPair = issueTokenPair(savedUser, savedUserRole.getRole().getName());
 
-    RefreshTokenEntity refreshTokenEntity = new RefreshTokenEntity();
-    refreshTokenEntity.setAuthUser(savedUser);
-    refreshTokenEntity.setTokenHash(refreshTokenHash);
-    refreshTokenEntity.setExpiresAt(tokenService.refreshTokenExpiresAt());
-    refreshTokenRepository.save(refreshTokenEntity);
-
-    AuthOutboxEventEntity authOutboxEvent = new AuthOutboxEventEntity();
-    authOutboxEvent.setAggregateType("AUTH_USER");
-    authOutboxEvent.setAggregateId(savedUser.getId());
-    authOutboxEvent.setEventType(AuthEventType.AUTH_USER_CREATED.name());
-    authOutboxEvent.setTopic(AuthEventType.AUTH_USER_CREATED.getTopic());
-    authOutboxEvent.setEventKey(savedUser.getId() + ":" + AuthEventType.AUTH_USER_CREATED.name());
-    authOutboxEvent.setSchemaVersion(AuthEventType.AUTH_USER_CREATED.getVersion());
-
-    authOutboxEvent.setPayload(
+    saveAuthOutboxEvent(
+        savedUser.getId(),
+        AuthEventType.AUTH_USER_CREATED,
         Map.of(
             "authUserId", savedUser.getId(),
             "email", signupCommand.email(),
@@ -117,13 +106,7 @@ public class AuthService {
             "lastName", signupCommand.lastName(),
             "verificationCode", verificationCode));
 
-    authOutboxEventRepository.save(authOutboxEvent);
-
-    return new VerifyAuthUserByCodeResult(
-        accessToken,
-        refreshToken,
-        jwtProperties.accessTokenTtlMinutes(),
-        jwtProperties.refreshTokenTtlDays());
+    return authResultMapper.toVerifyAuthUserByCodeResult(tokenPair);
   }
 
   @Transactional
@@ -149,22 +132,9 @@ public class AuthService {
             .findByAuthUserId(authUser.getId())
             .orElseThrow(() -> new RoleNotFoundException(authUser.getId()));
 
-    String accessToken =
-        tokenService.generateAccessToken(authUser, userRole.getRole().getName()).getTokenValue();
-    String refreshToken = tokenService.generateRefreshToken();
-    String refreshTokenHash = tokenService.hashToken(refreshToken);
+    TokenPair tokenPair = issueTokenPair(authUser, userRole.getRole().getName());
 
-    RefreshTokenEntity refreshTokenEntity = new RefreshTokenEntity();
-    refreshTokenEntity.setAuthUser(authUser);
-    refreshTokenEntity.setTokenHash(refreshTokenHash);
-    refreshTokenEntity.setExpiresAt(tokenService.refreshTokenExpiresAt());
-    refreshTokenRepository.save(refreshTokenEntity);
-
-    return new LoginResult(
-        accessToken,
-        refreshToken,
-        jwtProperties.accessTokenTtlMinutes(),
-        jwtProperties.refreshTokenTtlDays());
+    return authResultMapper.toLoginResult(tokenPair);
   }
 
   @Transactional
@@ -213,22 +183,9 @@ public class AuthService {
             .findByAuthUserId(authUser.getId())
             .orElseThrow(() -> new RoleNotFoundException(authUser.getId()));
 
-    String accessToken =
-        tokenService.generateAccessToken(authUser, userRole.getRole().getName()).getTokenValue();
+    TokenPair tokenPair = issueTokenPair(authUser, userRole.getRole().getName());
 
-    RefreshTokenEntity newRefreshToken = new RefreshTokenEntity();
-    String refreshToken = tokenService.generateRefreshToken();
-    String refreshTokenHash = tokenService.hashToken(refreshToken);
-    newRefreshToken.setExpiresAt(tokenService.refreshTokenExpiresAt());
-    newRefreshToken.setTokenHash(refreshTokenHash);
-    newRefreshToken.setAuthUser(authUser);
-    refreshTokenRepository.save(newRefreshToken);
-
-    return new RefreshResult(
-        accessToken,
-        refreshToken,
-        jwtProperties.accessTokenTtlMinutes(),
-        jwtProperties.refreshTokenTtlDays());
+    return authResultMapper.toRefreshResult(tokenPair);
   }
 
   public void changePassword(ChangePasswordCommand changePasswordCommand) {
@@ -259,20 +216,12 @@ public class AuthService {
     authUser.setStatus(AuthUserStatus.BLOCKED);
     authUserRepository.save(authUser);
 
-    AuthOutboxEventEntity authOutboxEvent = new AuthOutboxEventEntity();
-    authOutboxEvent.setAggregateType("AUTH_USER");
-    authOutboxEvent.setAggregateId(authUser.getId());
-    authOutboxEvent.setEventType(AuthEventType.AUTH_USER_BLOCKED.name());
-    authOutboxEvent.setTopic(AuthEventType.AUTH_USER_BLOCKED.getTopic());
-    authOutboxEvent.setEventKey(authUser.getId() + ":" + AuthEventType.AUTH_USER_BLOCKED.name());
-    authOutboxEvent.setSchemaVersion(AuthEventType.AUTH_USER_BLOCKED.getVersion());
-
-    authOutboxEvent.setPayload(
+    saveAuthOutboxEvent(
+        authUser.getId(),
+        AuthEventType.AUTH_USER_BLOCKED,
         Map.of(
             "authUserId", authUser.getId(),
             "email", authUser.getEmail()));
-
-    authOutboxEventRepository.save(authOutboxEvent);
   }
 
   public void unlockUser(UnlockAuthUserCommand unlockAuthUserCommand) {
@@ -288,20 +237,12 @@ public class AuthService {
     authUser.setStatus(AuthUserStatus.ACTIVE);
     authUserRepository.save(authUser);
 
-    AuthOutboxEventEntity authOutboxEvent = new AuthOutboxEventEntity();
-    authOutboxEvent.setAggregateType("AUTH_USER");
-    authOutboxEvent.setAggregateId(authUser.getId());
-    authOutboxEvent.setEventType(AuthEventType.AUTH_USER_UNLOCK.name());
-    authOutboxEvent.setTopic(AuthEventType.AUTH_USER_UNLOCK.getTopic());
-    authOutboxEvent.setEventKey(authUser.getId() + ":" + AuthEventType.AUTH_USER_UNLOCK.name());
-    authOutboxEvent.setSchemaVersion(AuthEventType.AUTH_USER_UNLOCK.getVersion());
-
-    authOutboxEvent.setPayload(
+    saveAuthOutboxEvent(
+        authUser.getId(),
+        AuthEventType.AUTH_USER_UNLOCK,
         Map.of(
             "authUserId", authUser.getId(),
             "email", authUser.getEmail()));
-
-    authOutboxEventRepository.save(authOutboxEvent);
   }
 
   @Transactional
@@ -323,21 +264,12 @@ public class AuthService {
     userRole.setRole(role);
     userRoleRepository.save(userRole);
 
-    AuthOutboxEventEntity authOutboxEvent = new AuthOutboxEventEntity();
-    authOutboxEvent.setAggregateType("AUTH_USER");
-    authOutboxEvent.setAggregateId(changeAuthUserRoleCommand.authUserId());
-    authOutboxEvent.setEventType(AuthEventType.AUTH_USER_ROLE_CHANGED.name());
-    authOutboxEvent.setTopic(KafkaTopics.AUTH_USER_ROLE_CHANGED);
-    authOutboxEvent.setEventKey(
-        changeAuthUserRoleCommand.authUserId() + ":" + AuthEventType.AUTH_USER_ROLE_CHANGED.name());
-    authOutboxEvent.setSchemaVersion(AuthEventType.AUTH_USER_ROLE_CHANGED.getVersion());
-
-    authOutboxEvent.setPayload(
+    saveAuthOutboxEvent(
+        changeAuthUserRoleCommand.authUserId(),
+        AuthEventType.AUTH_USER_ROLE_CHANGED,
         Map.of(
             "authUserId", changeAuthUserRoleCommand.authUserId(),
             "role", role.getName().name()));
-
-    authOutboxEventRepository.save(authOutboxEvent);
   }
 
   @Transactional
@@ -360,21 +292,9 @@ public class AuthService {
             .findByAuthUserId(authUser.getId())
             .orElseThrow(() -> new RoleNotFoundException(authUser.getId()));
 
-    String accessToken =
-        tokenService.generateAccessToken(authUser, userRole.getRole().getName()).getTokenValue();
-    String refreshToken = tokenService.generateRefreshToken();
+    TokenPair tokenPair = issueTokenPair(authUser, userRole.getRole().getName());
 
-    RefreshTokenEntity refreshTokenEntity = new RefreshTokenEntity();
-    refreshTokenEntity.setAuthUser(authUser);
-    refreshTokenEntity.setTokenHash(tokenService.hashToken(refreshToken));
-    refreshTokenEntity.setExpiresAt(tokenService.refreshTokenExpiresAt());
-    refreshTokenRepository.save(refreshTokenEntity);
-
-    return new VerifyAuthUserByCodeResult(
-        accessToken,
-        refreshToken,
-        jwtProperties.accessTokenTtlMinutes(),
-        jwtProperties.refreshTokenTtlDays());
+    return authResultMapper.toVerifyAuthUserByCodeResult(tokenPair);
   }
 
   @Transactional
@@ -408,20 +328,12 @@ public class AuthService {
   }
 
   private void saveAuthUserVerifiedOutboxEvent(AuthUserEntity authUser) {
-    AuthOutboxEventEntity authOutboxEvent = new AuthOutboxEventEntity();
-    authOutboxEvent.setAggregateType("AUTH_USER");
-    authOutboxEvent.setAggregateId(authUser.getId());
-    authOutboxEvent.setEventType(AuthEventType.AUTH_USER_VERIFIED.name());
-    authOutboxEvent.setTopic(AuthEventType.AUTH_USER_VERIFIED.getTopic());
-    authOutboxEvent.setEventKey(authUser.getId() + ":" + AuthEventType.AUTH_USER_VERIFIED.name());
-    authOutboxEvent.setSchemaVersion(AuthEventType.AUTH_USER_VERIFIED.getVersion());
-
-    authOutboxEvent.setPayload(
+    saveAuthOutboxEvent(
+        authUser.getId(),
+        AuthEventType.AUTH_USER_VERIFIED,
         Map.of(
             "authUserId", authUser.getId(),
             "email", authUser.getEmail()));
-
-    authOutboxEventRepository.save(authOutboxEvent);
   }
 
   private boolean canVerifyWithoutCode(String role) {
@@ -438,8 +350,7 @@ public class AuthService {
             .findByAuthUserId(command.authUserId())
             .orElseThrow(() -> new RoleNotFoundException(command.authUserId()));
 
-    return new GetAuthUserByIdResult(
-        authUser.getId(), authUser.getStatus(), authUser.getEmail(), userRole.getRole().getName());
+    return authResultMapper.toGetAuthUserByIdResult(authUser, userRole);
   }
 
   @Transactional
@@ -482,8 +393,13 @@ public class AuthService {
             .findByAuthUserId(authUser.getId())
             .orElseThrow(() -> new RoleNotFoundException(authUser.getId()));
 
-    String accessToken =
-        tokenService.generateAccessToken(authUser, userRole.getRole().getName()).getTokenValue();
+    TokenPair tokenPair = issueTokenPair(authUser, userRole.getRole().getName());
+
+    return authResultMapper.toResetPasswordResult(tokenPair);
+  }
+
+  private TokenPair issueTokenPair(AuthUserEntity authUser, Roles role) {
+    String accessToken = tokenService.generateAccessToken(authUser, role).getTokenValue();
     String refreshToken = tokenService.generateRefreshToken();
     String refreshTokenHash = tokenService.hashToken(refreshToken);
 
@@ -493,7 +409,7 @@ public class AuthService {
     refreshTokenEntity.setExpiresAt(tokenService.refreshTokenExpiresAt());
     refreshTokenRepository.save(refreshTokenEntity);
 
-    return new ResetPasswordResult(
+    return new TokenPair(
         accessToken,
         refreshToken,
         jwtProperties.accessTokenTtlMinutes(),
@@ -501,20 +417,95 @@ public class AuthService {
   }
 
   private void saveAuthUserForgetPasswordOutboxEvent(AuthUserEntity authUser) {
-    AuthOutboxEventEntity authOutboxEvent = new AuthOutboxEventEntity();
-    authOutboxEvent.setAggregateType("AUTH_USER");
-    authOutboxEvent.setAggregateId(authUser.getId());
-    authOutboxEvent.setEventType(AuthEventType.AUTH_USER_FORGET_PASSWORD.name());
-    authOutboxEvent.setTopic(AuthEventType.AUTH_USER_FORGET_PASSWORD.getTopic());
-    authOutboxEvent.setEventKey(
-        authUser.getId() + ":" + AuthEventType.AUTH_USER_FORGET_PASSWORD.name());
-    authOutboxEvent.setSchemaVersion(AuthEventType.AUTH_USER_FORGET_PASSWORD.getVersion());
-
-    authOutboxEvent.setPayload(
+    saveAuthOutboxEvent(
+        authUser.getId(),
+        AuthEventType.AUTH_USER_FORGET_PASSWORD,
         Map.of(
             "authUserId", authUser.getId(),
             "email", authUser.getEmail()));
+  }
 
-    authOutboxEventRepository.save(authOutboxEvent);
+  private AuthOutboxEventEntity saveAuthOutboxEvent(
+      UUID authUserId, AuthEventType eventType, Map<String, Object> payload) {
+    var authOutboxEvent = new AuthOutboxEventEntity();
+    authOutboxEvent.setAggregateType("AUTH_USER");
+    authOutboxEvent.setAggregateId(authUserId);
+    authOutboxEvent.setEventType(eventType.name());
+    authOutboxEvent.setTopic(eventType.getTopic());
+    authOutboxEvent.setEventKey(authUserId + ":" + eventType.name());
+    authOutboxEvent.setSchemaVersion(eventType.getVersion());
+    authOutboxEvent.setPayload(payload);
+    return authOutboxEventRepository.save(authOutboxEvent);
+  }
+
+  @Transactional
+  public SocialLoginResult socialLogin(SocialLoginCommand command) {
+    var socialAccount =
+        authSocialAccountsRepository.findByProviderAndProviderUserId(
+            command.provider(), command.providerUserId());
+
+    if (socialAccount.isPresent()) {
+      var authUserFromSocialAccount = socialAccount.get().getAuthUser();
+      UserRoleEntity userRole =
+          userRoleRepository
+              .findByAuthUserId(authUserFromSocialAccount.getId())
+              .orElseThrow(() -> new RoleNotFoundException(authUserFromSocialAccount.getId()));
+      var tokens = issueTokenPair(authUserFromSocialAccount, userRole.getRole().getName());
+      return authResultMapper.toSocialLoginResult(tokens);
+    }
+
+    var authUser = authUserRepository.findByEmail(command.email());
+    if (authUser.isPresent()) {
+      saveAuthSocialAccount(command, authUser.get());
+      UserRoleEntity userRole =
+          userRoleRepository
+              .findByAuthUserId(authUser.get().getId())
+              .orElseThrow(() -> new RoleNotFoundException(authUser.get().getId()));
+      var tokens = issueTokenPair(authUser.get(), userRole.getRole().getName());
+      return authResultMapper.toSocialLoginResult(tokens);
+    }
+
+    var newAuthUser = new AuthUserEntity();
+    newAuthUser.setStatus(AuthUserStatus.ACTIVE);
+    newAuthUser.setEmail(command.email());
+    newAuthUser.setEmailVerified(command.isEmailVerified());
+    newAuthUser = authUserRepository.save(newAuthUser);
+
+    var newUserRole = new UserRoleEntity();
+
+    AuthUserEntity finalNewAuthUser = newAuthUser;
+
+    RoleEntity roleEntity =
+        roleRepository
+            .findByName(Roles.USER)
+            .orElseThrow(() -> new RoleNotFoundException(finalNewAuthUser.getId()));
+
+    newUserRole.setAuthUser(newAuthUser);
+    newUserRole.setRole(roleEntity);
+    userRoleRepository.save(newUserRole);
+
+    saveAuthSocialAccount(command, newAuthUser);
+
+    var tokens = issueTokenPair(newAuthUser, newUserRole.getRole().getName());
+
+    saveAuthOutboxEvent(
+        newAuthUser.getId(),
+        AuthEventType.AUTH_SOCIAL_ACCOUNT_AUTH_USER_CREATED,
+        Map.of(
+            "authUserId", newAuthUser.getId(),
+            "email", newAuthUser.getEmail(),
+            "firstName", command.firstName(),
+            "lastName", command.lastName()));
+
+    return authResultMapper.toSocialLoginResult(tokens);
+  }
+
+  private AuthSocialAccountsEntity saveAuthSocialAccount(
+      SocialLoginCommand command, AuthUserEntity authUser) {
+    var authSocialAccount = new AuthSocialAccountsEntity();
+    authSocialAccount.setProvider(command.provider());
+    authSocialAccount.setProviderUserId(command.providerUserId());
+    authSocialAccount.setAuthUser(authUser);
+    return authSocialAccountsRepository.save(authSocialAccount);
   }
 }

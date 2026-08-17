@@ -3,6 +3,7 @@ package authservice.mapper.command;
 import auth.contract.v1.*;
 import authservice.dto.*;
 import enums.auth.Roles;
+import enums.auth.SocialLoginProvider;
 import java.util.Locale;
 import java.util.UUID;
 import org.mapstruct.Mapper;
@@ -74,5 +75,15 @@ public interface AuthCommandMapper {
   default ResetPasswordCommand toResetPasswordCommand(ResetPasswordGrpcRequest request) {
     return new ResetPasswordCommand(
         UUID.fromString(request.getAuthUserId()), request.getNewPassword());
+  }
+
+  default SocialLoginCommand toSocialLoginCommand(SocialLoginGrpcRequest request) {
+    return new SocialLoginCommand(
+        SocialLoginProvider.valueOf(request.getProvider()),
+        request.getProviderUserId(),
+        request.getEmail().trim().toLowerCase(Locale.ROOT),
+        request.getIsEmailVerified(),
+        request.getFirstName(),
+        request.getLastName());
   }
 }

@@ -14,6 +14,7 @@ Primary storage is PostgreSQL. Schema changes are managed by Liquibase under `sr
 | `RefreshTokenEntity` | Refresh token state and revocation/expiration data |
 | `RoleEntity` | Available roles |
 | `UserRoleEntity` | Auth user to role relation |
+| `AuthSocialAccountsEntity` | External OAuth provider account linked to an auth user |
 | `AuthOutboxEventEntity` | Outbox rows for Kafka publishing |
 
 ## Repositories
@@ -22,6 +23,7 @@ Primary storage is PostgreSQL. Schema changes are managed by Liquibase under `sr
 - `RefreshTokenRepository`
 - `RoleRepository`
 - `UserRoleRepository`
+- `AuthSocialAccountsRepository`
 - `AuthOutboxEventRepository`
 
 ## Migration Files
@@ -31,6 +33,8 @@ Primary storage is PostgreSQL. Schema changes are managed by Liquibase under `sr
 - `003-add-auth-user-role-changed-event.sql`
 - `004-update-auth-user-status-constraint.sql`
 - `005-drop-auth-outbox-event-key-unique-constraint.sql`
+- `006-create-auth-social-account-table.sql`
+- `007-add-auth-social-account-created-event.sql`
 
 ## Data Integrity Notes
 

@@ -9,3 +9,7 @@ databaseChangeLog:
       file: db/changelog/changes/004-update-auth-user-status-constraint.sql
   - include:
       file: db/changelog/changes/005-drop-auth-outbox-event-key-unique-constraint.sql
+  - include:
+      file: db/changelog/changes/006-create-auth-social-account-table.sql
+  - include:
+      file: db/changelog/changes/007-add-auth-social-account-created-event.sql

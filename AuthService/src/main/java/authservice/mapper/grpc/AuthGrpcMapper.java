@@ -60,6 +60,17 @@ public interface AuthGrpcMapper {
         .build();
   }
 
+  default SocialLoginGrpcResponse toSocialLoginGrpcResponse(SocialLoginResult result) {
+    return SocialLoginGrpcResponse.newBuilder()
+        .setTokens(
+            tokens(
+                result.accessToken(),
+                result.refreshToken(),
+                result.accessTokenMinutesTtl(),
+                result.refreshTokenDaysTtl()))
+        .build();
+  }
+
   private AuthTokenResponse tokens(
       String accessToken, String refreshToken, long accessTtl, long refreshTtl) {
     return AuthTokenResponse.newBuilder()

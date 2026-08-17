@@ -54,6 +54,16 @@ public interface AuthEventPayloadMapper {
         .build();
   }
 
+  default AuthSocialAccountAuthUserCreatedEventPayload
+      toAuthSocialAccountAuthUserCreatedEventPayload(Map<String, Object> value) {
+    return AuthSocialAccountAuthUserCreatedEventPayload.newBuilder()
+        .setAuthUserId(id(value))
+        .setEmail(value.get("email").toString())
+        .setFirstName(value.get("firstName").toString())
+        .setLastName(value.get("lastName").toString())
+        .build();
+  }
+
   private UUID id(Map<String, Object> value) {
     return UUID.fromString(value.get("authUserId").toString());
   }

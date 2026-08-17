@@ -102,4 +102,10 @@ public class AuthGrpcClient {
     return dtoMapper.toResetPasswordsResponseDto(
         stub.withDeadlineAfter(2, TimeUnit.SECONDS).resetPassword(grpcRequest));
   }
+
+  public LoginResponseDto socialLogin(SocialLoginRequestDto request) {
+    SocialLoginGrpcRequest grpcRequest = grpcMapper.toSocialLoginGrpcRequest(request);
+    return dtoMapper.toLoginResponseDto(
+        stub.withDeadlineAfter(2, TimeUnit.SECONDS).socialLogin(grpcRequest));
+  }
 }

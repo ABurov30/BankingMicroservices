@@ -18,7 +18,7 @@ public class AuthUserEntity {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  @Column(name = "password_hash", nullable = false)
+  @Column(name = "password_hash")
   private String passwordHash;
 
   @Enumerated(EnumType.STRING)
@@ -31,7 +31,7 @@ public class AuthUserEntity {
   @Column(name = "email_verified", nullable = false)
   private boolean emailVerified = false;
 
-  @Column(name = "verification_code_hash", nullable = false)
+  @Column(name = "verification_code_hash")
   private String verificationCodeHash;
 
   @CreationTimestamp

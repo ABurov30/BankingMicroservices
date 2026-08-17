@@ -8,6 +8,7 @@ import enums.auth.Roles;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import java.io.IOException;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -137,5 +138,10 @@ public class AuthGatewayController {
   @PutMapping("/admin/change-auth-user-role")
   public void changeAuthUserRole(@Valid @RequestBody ChangeAuthUserRoleRequestDto request) {
     authClient.changeAuthUserRole(request);
+  }
+
+  @GetMapping("/oauth/google")
+  public void googleLogin(HttpServletResponse response) throws IOException {
+    response.sendRedirect("/oauth2/authorization/google");
   }
 }

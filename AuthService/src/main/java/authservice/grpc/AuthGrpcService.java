@@ -169,4 +169,14 @@ public class AuthGrpcService extends AuthRpcServiceGrpc.AuthRpcServiceImplBase {
     responseObserver.onNext(response);
     responseObserver.onCompleted();
   }
+
+  @Override
+  public void socialLogin(
+      SocialLoginGrpcRequest request, StreamObserver<SocialLoginGrpcResponse> responseObserver) {
+    SocialLoginCommand command = commandMapper.toSocialLoginCommand(request);
+    SocialLoginGrpcResponse response =
+        grpcMapper.toSocialLoginGrpcResponse(authService.socialLogin(command));
+    responseObserver.onNext(response);
+    responseObserver.onCompleted();
+  }
 }

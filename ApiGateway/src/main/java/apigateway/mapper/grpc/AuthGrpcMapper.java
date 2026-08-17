@@ -89,4 +89,15 @@ public interface AuthGrpcMapper {
         .setNewPassword(value.newPassword())
         .build();
   }
+
+  default SocialLoginGrpcRequest toSocialLoginGrpcRequest(SocialLoginRequestDto value) {
+    return SocialLoginGrpcRequest.newBuilder()
+        .setProvider(value.provider().name())
+        .setProviderUserId(value.providerUserId())
+        .setEmail(value.email().trim().toLowerCase(Locale.ROOT))
+        .setIsEmailVerified(Boolean.TRUE.equals(value.isEmailVerified()))
+        .setFirstName(value.firstName() == null ? "" : value.firstName())
+        .setLastName(value.lastName() == null ? "" : value.lastName())
+        .build();
+  }
 }

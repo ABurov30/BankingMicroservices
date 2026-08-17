@@ -22,14 +22,25 @@ Security configuration permits:
 - `POST /auth/refresh`
 - `DELETE /auth/logout`
 - `PUT /auth/verify-user`
+- `GET /auth/oauth/google`
+- `/oauth2/**`
+- `/login/oauth2/**`
 - `/ws` and `/ws/**`
 - `/*/health`
 - `/v3/api-docs/**`
 - `/swagger-ui/**`
 - `/swagger-ui.html`
 - `/actuator/health`
+- `/actuator/prometheus`
 
 All other routes require an active user or an admin role unless a narrower manager/admin rule applies.
+
+## Google OAuth2
+
+`GET /auth/oauth/google` starts Google login by redirecting to Spring Security's Google OAuth2
+authorization endpoint. After Google redirects back to `/login/oauth2/code/google`, the gateway
+exchanges the OIDC user data with `AuthService`, sets `at` and `rt` cookies, and redirects the
+browser to `SITE_URL`.
 
 ## gRPC Clients
 

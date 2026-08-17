@@ -14,6 +14,7 @@ Known auth event categories include:
 - auth user verified
 - auth user role changed
 - auth user password reset or forget-password flow events
+- social account auth user created
 
 ## Consumed Events
 

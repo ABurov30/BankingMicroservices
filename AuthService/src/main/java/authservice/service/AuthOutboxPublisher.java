@@ -74,6 +74,8 @@ public class AuthOutboxPublisher implements KafkaOnSentHandler {
       case AUTH_USER_ROLE_CHANGED -> eventPayloadMapper.toAuthUserRoleChangedEventPayload(payload);
       case AUTH_USER_FORGET_PASSWORD ->
           eventPayloadMapper.toAuthUserForgetPasswordEventPayload(payload);
+      case AUTH_SOCIAL_ACCOUNT_AUTH_USER_CREATED ->
+          eventPayloadMapper.toAuthSocialAccountAuthUserCreatedEventPayload(payload);
     };
   }
 }

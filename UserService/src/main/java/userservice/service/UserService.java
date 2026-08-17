@@ -193,4 +193,15 @@ public class UserService {
     userProfileEntity.setRole(changeUserRoleCommand.role());
     userProfileRepository.save(userProfileEntity);
   }
+
+  @Transactional
+  public void createUserFromSocialAccount(CreatUserFromSocialAccountCommand command) {
+    var userProfileEntity = new UserProfileEntity();
+    userProfileEntity.setStatus(UserProfileStatus.ACTIVE);
+    userProfileEntity.setEmail(command.email());
+    userProfileEntity.setAuthUserId(command.authUserId());
+    userProfileEntity.setLastName(command.lastName());
+    userProfileEntity.setFirstName(command.firstName());
+    userProfileRepository.save(userProfileEntity);
+  }
 }
