@@ -19,7 +19,7 @@ Service implementation: `AuthGrpcService`.
 | `verifyAuthUserByPrivilegeRole` | Manager/admin verification |
 | `verifyAuthUserByCode` | Code-based user verification |
 | `changeAuthUserRole` | Admin role assignment flow |
-| `getAuthUserById` | Lookup auth user data |
+| `getAuthUserById` | Lookup auth user data, including linked social provider accounts |
 | `forgetPassword` | Start password reset flow |
 | `resetPassword` | Complete password reset flow |
 
@@ -30,3 +30,6 @@ Auth REST endpoints are exposed through `ApiGateway/AuthGatewayController`, not 
 ## Contracts
 
 gRPC request and response types come from `com.burov:contracts`. Kafka event types come from `com.burov:kafka-contracts`.
+
+`GetAuthUserByIdGrpcResponse` returns the auth user id, status, email, role, and a repeated
+`SocialAccountResponse` list with each linked provider and provider email.

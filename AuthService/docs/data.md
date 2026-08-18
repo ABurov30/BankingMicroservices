@@ -14,7 +14,7 @@ Primary storage is PostgreSQL. Schema changes are managed by Liquibase under `sr
 | `RefreshTokenEntity` | Refresh token state and revocation/expiration data |
 | `RoleEntity` | Available roles |
 | `UserRoleEntity` | Auth user to role relation |
-| `AuthSocialAccountsEntity` | External OAuth provider account linked to an auth user |
+| `AuthSocialAccountsEntity` | External OAuth provider account linked to an auth user, including provider email |
 | `AuthOutboxEventEntity` | Outbox rows for Kafka publishing |
 
 ## Repositories
@@ -39,3 +39,6 @@ Primary storage is PostgreSQL. Schema changes are managed by Liquibase under `sr
 ## Data Integrity Notes
 
 Refresh token and user status changes affect security. Avoid bypassing service methods that enforce token revocation, status checks, and event publication.
+
+Social account rows are unique by provider and provider user id. A single auth user may have
+multiple linked social provider accounts.

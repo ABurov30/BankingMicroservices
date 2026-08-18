@@ -35,7 +35,7 @@ public class UserInfoQueryHandler {
         authGrpcClient.getAuthUserById(new GetRoleByAuthUserIdRequestDto(autUserId));
 
     return new GetUserInfoWithAuthInfoResponseDto(
-        userInfoResponseDto, authInfo.role(), authInfo.status());
+        userInfoResponseDto, authInfo.role(), authInfo.status(), authInfo.socialAccounts());
   }
 
   public List<GetUserInfoWithAuthInfoResponseDto> getAllUserInfoWithAuthInfo() {
@@ -47,7 +47,7 @@ public class UserInfoQueryHandler {
                   authGrpcClient.getAuthUserById(
                       new GetRoleByAuthUserIdRequestDto(userInfo.autUserId()));
               return new GetUserInfoWithAuthInfoResponseDto(
-                  userInfo, authInfo.role(), authInfo.status());
+                  userInfo, authInfo.role(), authInfo.status(), authInfo.socialAccounts());
             })
         .toList();
   }

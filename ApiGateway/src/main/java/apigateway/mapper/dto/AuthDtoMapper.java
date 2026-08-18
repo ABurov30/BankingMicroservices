@@ -3,11 +3,13 @@ package apigateway.mapper.dto;
 import apigateway.dto.auth.LoginResponseDto;
 import apigateway.dto.auth.RefreshResponseDto;
 import apigateway.dto.auth.ResetPasswordsResponseDto;
+import apigateway.dto.auth.SocialAccountResponse;
 import apigateway.dto.auth.VerifyAuthUserByCodeResponseDto;
 import apigateway.dto.user.GetAuthUserByIdResponseDto;
 import auth.contract.v1.*;
 import enums.auth.AuthUserStatus;
 import enums.auth.Roles;
+import enums.auth.SocialLoginProvider;
 import java.util.UUID;
 import org.mapstruct.Mapper;
 
@@ -56,7 +58,14 @@ public interface AuthDtoMapper {
         UUID.fromString(value.getAuthUserId()),
         value.getEmail(),
         Roles.valueOf(value.getRole()),
-        AuthUserStatus.valueOf(value.getStatus()));
+        AuthUserStatus.valueOf(value.getStatus()),
+        value.getSocialAccountsList().stream().map(this::toSocialAccountResponse).toList());
+  }
+
+  private SocialAccountResponse toSocialAccountResponse(
+      auth.contract.v1.SocialAccountResponse value) {
+    return new SocialAccountResponse(
+        SocialLoginProvider.valueOf(value.getProvider()), value.getEmail());
   }
 
   default ResetPasswordsResponseDto toResetPasswordsResponseDto(ResetPasswordsGrpcResponse value) {

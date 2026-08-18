@@ -91,7 +91,7 @@
         <dependency>
             <groupId>com.burov</groupId>
             <artifactId>contracts</artifactId>
-            <version>0.0.17</version>
+            <version>0.0.18</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

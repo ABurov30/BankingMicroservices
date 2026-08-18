@@ -57,6 +57,7 @@ browser to `SITE_URL`.
 
 - Card responses map `CardResponse` from `CardService`, including configured limits and spend counters: `dailyLimit`, `monthlyLimit`, `spendDailyLimit`, and `spendMonthlyLimit`.
 - Transaction creation requests require `sourceCardId`; the transaction flow uses it for card limit reservation before account funds are requested.
+- User auth info responses include linked social provider accounts as `socialAccounts`.
 - `POST /user/user-info` returns user accounts with cards but omits account `availableBalance` and `reservedBalance`.
 
 ## WebSocket

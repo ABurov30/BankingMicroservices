@@ -17,9 +17,12 @@ public class AuthSocialAccountsEntity {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  @OneToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "user_id", nullable = false, unique = true)
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "user_id", nullable = false)
   private AuthUserEntity authUser;
+
+  @Column(name = "provider_email", nullable = false)
+  private String providerEmail;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "provider", nullable = false)

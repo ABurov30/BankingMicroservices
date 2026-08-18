@@ -46,6 +46,15 @@ public interface AuthGrpcMapper {
         .setStatus(result.status().name())
         .setEmail(result.email())
         .setRole(result.role().name())
+        .addAllSocialAccounts(
+            result.socialAccounts().stream().map(this::toSocialAccountResponse).toList())
+        .build();
+  }
+
+  private SocialAccountResponse toSocialAccountResponse(SocialAccountResult result) {
+    return SocialAccountResponse.newBuilder()
+        .setProvider(result.provider().name())
+        .setEmail(result.email())
         .build();
   }
 

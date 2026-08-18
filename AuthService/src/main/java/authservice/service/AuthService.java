@@ -349,8 +349,10 @@ public class AuthService {
         userRoleRepository
             .findByAuthUserId(command.authUserId())
             .orElseThrow(() -> new RoleNotFoundException(command.authUserId()));
+    List<AuthSocialAccountsEntity> socialAccounts =
+        authSocialAccountsRepository.findAllByAuthUserId(command.authUserId());
 
-    return authResultMapper.toGetAuthUserByIdResult(authUser, userRole);
+    return authResultMapper.toGetAuthUserByIdResult(authUser, userRole, socialAccounts);
   }
 
   @Transactional
@@ -505,6 +507,7 @@ public class AuthService {
     var authSocialAccount = new AuthSocialAccountsEntity();
     authSocialAccount.setProvider(command.provider());
     authSocialAccount.setProviderUserId(command.providerUserId());
+    authSocialAccount.setProviderEmail(command.email());
     authSocialAccount.setAuthUser(authUser);
     return authSocialAccountsRepository.save(authSocialAccount);
   }

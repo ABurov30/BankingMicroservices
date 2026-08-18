@@ -4,11 +4,14 @@ import authservice.dto.GetAuthUserByIdResult;
 import authservice.dto.LoginResult;
 import authservice.dto.RefreshResult;
 import authservice.dto.ResetPasswordResult;
+import authservice.dto.SocialAccountResult;
 import authservice.dto.SocialLoginResult;
 import authservice.dto.TokenPair;
 import authservice.dto.VerifyAuthUserByCodeResult;
+import authservice.entity.AuthSocialAccountsEntity;
 import authservice.entity.AuthUserEntity;
 import authservice.entity.UserRoleEntity;
+import java.util.List;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
@@ -38,9 +41,19 @@ public interface AuthResultMapper {
   }
 
   default GetAuthUserByIdResult toGetAuthUserByIdResult(
-      AuthUserEntity authUser, UserRoleEntity userRole) {
+      AuthUserEntity authUser,
+      UserRoleEntity userRole,
+      List<AuthSocialAccountsEntity> socialAccounts) {
     return new GetAuthUserByIdResult(
-        authUser.getId(), authUser.getStatus(), authUser.getEmail(), userRole.getRole().getName());
+        authUser.getId(),
+        authUser.getStatus(),
+        authUser.getEmail(),
+        userRole.getRole().getName(),
+        socialAccounts.stream().map(this::toSocialAccountResult).toList());
+  }
+
+  private SocialAccountResult toSocialAccountResult(AuthSocialAccountsEntity socialAccount) {
+    return new SocialAccountResult(socialAccount.getProvider(), socialAccount.getProviderEmail());
   }
 
   default ResetPasswordResult toResetPasswordResult(TokenPair tokenPair) {

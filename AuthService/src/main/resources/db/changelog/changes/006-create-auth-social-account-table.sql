@@ -6,6 +6,7 @@ create table auth_social_accounts
 (
     id               uuid primary key,
     user_id          uuid         not null references auth_users (id),
+    provider_email   varchar(255) not null,
     provider         varchar(32)  not null,
     provider_user_id varchar(255) not null,
     created_at       timestamp    not null,

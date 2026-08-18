@@ -65,7 +65,8 @@ public class UserKafkaListener {
   @IdempotentKafkaEvent
   @KafkaListener(
       topics =
-          "#{T(kafkacontracts.auth.AuthEventType).AUTH_SOCIAL_ACCOUNT_AUTH_USER_CREATED.getTopic()}")
+          "#{T(kafkacontracts.auth.AuthEventType).AUTH_SOCIAL_ACCOUNT_"
+              + "AUTH_USER_CREATED.getTopic()}")
   public void handleAuthSocialAccountAuthUserCreated(
       AuthSocialAccountAuthUserCreatedEventPayload payload,
       @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
