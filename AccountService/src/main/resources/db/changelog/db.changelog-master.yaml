@@ -11,3 +11,5 @@ databaseChangeLog:
       file: db/changelog/changes/005-remove-credit-account-type.sql
   - include:
       file: db/changelog/changes/006-create-account-hold-table.sql
+  - include:
+      file: db/changelog/changes/007-add-constraint-uq-accounts-owner-user-id-currency-type.sql

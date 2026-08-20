@@ -67,6 +67,10 @@ public class UserService {
 
     userProfileRepository.save(userProfileEntity);
 
+    saveUserProfileCreatedEvent(userProfileEntity);
+  }
+
+  private void saveUserProfileCreatedEvent(UserProfileEntity userProfileEntity) {
     UserOutboxEventEntity userOutboxEventEntity = new UserOutboxEventEntity();
     userOutboxEventEntity.setAggregateType("USER_PROFILE");
     userOutboxEventEntity.setAggregateId(userProfileEntity.getId());
@@ -196,6 +200,10 @@ public class UserService {
 
   @Transactional
   public void createUserFromSocialAccount(CreatUserFromSocialAccountCommand command) {
+    if (userProfileRepository.findByAuthUserId(command.authUserId()).isPresent()) {
+      return;
+    }
+
     var userProfileEntity = new UserProfileEntity();
     userProfileEntity.setStatus(UserProfileStatus.ACTIVE);
     userProfileEntity.setEmail(command.email());
@@ -203,5 +211,7 @@ public class UserService {
     userProfileEntity.setLastName(command.lastName());
     userProfileEntity.setFirstName(command.firstName());
     userProfileRepository.save(userProfileEntity);
+
+    saveUserProfileCreatedEvent(userProfileEntity);
   }
 }

@@ -19,7 +19,7 @@ User profile changes are published through `UserOutboxPublisher`. Downstream con
 
 Known produced event categories include:
 
-- user profile created
+- user profile created, including profiles created from OAuth/social auth users
 - user profile blocked
 - user profile unblocked or active again
 
