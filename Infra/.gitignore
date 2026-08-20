@@ -3,4 +3,4 @@
 .env*
 !.env.example
 
-secretsInfra/secrets/
+secrets
