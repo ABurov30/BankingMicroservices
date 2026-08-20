@@ -76,6 +76,12 @@ public class GrpcClientConfig {
     return TransactionRpcServiceGrpc.newBlockingStub(transactionChannel);
   }
 
+  @Bean
+  TransactionRpcServiceGrpc.TransactionRpcServiceStub transactionAsyncStub(
+      ManagedChannel transactionChannel) {
+    return TransactionRpcServiceGrpc.newStub(transactionChannel);
+  }
+
   @Bean(destroyMethod = "shutdown")
   ManagedChannel notificationChannel(
       @Value("${NOTIFICATION_GRPC_HOST}") String host,

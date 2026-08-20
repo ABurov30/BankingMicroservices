@@ -1,0 +1,142 @@
+asyncapi: 3.0.0
+info:
+  title: Bank API Gateway WebSocket API
+  version: 1.0.0
+  description: >-
+    STOMP destinations exposed by ApiGateway over the authenticated WebSocket
+    endpoint. The HTTP-only `at` cookie is used during the WebSocket handshake
+    to resolve the authenticated user.
+
+servers:
+  local:
+    host: localhost:8080
+    pathname: /ws
+    protocol: ws
+    description: Local ApiGateway WebSocket endpoint
+  production:
+    host: buro-bank.ru
+    pathname: /ws
+    protocol: wss
+    description: Production ApiGateway WebSocket endpoint
+
+defaultContentType: application/json
+
+channels:
+  notifications:
+    address: /user/queue/notifications
+    description: Push notifications for the authenticated user.
+    messages:
+      notification:
+        $ref: '#/components/messages/Notification'
+
+  transactionStatus:
+    address: /user/queue/transactions/{transactionId}
+    description: >-
+      Status updates for one transaction. The transactionId is currently part
+      of the STOMP destination and is not included in the protobuf payload.
+    parameters:
+      transactionId:
+        description: Transaction UUID used in the subscription destination.
+        examples:
+          - '11111111-1111-1111-1111-111111111111'
+    messages:
+      transactionStatus:
+        $ref: '#/components/messages/TransactionStatus'
+
+operations:
+  receiveNotification:
+    action: receive
+    channel:
+      $ref: '#/channels/notifications'
+    summary: Receive a push notification
+    messages:
+      - $ref: '#/channels/notifications/messages/notification'
+
+  receiveTransactionStatus:
+    action: receive
+    channel:
+      $ref: '#/channels/transactionStatus'
+    summary: Receive a transaction status update
+    messages:
+      - $ref: '#/channels/transactionStatus/messages/transactionStatus'
+
+components:
+  securitySchemes:
+    accessCookie:
+      type: httpApiKey
+      name: at
+      in: cookie
+      description: HTTP-only access-token cookie used by the WebSocket handshake.
+
+  messages:
+    Notification:
+      name: Notification
+      title: Push notification
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/NotificationPayload'
+
+    TransactionStatus:
+      name: TransactionStatus
+      title: Transaction status update
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/TransactionStatusPayload'
+
+  schemas:
+    NotificationPayload:
+      type: object
+      required:
+        - title
+        - body
+        - type
+      properties:
+        title:
+          type: string
+        body:
+          type: string
+        type:
+          type: string
+      example:
+        title: Transaction completed
+        body: Your transaction was completed
+        type: TRANSACTION_STATUS_CHANGED
+
+    TransactionStatusPayload:
+      type: object
+      required:
+        - amount
+        - currency
+        - status
+      properties:
+        amount:
+          type: integer
+          format: int64
+          description: Transaction amount in the service's minor-unit representation.
+        currency:
+          type: string
+          description: Account currency enum value.
+        status:
+          type: string
+          description: Transaction status enum value.
+        sourceAccount:
+          $ref: '#/components/schemas/TransactionStatusAccountPayload'
+          nullable: true
+          description: Source account data when it is present in the response.
+        targetAccount:
+          $ref: '#/components/schemas/TransactionStatusAccountPayload'
+          nullable: true
+          description: Target account data when it is present in the response.
+
+    TransactionStatusAccountPayload:
+      type: object
+      required:
+        - accountNumber
+        - currency
+      properties:
+        accountNumber:
+          type: string
+          description: Account number safe to expose to the transaction participant.
+        currency:
+          type: string
+          description: Account currency enum value.

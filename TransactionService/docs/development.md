@@ -11,6 +11,16 @@ make dev
 
 Local runtime needs PostgreSQL, Kafka, Schema Registry, and reachable `CardService` and `AccountService` gRPC endpoints.
 
+For terminal-only restart on save, install `watchexec` and use:
+
+```bash
+brew install watchexec
+make dev-hot
+```
+
+`dev-hot` runs the application and recompiles changed Java/resources files. Spring Boot DevTools
+then restarts the application when the compiled classes in `target/classes` change.
+
 ## Checks
 
 ```bash

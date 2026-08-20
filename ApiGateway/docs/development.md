@@ -31,3 +31,5 @@ GITHUB_TOKEN=replace_me ./mvnw -s .mvn/settings-docker.xml test
 - Authentication changes: update `SecurityConfig`, `CookieConfig`, and tests.
 - gRPC mapping changes: update client, mapper classes, REST DTOs, and service docs together.
 - Push notification changes: update Kafka listener, DTO mapper, and WebSocket behavior.
+- WebSocket/STOMP changes: update `docs/asyncapi.yaml`, `docs/interfaces.md`, payload DTOs, authentication details, and WebSocket tests together.
+- Runtime API docs: Swagger UI is available at `/swagger-ui.html`; AsyncAPI UI is available at `/asyncapi`.

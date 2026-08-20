@@ -30,6 +30,9 @@ Security configuration permits:
 - `/v3/api-docs/**`
 - `/swagger-ui/**`
 - `/swagger-ui.html`
+- `/asyncapi`
+- `/asyncapi-ui.html`
+- `/asyncapi.yaml`
 - `/actuator/health`
 - `/actuator/prometheus`
 
@@ -57,9 +60,26 @@ browser to `SITE_URL`.
 
 - Card responses map `CardResponse` from `CardService`, including configured limits and spend counters: `dailyLimit`, `monthlyLimit`, `spendDailyLimit`, and `spendMonthlyLimit`.
 - Transaction creation requests require `sourceCardId`; the transaction flow uses it for card limit reservation before account funds are requested.
+- Transaction list responses include `transactionId`, which the UI uses to open a live status subscription for the selected transaction.
 - User auth info responses include linked social provider accounts as `socialAccounts`.
 - `POST /user/user-info` returns user accounts with cards but omits account `availableBalance` and `reservedBalance`.
 
 ## WebSocket
 
-The gateway maps authenticated users to WebSocket principals and sends push notifications to `/queue/notifications`.
+The gateway maps authenticated users to WebSocket principals and sends messages through user destinations.
+The machine-readable contract is [asyncapi.yaml](asyncapi.yaml). At runtime, the gateway exposes
+the rendered AsyncAPI page at `/asyncapi` and `/asyncapi-ui.html`, and the source contract at
+`/asyncapi.yaml`.
+
+The STOMP endpoint is `/ws`. The WebSocket handshake uses the HTTP-only `at` cookie to resolve the
+authenticated user. Clients subscribe to these user destinations:
+
+| Destination | Message |
+| --- | --- |
+| `/user/queue/notifications` | `NotificationResponseDto`: `title`, `body`, `type` |
+| `/user/queue/transactions/{transactionId}` | `TransactionStatusResponseDto`: `amount`, `currency`, `status`, and optional `sourceAccount`/`targetAccount` fields with `accountNumber`, `currency` |
+
+The transaction list provides the `transactionId` required to build the transaction stream
+destination. For the transaction stream itself, `transactionId` is currently part of the destination
+and is not included in the protobuf payload. Update both this document and `asyncapi.yaml` when the
+public DTO changes.

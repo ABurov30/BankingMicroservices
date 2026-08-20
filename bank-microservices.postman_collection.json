@@ -1,0 +1,857 @@
+{
+  "info": {
+    "_postman_id": "4e61f36c-367c-485e-8b96-e8487f6ec25a",
+    "name": "buro-bank",
+    "description": "HTTP collection for Buro Bank microservices. Most application endpoints are exposed through ApiGateway and use HttpOnly cookies `at` and `rt` set by login/refresh.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "29457124"
+  },
+  "auth": {
+    "type": "noauth"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.collectionVariables.get('idempotencyKey')) {",
+          "  pm.collectionVariables.set('idempotencyKey', pm.variables.replaceIn('{{$guid}}'));",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "gatewayUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "notificationServiceUrl",
+      "value": "http://localhost:8086",
+      "type": "string"
+    },
+    {
+      "key": "email",
+      "value": "test@mail.com",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "123456789",
+      "type": "string"
+    },
+    {
+      "key": "newPassword",
+      "value": "1234567890",
+      "type": "string"
+    },
+    {
+      "key": "authUserId",
+      "value": "11111111-1111-1111-1111-111111111111",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "22222222-2222-2222-2222-222222222222",
+      "type": "string"
+    },
+    {
+      "key": "ownerUserId",
+      "value": "22222222-2222-2222-2222-222222222222",
+      "type": "string"
+    },
+    {
+      "key": "accountId",
+      "value": "33333333-3333-3333-3333-333333333333",
+      "type": "string"
+    },
+    {
+      "key": "targetAccountId",
+      "value": "44444444-4444-4444-4444-444444444444",
+      "type": "string"
+    },
+    {
+      "key": "cardId",
+      "value": "55555555-5555-5555-5555-555555555555",
+      "type": "string"
+    },
+    {
+      "key": "notificationId",
+      "value": "66666666-6666-6666-6666-666666666666",
+      "type": "string"
+    },
+    {
+      "key": "verificationCode",
+      "value": "123456",
+      "type": "string"
+    },
+    {
+      "key": "idempotencyKey",
+      "value": "77777777-7777-7777-7777-777777777777",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Gateway - Auth",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Public. Proxies AuthService health through ApiGateway.",
+            "url": "{{gatewayUrl}}/auth/health"
+          },
+          "response": []
+        },
+        {
+          "name": "Signup",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Signup accepted', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Public. Creates auth user and user profile.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"firstName\": \"Ivan\",\n  \"lastName\": \"Ivanov\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{gatewayUrl}}/auth/signup"
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login sets auth cookies', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+                  "  pm.expect(pm.response.headers.get('Set-Cookie')).to.include('at=');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Public. Sets HttpOnly cookies `at` and `rt`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{gatewayUrl}}/auth/login"
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Tokens",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "description": "Public route, but requires `rt` cookie from login.",
+            "url": "{{gatewayUrl}}/auth/refresh"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "description": "Public route, but requires `rt` cookie from login. Clears auth cookies.",
+            "url": "{{gatewayUrl}}/auth/logout"
+          },
+          "response": []
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Requires authenticated active user.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"authUserId\": \"{{authUserId}}\",\n  \"oldPassword\": \"{{password}}\",\n  \"newPassword\": \"{{newPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{gatewayUrl}}/auth/change-password"
+          },
+          "response": []
+        },
+        {
+          "name": "Verify User By Code",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Public. Verifies user by code and sets auth cookies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"authUserId\": \"{{authUserId}}\",\n  \"verificationCode\": \"{{verificationCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{gatewayUrl}}/auth/verify-user"
+          },
+          "response": []
+        },
+        {
+          "name": "Forget Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Public. Starts password reset flow.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{gatewayUrl}}/auth/forget-password"
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Public. Resets password and sets auth cookies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"authUserId\": \"{{authUserId}}\",\n  \"newPassword\": \"{{newPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{gatewayUrl}}/auth/reset-password"
+          },
+          "response": []
+        },
+        {
+          "name": "Manager - Block User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Requires ADMIN or active MANAGER.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"authUserId\": \"{{authUserId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{gatewayUrl}}/auth/manager/block-user"
+          },
+          "response": []
+        },
+        {
+          "name": "Manager - Unlock User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Requires ADMIN or active MANAGER.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"authUserId\": \"{{authUserId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{gatewayUrl}}/auth/manager/unlock-user"
+          },
+          "response": []
+        },
+        {
+          "name": "Manager - Verify User By Role",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "description": "Requires ADMIN or active MANAGER. Uses path authUserId and role from access-token cookie.",
+            "url": "{{gatewayUrl}}/auth/manager/verify-user/{{authUserId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Admin - Change Auth User Role",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Requires ADMIN. Valid roles: USER, MANAGER, ADMIN.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"authUserId\": \"{{authUserId}}\",\n  \"role\": \"MANAGER\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{gatewayUrl}}/auth/admin/change-auth-user-role"
+          },
+          "response": []
+        },
+        {
+          "name": "OAuth - Google Login Redirect",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Public. Redirects to Spring OAuth2 Google authorization endpoint.",
+            "url": "{{gatewayUrl}}/auth/oauth/google"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Gateway - User",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Public. Proxies UserService health through ApiGateway.",
+            "url": "{{gatewayUrl}}/user/health"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Requires authenticated active user. authUserId is read from `at` cookie subject.",
+            "url": "{{gatewayUrl}}/user/user-info"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Info With Accounts By Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Requires authenticated active user.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{gatewayUrl}}/user/user-info"
+          },
+          "response": []
+        },
+        {
+          "name": "Manager - Get All User Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Requires ADMIN or active MANAGER.",
+            "url": "{{gatewayUrl}}/user/manager/all-user-info"
+          },
+          "response": []
+        },
+        {
+          "name": "Manager - Get User Info By User Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Requires ADMIN or active MANAGER.",
+            "url": "{{gatewayUrl}}/user/manager/user-info/{{userId}}"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Gateway - Account",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Public. Proxies AccountService health through ApiGateway.",
+            "url": "{{gatewayUrl}}/account/health"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Requires authenticated active user. Valid type: CHECKING, SAVINGS. Valid currency: USD, EUR, CNY, GBP.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ownerUserId\": \"{{ownerUserId}}\",\n  \"type\": \"CHECKING\",\n  \"currency\": \"USD\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{gatewayUrl}}/account/create"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Accounts With Cards By Owner Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Requires authenticated active user.",
+            "url": "{{gatewayUrl}}/account/accounts/{{ownerUserId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Freeze Account",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "description": "Requires authenticated active user. Uses authUserId and role from access-token cookie.",
+            "url": "{{gatewayUrl}}/account/freeze/{{accountId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Unfreeze Account",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "description": "Requires authenticated active user. Uses authUserId and role from access-token cookie.",
+            "url": "{{gatewayUrl}}/account/unfreeze/{{accountId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Manager - Get All Accounts With Cards",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Requires ADMIN or active MANAGER.",
+            "url": "{{gatewayUrl}}/account/manager/all-accounts"
+          },
+          "response": []
+        },
+        {
+          "name": "Top Up Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Requires authenticated active user.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountId\": \"{{accountId}}\",\n  \"amount\": 100.00\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{gatewayUrl}}/account/topUp"
+          },
+          "response": []
+        },
+        {
+          "name": "Withdraw Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Requires authenticated active user.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountId\": \"{{accountId}}\",\n  \"amount\": 50.00\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{gatewayUrl}}/account/withdraw"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Gateway - Card",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Public. Proxies CardService health through ApiGateway.",
+            "url": "{{gatewayUrl}}/card/health"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Card",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Requires authenticated active user. Uses authUserId and role from access-token cookie.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountId\": \"{{accountId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{gatewayUrl}}/card/create"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Card",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Requires authenticated active user. Valid status: ACTIVE, BLOCKED, FROZEN, EXPIRED.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountId\": \"{{accountId}}\",\n  \"cardId\": \"{{cardId}}\",\n  \"status\": \"ACTIVE\",\n  \"dailyLimit\": 500.00,\n  \"monthlyLimit\": 5000.00\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{gatewayUrl}}/card/update"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Gateway - Transaction",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Public. Proxies TransactionService health through ApiGateway.",
+            "url": "{{gatewayUrl}}/transaction/health"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Transaction",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('idempotencyKey', pm.variables.replaceIn('{{$guid}}'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Requires authenticated active user. Endpoint path is `/creat-transaction` in code.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceAccountId\": \"{{accountId}}\",\n  \"sourceCardId\": \"{{cardId}}\",\n  \"targetAccountId\": \"{{targetAccountId}}\",\n  \"amount\": 25.00,\n  \"currency\": \"USD\",\n  \"idempotencyKey\": \"{{idempotencyKey}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{gatewayUrl}}/transaction/creat-transaction"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Transactions By User Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Requires authenticated active user.",
+            "url": "{{gatewayUrl}}/transaction/user/{{userId}}"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Gateway - Notification",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Public. Proxies NotificationService health through ApiGateway.",
+            "url": "{{gatewayUrl}}/notification/health"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Requires authenticated active user. authUserId is read from `at` cookie subject.",
+            "url": "{{gatewayUrl}}/notification/notifications"
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Notifications As Readed",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Requires authenticated active user. authUserId is read from `at` cookie subject.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ids\": [\n    \"{{notificationId}}\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{gatewayUrl}}/notification/notifications/mark-as-readed"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notification Service - Direct HTTP",
+      "item": [
+        {
+          "name": "Get Push Notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Direct NotificationService endpoint on NOTIFICATION_PORT. Query param authUserId is required.",
+            "url": {
+              "raw": "{{notificationServiceUrl}}/notification/notifications?authUserId={{authUserId}}",
+              "query": [
+                {
+                  "key": "authUserId",
+                  "value": "{{authUserId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Push Notifications As Readed",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Direct NotificationService endpoint on NOTIFICATION_PORT.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"authUserId\": \"{{authUserId}}\",\n  \"ids\": [\n    \"{{notificationId}}\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{notificationServiceUrl}}/notification/notifications/mark-as-readed"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Gateway Actuator Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Public Spring Boot actuator health endpoint.",
+            "url": "{{gatewayUrl}}/actuator/health"
+          },
+          "response": []
+        },
+        {
+          "name": "Gateway Prometheus Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Public Prometheus scrape endpoint.",
+            "url": "{{gatewayUrl}}/actuator/prometheus"
+          },
+          "response": []
+        },
+        {
+          "name": "Gateway OpenAPI Docs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Public OpenAPI JSON generated by springdoc.",
+            "url": "{{gatewayUrl}}/v3/api-docs"
+          },
+          "response": []
+        },
+        {
+          "name": "Gateway Swagger UI",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Public Swagger UI HTML.",
+            "url": "{{gatewayUrl}}/swagger-ui.html"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

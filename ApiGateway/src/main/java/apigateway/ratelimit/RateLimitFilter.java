@@ -57,17 +57,21 @@ public class RateLimitFilter extends OncePerRequestFilter {
   }
 
   private boolean shouldSkip(HttpServletRequest request) {
-    String path = request.getRequestURI();
+    String path = requestPath(request);
     return "OPTIONS".equals(request.getMethod())
+        || path.equals("/")
         || path.endsWith("/health")
         || path.startsWith("/actuator")
         || path.startsWith("/swagger-ui")
         || path.startsWith("/v3/api-docs")
+        || path.equals("/asyncapi")
+        || path.equals("/asyncapi-ui.html")
+        || path.equals("/asyncapi.yaml")
         || path.startsWith("/ws");
   }
 
   private RateLimitProperties.Limit resolveLimit(HttpServletRequest request) {
-    String path = request.getRequestURI();
+    String path = requestPath(request);
 
     if (path.startsWith("/auth/login")
         || path.startsWith("/auth/signup")
@@ -83,8 +87,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
   }
 
   private String resolveKey(HttpServletRequest request) {
-    String path = request.getRequestURI();
-    String group = path.startsWith("/auth") ? "auth" : path.split("/")[1];
+    String path = requestPath(request);
+    String group = path.startsWith("/auth") ? "auth" : firstPathSegment(path);
 
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     if (authentication instanceof JwtAuthenticationToken jwtAuthenticationToken) {
@@ -93,6 +97,16 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     return "rl:" + group + ":ip:" + request.getRemoteAddr();
+  }
+
+  private String requestPath(HttpServletRequest request) {
+    String servletPath = request.getServletPath();
+    return servletPath == null || servletPath.isBlank() ? "/" : servletPath;
+  }
+
+  private String firstPathSegment(String path) {
+    String[] segments = path.split("/");
+    return segments.length > 1 && !segments[1].isBlank() ? segments[1] : "root";
   }
 
   private record ErrorResponse(Instant timestamp, int status, String error, List<String> message) {}

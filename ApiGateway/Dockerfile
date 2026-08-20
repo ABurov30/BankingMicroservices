@@ -14,6 +14,7 @@ RUN --mount=type=cache,target=/root/.m2,sharing=locked \
     ./mvnw -s .mvn/settings-docker.xml dependency:go-offline -DskipTests
 
 COPY src src
+COPY docs docs
 RUN --mount=type=cache,target=/root/.m2,sharing=locked \
     ./mvnw -s .mvn/settings-docker.xml clean package -DskipTests
 

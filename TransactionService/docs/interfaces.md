@@ -11,6 +11,10 @@ Service implementation: `TransactionGrpcService`.
 | `getTransactionHealth` | Health check |
 | `createTransaction` | Create a transaction, reserve card limits, and start funds reservation |
 | `getTransactionsByAccounts` | Read transactions for account ids |
+| `watchTransactionStatus` | Stream status updates for one transaction after verifying that the subscribing auth user owns the source or target account |
+
+`watchTransactionStatus` returns `TransactionStatusResponse` messages with `amount`, `currency`,
+`status`, and non-sensitive `sourceAccount` / `targetAccount` data.
 
 ## REST Exposure
 

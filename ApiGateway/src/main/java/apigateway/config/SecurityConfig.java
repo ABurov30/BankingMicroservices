@@ -36,6 +36,7 @@ import tools.jackson.databind.json.JsonMapper;
 @Configuration
 public class SecurityConfig {
   private static final String[] PUBLIC_ENDPOINTS = {
+    "/",
     "/auth/signup",
     "/auth/login",
     "/auth/refresh",
@@ -50,6 +51,9 @@ public class SecurityConfig {
     "/v3/api-docs/**",
     "/swagger-ui/**",
     "/swagger-ui.html",
+    "/asyncapi",
+    "/asyncapi-ui.html",
+    "/asyncapi.yaml",
     "/actuator/health",
     "/actuator/prometheus"
   };
@@ -153,7 +157,7 @@ public class SecurityConfig {
                 oauth
                     .bearerTokenResolver(
                         request -> {
-                          String path = request.getRequestURI();
+                          String path = requestPath(request.getServletPath());
                           if (isPublicEndpoint(path)) {
                             return null;
                           }
@@ -195,7 +199,8 @@ public class SecurityConfig {
   }
 
   private boolean isPublicEndpoint(String path) {
-    return path.equals("/auth/signup")
+    return path.equals("/")
+        || path.equals("/auth/signup")
         || path.equals("/auth/login")
         || path.equals("/auth/refresh")
         || path.equals("/auth/logout")
@@ -209,8 +214,15 @@ public class SecurityConfig {
         || path.startsWith("/v3/api-docs/")
         || path.equals("/swagger-ui.html")
         || path.startsWith("/swagger-ui/")
+        || path.equals("/asyncapi")
+        || path.equals("/asyncapi-ui.html")
+        || path.equals("/asyncapi.yaml")
         || path.equals("/actuator/health")
         || path.equals("/actuator/prometheus");
+  }
+
+  private String requestPath(String servletPath) {
+    return servletPath == null || servletPath.isBlank() ? "/" : servletPath;
   }
 
   private String toOrigin(String siteUrl) {

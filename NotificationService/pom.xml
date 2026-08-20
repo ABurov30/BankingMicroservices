@@ -91,7 +91,7 @@
         <dependency>
             <groupId>com.burov</groupId>
             <artifactId>contracts</artifactId>
-            <version>0.0.18</version>
+            <version>0.0.19</version>
         </dependency>
         <dependency>
             <groupId>io.grpc</groupId>

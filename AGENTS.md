@@ -8,6 +8,7 @@ Instructions for agents working in this repository.
 - Each service is a separate Maven project with its own `pom.xml`, `.mvn/settings-docker.xml`, Dockerfile, `.env.example`, `README.md`, `AGENTS.md`, and `docs` folder.
 - Do not commit real `.env` files, JWT keys, SMTP passwords, or GitHub tokens.
 - When a change affects behavior, public APIs, gRPC/Kafka contracts, configuration, persistence, or operational flows, update the relevant service docs in the same change.
+- When a change affects public HTTP/WebSocket interfaces, update [bank-microservices.postman_collection.json](bank-microservices.postman_collection.json) in the same change.
 - If you change build, formatting, or Checkstyle behavior, verify all seven services.
 
 ## Quality Commands
@@ -45,4 +46,6 @@ GITHUB_TOKEN=replace_me ./mvnw -s .mvn/settings-docker.xml spotless:check checks
 - Use Kafka event types from `com.burov:kafka-contracts`.
 - Add new database migrations under `src/main/resources/db/changelog/changes` and include them from `db.changelog-master.yaml`.
 - Keep `docs` and local `README.md` files in sync with interface, DTO, config, event, persistence, and workflow changes.
+- Keep [bank-microservices.postman_collection.json](bank-microservices.postman_collection.json) in sync with public REST and WebSocket entrypoints.
+- For ApiGateway WebSocket/STOMP contract changes, update `ApiGateway/docs/asyncapi.yaml` and `ApiGateway/docs/interfaces.md` in the same change. Keep destinations, authentication, payload schemas, and examples synchronized with the implementation.
 - After formatting, verify `spotless:check` and `checkstyle:check` in every touched service.

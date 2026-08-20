@@ -1,12 +1,14 @@
 package transactionservice.mapper.grpc;
 
 import account.contract.v1.AccountResponse;
+import account.contract.v1.AccountResponseWithoutSensitiveInfo;
 import account.contract.v1.ReserveFundsForTransactionGrpcRequest;
 import card.contract.v1.ReserveLimitsForTransactionGrpcRequest;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 import org.mapstruct.Mapper;
 import transaction.contract.v1.TransactionResponse;
+import transaction.contract.v1.TransactionStatusResponse;
 import transactionservice.dto.CreateTransactionCommand;
 import transactionservice.entity.TransactionEntity;
 
@@ -37,6 +39,7 @@ public interface TransactionGrpcMapper {
       TransactionEntity transaction, AccountResponse sourceAccount, AccountResponse targetAccount) {
     var response =
         TransactionResponse.newBuilder()
+            .setTransactionId(transaction.getId().toString())
             .setAmount(transaction.getAmount().longValue())
             .setCurrency(transaction.getCurrency().name())
             .setStatus(transaction.getStatus().name());
@@ -59,5 +62,32 @@ public interface TransactionGrpcMapper {
     }
 
     return response.build();
+  }
+
+  default TransactionStatusResponse toTransactionStatusResponse(
+      TransactionEntity transaction, AccountResponse sourceAccount, AccountResponse targetAccount) {
+    var response =
+        TransactionStatusResponse.newBuilder()
+            .setAmount(transaction.getAmount().longValue())
+            .setCurrency(transaction.getCurrency().name())
+            .setStatus(transaction.getStatus().name());
+
+    if (sourceAccount != null) {
+      response.setSourceAccount(toAccountResponseWithoutSensitiveInfo(sourceAccount));
+    }
+
+    if (targetAccount != null) {
+      response.setTargetAccount(toAccountResponseWithoutSensitiveInfo(targetAccount));
+    }
+
+    return response.build();
+  }
+
+  private AccountResponseWithoutSensitiveInfo toAccountResponseWithoutSensitiveInfo(
+      AccountResponse account) {
+    return AccountResponseWithoutSensitiveInfo.newBuilder()
+        .setAccountNumber(account.getAccountNumber())
+        .setCurrency(account.getCurrency())
+        .build();
   }
 }

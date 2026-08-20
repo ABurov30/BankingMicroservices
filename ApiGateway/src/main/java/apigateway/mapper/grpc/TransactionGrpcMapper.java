@@ -1,9 +1,12 @@
 package apigateway.mapper.grpc;
 
 import account.contract.v1.AccountResponse;
+import account.contract.v1.AccountResponseWithoutSensitiveInfo;
 import apigateway.dto.account.GetAccountResponseDto;
 import apigateway.dto.transaction.CreateTransactionRequestDto;
 import apigateway.dto.transaction.TransactionResponseDto;
+import apigateway.dto.transaction.TransactionStatusAccountResponseDto;
+import apigateway.dto.transaction.TransactionStatusResponseDto;
 import enums.account.AccountCurrency;
 import enums.account.AccountStatus;
 import enums.account.AccountType;
@@ -17,6 +20,8 @@ import transaction.contract.v1.CreateTransactionGrpcRequest;
 import transaction.contract.v1.GetTransactionsByAccountsGrpcRequest;
 import transaction.contract.v1.GetTransactionsByAccountsGrpcResponse;
 import transaction.contract.v1.TransactionResponse;
+import transaction.contract.v1.TransactionStatusResponse;
+import transaction.contract.v1.WatchTransactionStatusRequest;
 
 @Mapper(componentModel = "spring")
 public interface TransactionGrpcMapper {
@@ -42,6 +47,15 @@ public interface TransactionGrpcMapper {
         .build();
   }
 
+  default WatchTransactionStatusRequest toWatchTransactionStatusRequest(
+      UUID transactionId, UUID authUserId, UUID subscriptionKey) {
+    return WatchTransactionStatusRequest.newBuilder()
+        .setTransactionId(transactionId.toString())
+        .setAuthUserId(authUserId.toString())
+        .setSubscriptionKey(subscriptionKey.toString())
+        .build();
+  }
+
   default List<TransactionResponseDto> toTransactionResponseDtos(
       GetTransactionsByAccountsGrpcResponse response) {
     return response.getTransactionsList().stream().map(this::toTransactionResponseDto).toList();
@@ -49,6 +63,7 @@ public interface TransactionGrpcMapper {
 
   default TransactionResponseDto toTransactionResponseDto(TransactionResponse response) {
     return new TransactionResponseDto(
+        UUID.fromString(response.getTransactionId()),
         BigDecimal.valueOf(response.getAmount()),
         AccountCurrency.valueOf(response.getCurrency()),
         TransactionStatus.valueOf(response.getStatus()),
@@ -56,6 +71,26 @@ public interface TransactionGrpcMapper {
         toLocalDateTime(response.getCompletedAt()),
         response.hasSourceAccount() ? toGetAccountResponseDto(response.getSourceAccount()) : null,
         response.hasTargetAccount() ? toGetAccountResponseDto(response.getTargetAccount()) : null);
+  }
+
+  default TransactionStatusResponseDto toTransactionStatusResponseDto(
+      TransactionStatusResponse response) {
+    return new TransactionStatusResponseDto(
+        BigDecimal.valueOf(response.getAmount()),
+        AccountCurrency.valueOf(response.getCurrency()),
+        TransactionStatus.valueOf(response.getStatus()),
+        response.hasSourceAccount()
+            ? toTransactionStatusAccountResponseDto(response.getSourceAccount())
+            : null,
+        response.hasTargetAccount()
+            ? toTransactionStatusAccountResponseDto(response.getTargetAccount())
+            : null);
+  }
+
+  private TransactionStatusAccountResponseDto toTransactionStatusAccountResponseDto(
+      AccountResponseWithoutSensitiveInfo account) {
+    return new TransactionStatusAccountResponseDto(
+        account.getAccountNumber(), AccountCurrency.valueOf(account.getCurrency()));
   }
 
   private GetAccountResponseDto toGetAccountResponseDto(AccountResponse account) {

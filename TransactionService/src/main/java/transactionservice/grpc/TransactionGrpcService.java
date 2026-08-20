@@ -2,6 +2,7 @@ package transactionservice.grpc;
 
 import account.contract.v1.AccountResponse;
 import com.google.protobuf.Empty;
+import io.grpc.stub.ServerCallStreamObserver;
 import io.grpc.stub.StreamObserver;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -24,16 +25,19 @@ public class TransactionGrpcService
   private final AccountGrpcClient accountGrpcClient;
   private final TransactionCommandMapper commandMapper;
   private final TransactionGrpcMapper grpcMapper;
+  private final TransactionStatusStreamRegistry transactionStatusStreamRegistry;
 
   public TransactionGrpcService(
       TransactionService transactionService,
       AccountGrpcClient accountGrpcClient,
       TransactionCommandMapper transactionCommandMapper,
-      TransactionGrpcMapper transactionGrpcMapper) {
+      TransactionGrpcMapper transactionGrpcMapper,
+      TransactionStatusStreamRegistry transactionStatusStreamRegistry) {
     this.transactionService = transactionService;
     this.accountGrpcClient = accountGrpcClient;
     this.commandMapper = transactionCommandMapper;
     this.grpcMapper = transactionGrpcMapper;
+    this.transactionStatusStreamRegistry = transactionStatusStreamRegistry;
   }
 
   @Override
@@ -55,6 +59,24 @@ public class TransactionGrpcService
 
     responseObserver.onNext(Empty.getDefaultInstance());
     responseObserver.onCompleted();
+  }
+
+  @Override
+  public void watchTransactionStatus(
+      WatchTransactionStatusRequest request,
+      StreamObserver<TransactionStatusResponse> responseObserver) {
+    UUID transactionId = UUID.fromString(request.getTransactionId());
+    UUID authUserId = UUID.fromString(request.getAuthUserId());
+    UUID subscriptionKey = UUID.fromString(request.getSubscriptionKey());
+
+    ServerCallStreamObserver<TransactionStatusResponse> serverObserver =
+        (ServerCallStreamObserver<TransactionStatusResponse>) responseObserver;
+
+    serverObserver.setOnCancelHandler(
+        () -> transactionStatusStreamRegistry.unsubscribe(transactionId, subscriptionKey));
+
+    transactionStatusStreamRegistry.subscribe(
+        transactionId, subscriptionKey, authUserId, serverObserver);
   }
 
   @Override

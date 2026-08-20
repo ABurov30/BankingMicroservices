@@ -20,6 +20,7 @@ import transactionservice.dto.ReservationResponseDto;
 import transactionservice.entity.TransactionEntity;
 import transactionservice.entity.TransactionOutboxEventEntity;
 import transactionservice.exception.FundsReservationFailedException;
+import transactionservice.grpc.TransactionStatusStreamRegistry;
 import transactionservice.mapper.grpc.TransactionGrpcMapper;
 import transactionservice.repository.TransactionOutboxEventRepository;
 import transactionservice.repository.TransactionRepository;
@@ -31,6 +32,7 @@ public class TransactionService {
   private final TransactionRepository transactionRepository;
   private final TransactionGrpcMapper grpcMapper;
   private final CardGrpcClient cardGrpcClient;
+  private final TransactionStatusStreamRegistry transactionStatusStreamRegistry;
   private static final Logger log = LoggerFactory.getLogger(TransactionService.class);
 
   public TransactionService(
@@ -38,12 +40,14 @@ public class TransactionService {
       TransactionOutboxEventRepository transactionOutboxEventRepository,
       TransactionRepository transactionRepository,
       TransactionGrpcMapper grpcMapper,
-      CardGrpcClient cardGrpcClient) {
+      CardGrpcClient cardGrpcClient,
+      TransactionStatusStreamRegistry transactionStatusStreamRegistry) {
     this.accountGrpcClient = accountGrpcClient;
     this.transactionRepository = transactionRepository;
     this.transactionOutboxEventRepository = transactionOutboxEventRepository;
     this.grpcMapper = grpcMapper;
     this.cardGrpcClient = cardGrpcClient;
+    this.transactionStatusStreamRegistry = transactionStatusStreamRegistry;
   }
 
   private TransactionEntity saveTransaction(CreateTransactionCommand command) {
@@ -79,6 +83,7 @@ public class TransactionService {
     transaction.setStatus(TransactionStatus.FAILED);
     transaction.setErrorMessage(reservationResponse.message());
     transactionRepository.save(transaction);
+    transactionStatusStreamRegistry.notifyStatusChanged(transaction);
     saveTransactionOutboxEvent(
         transaction,
         TransactionEventType.TRANSACTION_FAILED,
@@ -115,6 +120,7 @@ public class TransactionService {
 
     transaction.setStatus(TransactionStatus.FUNDS_REQUESTED);
     transactionRepository.save(transaction);
+    transactionStatusStreamRegistry.notifyStatusChanged(transaction);
     saveTransactionOutboxEvent(
         transaction,
         TransactionEventType.TRANSACTION_FUNDS_REQUESTED,
@@ -165,9 +171,10 @@ public class TransactionService {
     transactionEntity.setCompletedAdt(LocalDateTime.now());
     transactionEntity.setStatus(command.status());
     transactionRepository.save(transactionEntity);
+    transactionStatusStreamRegistry.notifyStatusChanged(transactionEntity);
   }
 
-  private boolean isTerminalStatus(TransactionStatus status) {
+  public boolean isTerminalStatus(TransactionStatus status) {
     return status == TransactionStatus.COMPLETED
         || status == TransactionStatus.COMPENSATED
         || status == TransactionStatus.FAILED;
