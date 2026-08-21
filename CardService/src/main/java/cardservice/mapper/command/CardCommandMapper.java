@@ -51,8 +51,8 @@ public interface CardCommandMapper {
     return new UpdateCardCommand(
         UUID.fromString(request.getCardId()),
         CardStatus.valueOf(request.getStatus()),
-        BigDecimal.valueOf(request.getDailyLimit()),
-        BigDecimal.valueOf(request.getMonthlyLimit()),
+        BigDecimal.valueOf(request.getDailyLimitMinorUnits()),
+        BigDecimal.valueOf(request.getMonthlyLimitMinorUnits()),
         UUID.fromString(request.getAuthUserId()),
         request.getRole());
   }
@@ -66,7 +66,7 @@ public interface CardCommandMapper {
       ReserveLimitsForTransactionGrpcRequest request) {
     return new ReserveLimitsForTransactionCommand(
         UUID.fromString(request.getSourceCardId()),
-        BigDecimal.valueOf(request.getAmount()),
+        BigDecimal.valueOf(request.getMinorUnits()),
         UUID.fromString(request.getTransactionId()),
         UUID.fromString(request.getSourceAuthUserId()));
   }

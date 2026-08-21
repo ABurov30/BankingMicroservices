@@ -64,9 +64,16 @@ public class AccountScheduler {
                   accountRepository
                       .findByIdForUpdate(accountHold.getAccountId())
                       .orElseThrow(() -> new AccountsNotFoundException(accountHold.getAccountId()));
+              var accountCurrency = account.getCurrency().getName();
 
               account.setReservedBalance(
-                  account.getReservedBalance().subtract(accountHold.getAmount()));
+                  account
+                      .getReservedBalance()
+                      .subtract(
+                          accountHold
+                              .getMinorUnits()
+                              .movePointLeft(accountCurrency.getMinorUnit())));
+
               accountRepository.save(account);
               accountHold.setStatus(ReservationStatus.RELEASED_BY_TIME);
               accountHold.setReleasedAt(LocalDateTime.now());

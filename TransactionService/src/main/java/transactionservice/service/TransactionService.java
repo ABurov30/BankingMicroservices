@@ -55,7 +55,7 @@ public class TransactionService {
     transaction.setSourceAccountId(command.sourceAccountId());
     transaction.setTargetAccountId(command.targetAccountId());
     transaction.setIdempotencyKey(command.idempotencyKey());
-    transaction.setAmount(command.amount());
+    transaction.setMinorUnits(command.minorUnits());
     transaction.setCurrency(command.currency());
     transaction.setStatus(TransactionStatus.FUNDS_RESERVED);
     return transactionRepository.save(transaction);
@@ -84,11 +84,13 @@ public class TransactionService {
     transaction.setErrorMessage(reservationResponse.message());
     transactionRepository.save(transaction);
     transactionStatusStreamRegistry.notifyStatusChanged(transaction);
+
+    var currency = transaction.getCurrency();
     saveTransactionOutboxEvent(
         transaction,
         TransactionEventType.TRANSACTION_FAILED,
         Map.of(
-            "amount", transaction.getAmount(),
+            "amount", transaction.getMinorUnits().movePointLeft(currency.getMinorUnit()),
             "authUserId", command.sourceAuthUserId()));
     throw new FundsReservationFailedException(exceptionMessage + " " + transaction.getId());
   }
@@ -168,7 +170,7 @@ public class TransactionService {
       return;
     }
 
-    transactionEntity.setCompletedAdt(LocalDateTime.now());
+    transactionEntity.setCompletedAt(LocalDateTime.now());
     transactionEntity.setStatus(command.status());
     transactionRepository.save(transactionEntity);
     transactionStatusStreamRegistry.notifyStatusChanged(transactionEntity);

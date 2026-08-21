@@ -29,11 +29,12 @@ public interface CardGrpcMapper {
         .setAccountId(value.accountId().toString())
         .setPan(value.pan())
         .setStatus(value.status().name())
-        .setDailyLimit(value.dailyLimit().longValue())
-        .setMonthlyLimit(value.monthlyLimit().longValue())
+        .setDailyLimitMinorUnits(value.dailyLimitMinorUnits().longValue())
+        .setMonthlyLimitMinorUnits(value.monthlyLimitMinorUnits().longValue())
         .setExpiresAt(value.expiresAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
-        .setSpendDailyLimit(value.spendDailyLimit().longValue())
-        .setSpendMonthlyLimit(value.spendMonthlyLimit().longValue())
+        .setSpendDailyLimitMinorUnits(value.spendDailyLimitMinorUnits().longValue())
+        .setSpendMonthlyLimitMinorUnits(value.spendMonthlyLimitMinorUnits().longValue())
+        .setCurrency(value.currency().name())
         .build();
   }
 
@@ -43,11 +44,12 @@ public interface CardGrpcMapper {
         .setAccountId(value.accountId().toString())
         .setPan(value.pan())
         .setStatus(value.status().name())
-        .setDailyLimit(value.dailyLimit().longValue())
-        .setMonthlyLimit(value.monthlyLimit().longValue())
+        .setDailyLimitMinorUnits(value.dailyLimitMinorUnits().longValue())
+        .setMonthlyLimitMinorUnits(value.monthlyLimitMinorUnits().longValue())
         .setExpiresAt(value.expiresAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
-        .setSpendDailyLimit(value.spendDailyLimit().longValue())
-        .setSpendMonthlyLimit(value.spendMonthlyLimit().longValue())
+        .setSpendDailyLimitMinorUnits(value.spendDailyLimitMinorUnits().longValue())
+        .setSpendMonthlyLimitMinorUnits(value.spendMonthlyLimitMinorUnits().longValue())
+        .setCurrency(value.currency().name())
         .build();
   }
 
@@ -57,11 +59,12 @@ public interface CardGrpcMapper {
         .setAccountId(value.accountId().toString())
         .setPan(value.pan())
         .setStatus(value.status().name())
-        .setDailyLimit(value.dailyLimit().longValue())
-        .setMonthlyLimit(value.monthlyLimit().longValue())
+        .setDailyLimitMinorUnits(value.dailyLimitMinorUnits().longValue())
+        .setMonthlyLimitMinorUnits(value.monthlyLimitMinorUnits().longValue())
         .setExpiresAt(value.expiresAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
-        .setSpendDailyLimit(value.spendDailyLimit().longValue())
-        .setSpendMonthlyLimit(value.spendMonthlyLimit().longValue())
+        .setSpendDailyLimitMinorUnits(value.spendDailyLimitMinorUnits().longValue())
+        .setSpendMonthlyLimitMinorUnits(value.spendMonthlyLimitMinorUnits().longValue())
+        .setCurrency(value.currency().name())
         .build();
   }
 

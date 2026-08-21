@@ -7,7 +7,7 @@ create table transactions
     source_account_id uuid        not null,
     target_account_id uuid        not null,
     idempotency_key   uuid        not null unique,
-    amount            decimal     not null,
+    minor_units       decimal     not null,
     currency          varchar(55) not null,
     status            varchar(55) not null default 'FUNDS_RESERVED',
     error_message     varchar(255),
@@ -24,8 +24,8 @@ create table transactions
     constraint chk_transactions_currency
         check ( currency in ('USD', 'EUR', 'CNY', 'GBP') ),
 
-    constraint chk_transaction_amount_positive
-        check ( amount > 0 )
+    constraint chk_transaction_minor_units_positive
+        check ( minor_units > 0 )
 );
 
 create table transaction_outbox_events

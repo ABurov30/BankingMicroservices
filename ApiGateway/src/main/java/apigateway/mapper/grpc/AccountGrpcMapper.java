@@ -33,7 +33,7 @@ public interface AccountGrpcMapper {
       UpdateAccountBalanceRequestDto request, UUID authUserId) {
     return UpdateAccountBalanceGrpcRequest.newBuilder()
         .setAccountId(request.accountId().toString())
-        .setAmount(request.amount().longValue())
+        .setMinorUnits(request.minorUnits().longValue())
         .setAuthUserId(authUserId.toString())
         .build();
   }

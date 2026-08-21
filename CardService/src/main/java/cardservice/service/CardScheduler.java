@@ -38,9 +38,10 @@ public class CardScheduler {
                       .findByIdForUpdate(limitsHold.getCardId())
                       .orElseThrow(() -> new CardNotFoundException(limitsHold.getCardId()));
 
-              card.setSpendDailyLimit(card.getSpendDailyLimit().subtract(limitsHold.getAmount()));
-              card.setSpendMonthlyLimit(
-                  card.getSpendMonthlyLimit().subtract(limitsHold.getAmount()));
+              card.setSpendDailyLimitMinorUnits(
+                  card.getSpendDailyLimitMinorUnits().subtract(limitsHold.getMinorUnits()));
+              card.setSpendMonthlyLimitMinorUnits(
+                  card.getSpendMonthlyLimitMinorUnits().subtract(limitsHold.getMinorUnits()));
               cardRepository.save(card);
               limitsHold.setStatus(ReservationStatus.RELEASED_BY_TIME);
               limitsHold.setReleasedAt(LocalDateTime.now());
@@ -52,12 +53,12 @@ public class CardScheduler {
   @Scheduled(cron = "0 0 0 * * *")
   @Transactional
   public void resetSpendDailyLimit() {
-    cardRepository.resetSpendDailyLimit(BigDecimal.ZERO);
+    cardRepository.resetSpendDailyLimitMinorUnits(BigDecimal.ZERO);
   }
 
   @Scheduled(cron = "0 0 0 1 * *")
   @Transactional
   public void resetSpendMonthlyLimit() {
-    cardRepository.resetSpendMonthlyLimit(BigDecimal.ZERO);
+    cardRepository.resetSpendMonthlyLimitMinorUnits(BigDecimal.ZERO);
   }
 }

@@ -1,7 +1,7 @@
 package accountservice.entity;
 
-import enums.account.AccountCurrency;
 import enums.account.ReservationStatus;
+import enums.common.Currency;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -27,10 +27,10 @@ public class AccountHoldEntity {
 
   @Enumerated(EnumType.STRING)
   @Column(name = "currency", nullable = false)
-  private AccountCurrency currency;
+  private Currency currency;
 
-  @Column(name = "amount", nullable = false)
-  private BigDecimal amount;
+  @Column(name = "minor_units", nullable = false)
+  private BigDecimal minorUnits;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "status", nullable = false)

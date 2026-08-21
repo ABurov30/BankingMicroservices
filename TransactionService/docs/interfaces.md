@@ -13,7 +13,7 @@ Service implementation: `TransactionGrpcService`.
 | `getTransactionsByAccounts` | Read transactions for account ids |
 | `watchTransactionStatus` | Stream status updates for one transaction after verifying that the subscribing auth user owns the source or target account |
 
-`watchTransactionStatus` returns `TransactionStatusResponse` messages with `amount`, `currency`,
+`watchTransactionStatus` returns `TransactionStatusResponse` messages with `minorUnits`, `currency`,
 `status`, and non-sensitive `sourceAccount` / `targetAccount` data.
 
 ## REST Exposure
@@ -28,7 +28,7 @@ Gateway route groups include:
 
 The route name `creat-transaction` is currently spelled that way in code.
 
-`POST /transaction/creat-transaction` requires `sourceCardId` in addition to source account, target account, amount, currency, and idempotency key.
+`POST /transaction/creat-transaction` requires `sourceCardId` in addition to source account, target account, `minorUnits`, currency, and idempotency key.
 
 ## External gRPC Calls
 

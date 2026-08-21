@@ -1,6 +1,6 @@
 package accountservice.entity;
 
-import enums.account.AccountCurrency;
+import enums.common.Currency;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -18,7 +18,7 @@ public class CurrencyEntity {
 
   @Enumerated(EnumType.STRING)
   @Column(name = "name", nullable = false, unique = true)
-  private AccountCurrency name;
+  private Currency name;
 
   @Column(name = "rate_from_usd", nullable = false)
   private BigDecimal rateFromUSD;

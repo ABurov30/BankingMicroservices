@@ -1,8 +1,8 @@
 package apigateway.dto.user;
 
-import enums.account.AccountCurrency;
 import enums.account.AccountStatus;
 import enums.account.AccountType;
+import enums.common.Currency;
 import java.util.UUID;
 
 public record GetUserInfoAccountResponseDto(
@@ -11,4 +11,4 @@ public record GetUserInfoAccountResponseDto(
     String accountNumber,
     AccountType type,
     AccountStatus status,
-    AccountCurrency currency) {}
+    Currency currency) {}

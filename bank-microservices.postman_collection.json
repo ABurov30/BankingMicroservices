@@ -552,7 +552,7 @@
             "description": "Requires authenticated active user.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"accountId\": \"{{accountId}}\",\n  \"amount\": 100.00\n}",
+              "raw": "{\n  \"accountId\": \"{{accountId}}\",\n  \"minorUnits\": 10000\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -576,7 +576,7 @@
             "description": "Requires authenticated active user.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"accountId\": \"{{accountId}}\",\n  \"amount\": 50.00\n}",
+              "raw": "{\n  \"accountId\": \"{{accountId}}\",\n  \"minorUnits\": 5000\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -639,7 +639,7 @@
             "description": "Requires authenticated active user. Valid status: ACTIVE, BLOCKED, FROZEN, EXPIRED.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"accountId\": \"{{accountId}}\",\n  \"cardId\": \"{{cardId}}\",\n  \"status\": \"ACTIVE\",\n  \"dailyLimit\": 500.00,\n  \"monthlyLimit\": 5000.00\n}",
+              "raw": "{\n  \"accountId\": \"{{accountId}}\",\n  \"cardId\": \"{{cardId}}\",\n  \"status\": \"ACTIVE\",\n  \"dailyLimitMinorUnits\": 50000,\n  \"monthlyLimitMinorUnits\": 500000\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -689,7 +689,7 @@
             "description": "Requires authenticated active user. Endpoint path is `/creat-transaction` in code.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"sourceAccountId\": \"{{accountId}}\",\n  \"sourceCardId\": \"{{cardId}}\",\n  \"targetAccountId\": \"{{targetAccountId}}\",\n  \"amount\": 25.00,\n  \"currency\": \"USD\",\n  \"idempotencyKey\": \"{{idempotencyKey}}\"\n}",
+              "raw": "{\n  \"sourceAccountId\": \"{{accountId}}\",\n  \"sourceCardId\": \"{{cardId}}\",\n  \"targetAccountId\": \"{{targetAccountId}}\",\n  \"minorUnits\": 2500,\n  \"currency\": \"USD\",\n  \"idempotencyKey\": \"{{idempotencyKey}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

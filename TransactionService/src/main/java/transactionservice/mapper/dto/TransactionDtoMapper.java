@@ -3,10 +3,10 @@ package transactionservice.mapper.dto;
 import account.contract.v1.AccountResponse;
 import account.contract.v1.ReserveFundsForTransactionGrpcResponse;
 import card.contract.v1.ReserveLimitsForTransactionGrpcResponse;
-import enums.account.AccountCurrency;
 import enums.account.AccountStatus;
 import enums.account.AccountType;
 import enums.account.ReservationStatus;
+import enums.common.Currency;
 import java.math.BigDecimal;
 import java.util.UUID;
 import org.mapstruct.Mapper;
@@ -30,7 +30,7 @@ public interface TransactionDtoMapper {
         AccountStatus.valueOf(response.getStatus()),
         BigDecimal.valueOf(response.getAvailableBalance()),
         BigDecimal.valueOf(response.getReservedBalance()),
-        AccountCurrency.valueOf(response.getCurrency()));
+        Currency.valueOf(response.getCurrency()));
   }
 
   default ReserveFudsForTransactionResponseDto toReserveFudsForTransactionResponseDto(

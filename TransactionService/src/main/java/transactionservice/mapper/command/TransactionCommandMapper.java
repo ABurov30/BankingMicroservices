@@ -1,6 +1,6 @@
 package transactionservice.mapper.command;
 
-import enums.account.AccountCurrency;
+import enums.common.Currency;
 import enums.transaction.TransactionStatus;
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -19,8 +19,8 @@ public interface TransactionCommandMapper {
     return new CreateTransactionCommand(
         UUID.fromString(grpcRequest.getSourceAccountId()),
         UUID.fromString(grpcRequest.getTargetAccountId()),
-        BigDecimal.valueOf(grpcRequest.getAmount()),
-        AccountCurrency.valueOf(grpcRequest.getCurrency()),
+        BigDecimal.valueOf(grpcRequest.getMinorUnits()),
+        Currency.valueOf(grpcRequest.getCurrency()),
         UUID.fromString(grpcRequest.getIdempotencyKey()),
         UUID.fromString(grpcRequest.getSourceAuthUserId()),
         UUID.fromString(grpcRequest.getTargetAuthUserId()),

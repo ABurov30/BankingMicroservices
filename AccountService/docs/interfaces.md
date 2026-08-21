@@ -19,6 +19,12 @@ Service implementation: `AccountGrpcService`.
 | `withdrawAccount` | Withdraw funds from an account |
 | `reserveFundsForTransaction` | Reserve funds for transaction processing |
 
+`createAccount` returns `ALREADY_EXISTS` when the owner already has an account with the requested currency and account type.
+
+`topUpAccount` and `withdrawAccount` receive `minorUnits` and convert them to the account currency amount before updating balances.
+
+`reserveFundsForTransaction` receives `minorUnits` from `TransactionService` and converts them to the source account currency amount before comparing and reserving balances.
+
 ## REST Exposure
 
 Account REST endpoints are exposed through `ApiGateway/AccountGatewayController`.

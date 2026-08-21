@@ -2,8 +2,8 @@ package accountservice.mapper.command;
 
 import account.contract.v1.*;
 import accountservice.dto.*;
-import enums.account.AccountCurrency;
 import enums.account.AccountType;
+import enums.common.Currency;
 import java.math.BigDecimal;
 import java.util.UUID;
 import kafkacontracts.account.TransactionFundsRequestedEventPayload;
@@ -15,7 +15,7 @@ import org.mapstruct.Mapper;
 public interface AccountCommandMapper {
   default CreateAccountCommand toCreateAccountCommand(UserProfileCreatedEventPayload payload) {
     return new CreateAccountCommand(
-        payload.getUserId(), payload.getAuthUserId(), AccountType.CHECKING, AccountCurrency.USD);
+        payload.getUserId(), payload.getAuthUserId(), AccountType.CHECKING, Currency.USD);
   }
 
   default CreateAccountCommand toCreateAccountCommand(CreateAccountGrpcRequest request) {
@@ -23,7 +23,7 @@ public interface AccountCommandMapper {
         UUID.fromString(request.getOwnerUserId()),
         UUID.fromString(request.getAuthUserId()),
         AccountType.valueOf(request.getType()),
-        AccountCurrency.valueOf(request.getCurrency()));
+        Currency.valueOf(request.getCurrency()));
   }
 
   default GetAccountsByOwnerUserIdCommand toGetAccountsByOwnerUserIdCommand(
@@ -58,7 +58,7 @@ public interface AccountCommandMapper {
       UpdateAccountBalanceGrpcRequest request) {
     return new UpdateAccountBalanceCommand(
         UUID.fromString(request.getAccountId()),
-        BigDecimal.valueOf(request.getAmount()),
+        BigDecimal.valueOf(request.getMinorUnits()),
         UUID.fromString(request.getAuthUserId()));
   }
 

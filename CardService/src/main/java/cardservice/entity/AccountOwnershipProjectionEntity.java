@@ -1,7 +1,10 @@
 package cardservice.entity;
 
+import enums.common.Currency;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.util.UUID;
@@ -22,4 +25,8 @@ public class AccountOwnershipProjectionEntity {
 
   @Column(name = "account_number")
   private String accountNumber;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "currency", nullable = false)
+  private Currency currency;
 }

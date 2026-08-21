@@ -15,6 +15,7 @@ public interface AccountEventPayloadMapper {
         .setAccountId(UUID.fromString(payload.get("accountId").toString()))
         .setAuthUserId(UUID.fromString(payload.get("authUserId").toString()))
         .setAccountNumber(payload.get("accountNumber").toString())
+        .setCurrency(payload.get("currency").toString())
         .build();
   }
 

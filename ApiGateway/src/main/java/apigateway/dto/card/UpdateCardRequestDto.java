@@ -9,5 +9,5 @@ public record UpdateCardRequestDto(
     @NotNull UUID accountId,
     @NotNull UUID cardId,
     @NotNull CardStatus status,
-    @NotNull BigDecimal dailyLimit,
-    @NotNull BigDecimal monthlyLimit) {}
+    @NotNull BigDecimal dailyLimitMinorUnits,
+    @NotNull BigDecimal monthlyLimitMinorUnits) {}

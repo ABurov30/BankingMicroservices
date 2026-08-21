@@ -30,7 +30,7 @@ public interface TransferCommandMapper {
     return new ReserveFundsForTransactionCommand(
         UUID.fromString(request.getSourceAccountId()),
         UUID.fromString(request.getTargetAccountId()),
-        BigDecimal.valueOf(request.getAmount()),
+        BigDecimal.valueOf(request.getMinorUnits()),
         UUID.fromString(request.getTransactionId()),
         UUID.fromString(request.getSourceAuthUserId()));
   }

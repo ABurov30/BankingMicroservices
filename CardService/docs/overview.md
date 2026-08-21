@@ -27,4 +27,4 @@
 
 ## Integration Boundaries
 
-`CardService` should not own account balances. It consumes account events to maintain enough account ownership data for card operations.
+`CardService` should not own account balances. It consumes account events to maintain enough account ownership and currency data for card operations.

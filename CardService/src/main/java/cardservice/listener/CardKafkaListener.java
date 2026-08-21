@@ -4,6 +4,7 @@ import cardservice.annotation.EventKey;
 import cardservice.annotation.IdempotentKafkaEvent;
 import cardservice.mapper.command.CardCommandMapper;
 import cardservice.service.CardService;
+import enums.common.Currency;
 import kafkacontracts.account.AccountCreatedEventPayload;
 import kafkacontracts.account.AccountFrozenEventPayload;
 import kafkacontracts.account.AccountUnfrozenEventPayload;
@@ -31,7 +32,8 @@ public class CardKafkaListener {
   public void handleAccountCreated(
       AccountCreatedEventPayload payload,
       @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
-    cardService.createCard(commandMapper.toCreateCardCommand(payload));
+    cardService.createCard(
+        commandMapper.toCreateCardCommand(payload), Currency.valueOf(payload.getCurrency()));
   }
 
   @IdempotentKafkaEvent

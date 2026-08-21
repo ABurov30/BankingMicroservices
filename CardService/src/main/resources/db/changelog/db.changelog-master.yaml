@@ -5,3 +5,7 @@ databaseChangeLog:
       file: db/changelog/changes/002-create-proccessed-event-table.sql
   - include:
       file: db/changelog/changes/003-create-card-limit-hold-table.sql
+  - include:
+      file: db/changelog/changes/004-store-card-limits-in-minor-units.sql
+  - include:
+      file: db/changelog/changes/005-add-card-currency.sql

@@ -1,5 +1,6 @@
 package accountservice.grpc;
 
+import accountservice.exception.AccountAlreadyExistsException;
 import accountservice.exception.AccountAlreadyFrozenException;
 import accountservice.exception.AccountClosedException;
 import accountservice.exception.AccountGenerationFailedException;
@@ -53,6 +54,10 @@ public class GrpcExceptionInterceptor implements ServerInterceptor {
         || exception instanceof AccountsNotFoundException
         || exception instanceof AccountHoldNotFoundException) {
       return Status.NOT_FOUND;
+    }
+
+    if (exception instanceof AccountAlreadyExistsException) {
+      return Status.ALREADY_EXISTS;
     }
 
     if (exception instanceof AccountAlreadyFrozenException

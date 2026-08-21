@@ -22,6 +22,7 @@ import cardservice.repository.CardOutboxEventRepository;
 import cardservice.repository.CardRepository;
 import enums.account.ReservationStatus;
 import enums.card.CardStatus;
+import enums.common.Currency;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
@@ -110,6 +111,12 @@ public class CardService {
 
   @Transactional
   public CreateCardResult createCard(CreatedCardCommand createdCardCommand) {
+    return createCard(createdCardCommand, null);
+  }
+
+  @Transactional
+  public CreateCardResult createCard(
+      CreatedCardCommand createdCardCommand, Currency accountCurrencyFromEvent) {
     if (createdCardCommand.role() != null
         && !canAccessAccount(
             createdCardCommand.accountId(),
@@ -118,21 +125,27 @@ public class CardService {
       throw new CardsNotFoundException(createdCardCommand.accountId());
     }
 
+    Currency accountCurrency =
+        accountCurrencyFromEvent != null
+            ? accountCurrencyFromEvent
+            : getAccountCurrency(createdCardCommand.accountId());
+
     CardEntity cardEntity = new CardEntity();
     cardEntity.setAccountId(createdCardCommand.accountId());
     cardEntity.setPan(generateUniquePan());
     cardEntity.setCardStatus(CardStatus.ACTIVE);
-    cardEntity.setDailyLimit(BigDecimal.ZERO);
-    cardEntity.setMonthlyLimit(BigDecimal.ZERO);
+    cardEntity.setDailyLimitMinorUnits(BigDecimal.ZERO);
+    cardEntity.setMonthlyLimitMinorUnits(BigDecimal.ZERO);
     cardEntity.setExpiresAt(LocalDateTime.now().plusYears(CARD_EXPIRATION_YEARS));
     CardEntity savedCard = cardRepository.save(cardEntity);
 
-    if (createdCardCommand.authUserId() != null) {
+    if (createdCardCommand.authUserId() != null && createdCardCommand.accountNumber() != null) {
       AccountOwnershipProjectionEntity accountOwnershipProjectionEntity =
           new AccountOwnershipProjectionEntity();
       accountOwnershipProjectionEntity.setOwnerAuthUserId(createdCardCommand.authUserId());
       accountOwnershipProjectionEntity.setAccountId(createdCardCommand.accountId());
       accountOwnershipProjectionEntity.setAccountNumber(createdCardCommand.accountNumber());
+      accountOwnershipProjectionEntity.setCurrency(accountCurrency);
       accountOwnershipProjectionRepository.save(accountOwnershipProjectionEntity);
     }
 
@@ -143,7 +156,7 @@ public class CardService {
           createdCardCommand.authUserId(),
           createdCardCommand.accountNumber());
     }
-    return resultMapper.toCreateCardResult(savedCard);
+    return resultMapper.toCreateCardResult(savedCard, accountCurrency);
   }
 
   private void changeCardStatus(CardEntity cardEntity, CardStatus cardStatus) {
@@ -153,17 +166,17 @@ public class CardService {
   private void changeCardDailyLimit(
       CardEntity cardEntity, BigDecimal newDailyLimit, BigDecimal newMonthlyLimit) {
     BigDecimal monthlyLimit =
-        newMonthlyLimit != null ? newMonthlyLimit : cardEntity.getMonthlyLimit();
+        newMonthlyLimit != null ? newMonthlyLimit : cardEntity.getMonthlyLimitMinorUnits();
 
     if (newDailyLimit.compareTo(monthlyLimit) > 0) {
       throw new InvalidCardLimitException("Daily limit should be less or equals monthly limit");
     }
 
-    cardEntity.setDailyLimit(newDailyLimit);
+    cardEntity.setDailyLimitMinorUnits(newDailyLimit);
   }
 
   private void changeCardMonthlyLimit(CardEntity cardEntity, BigDecimal newMonthlyLimit) {
-    cardEntity.setMonthlyLimit(newMonthlyLimit);
+    cardEntity.setMonthlyLimitMinorUnits(newMonthlyLimit);
   }
 
   @Transactional
@@ -258,27 +271,39 @@ public class CardService {
       this.changeCardStatus(cardEntity, updateCardCommand.status());
     }
 
-    if (updateCardCommand.dailyLimit() != null) {
+    if (updateCardCommand.dailyLimitMinorUnits() != null) {
       this.changeCardDailyLimit(
-          cardEntity, updateCardCommand.dailyLimit(), updateCardCommand.monthlyLimit());
+          cardEntity,
+          updateCardCommand.dailyLimitMinorUnits(),
+          updateCardCommand.monthlyLimitMinorUnits());
     }
 
-    if (updateCardCommand.monthlyLimit() != null) {
-      this.changeCardMonthlyLimit(cardEntity, updateCardCommand.monthlyLimit());
+    if (updateCardCommand.monthlyLimitMinorUnits() != null) {
+      this.changeCardMonthlyLimit(cardEntity, updateCardCommand.monthlyLimitMinorUnits());
     }
 
     CardEntity savedCard = cardRepository.save(cardEntity);
 
-    return resultMapper.toUpdateCardResult(savedCard);
+    return resultMapper.toUpdateCardResult(savedCard, getAccountCurrency(savedCard.getAccountId()));
   }
 
   public List<GetCardResult> getCardsByAccountId(GetCardsByAccountIdCommand command) {
-    List<CardEntity> cardEntityList =
-        cardRepository
-            .findByAccountId(command.accountId())
-            .orElseThrow(() -> new CardsNotFoundException(command.accountId()));
+    List<CardEntity> cardEntityList = cardRepository.findByAccountId(command.accountId());
+    if (cardEntityList.isEmpty()) {
+      return List.of();
+    }
 
-    return cardEntityList.stream().map(resultMapper::toGetCardResult).toList();
+    Currency accountCurrency = getAccountCurrency(command.accountId());
+    return cardEntityList.stream()
+        .map(card -> resultMapper.toGetCardResult(card, accountCurrency))
+        .toList();
+  }
+
+  private Currency getAccountCurrency(UUID accountId) {
+    return accountOwnershipProjectionRepository
+        .findById(accountId)
+        .map(AccountOwnershipProjectionEntity::getCurrency)
+        .orElseThrow(() -> new CardsNotFoundException(accountId));
   }
 
   private boolean canAccessAccount(UUID accountId, UUID authUserId, String role) {
@@ -331,7 +356,7 @@ public class CardService {
         throw new CardLimitHoldAlreadyExistsException(command.transactionId());
       }
 
-      var isAmountNegative = command.amount().compareTo(BigDecimal.ZERO) < 0;
+      var isAmountNegative = command.minorUnits().compareTo(BigDecimal.ZERO) < 0;
 
       if (isAmountNegative) {
         throw new InvalidTransactionAmountException(command.transactionId());
@@ -358,14 +383,16 @@ public class CardService {
 
   private void validateLimitsForTransaction(
       ReserveLimitsForTransactionCommand command, CardEntity card) {
-    var availableDailyLimits = card.getDailyLimit().subtract(card.getSpendDailyLimit());
-    var availableMonthlyLimits = card.getMonthlyLimit().subtract(card.getSpendMonthlyLimit());
+    var availableDailyLimits =
+        card.getDailyLimitMinorUnits().subtract(card.getSpendDailyLimitMinorUnits());
+    var availableMonthlyLimits =
+        card.getMonthlyLimitMinorUnits().subtract(card.getSpendMonthlyLimitMinorUnits());
 
-    if (availableDailyLimits.compareTo(command.amount()) < 0) {
+    if (availableDailyLimits.compareTo(command.minorUnits()) < 0) {
       throw new InsufficientDailyCardLimitException(command.transactionId());
     }
 
-    if (availableMonthlyLimits.compareTo(command.amount()) < 0) {
+    if (availableMonthlyLimits.compareTo(command.minorUnits()) < 0) {
       throw new InsufficientMonthlyCardLimitException(command.transactionId());
     }
   }
@@ -373,7 +400,7 @@ public class CardService {
   private void createCardLimitHold(ReserveLimitsForTransactionCommand command, CardEntity card) {
     var carLimitHold = new CardLimitHoldEntity();
     carLimitHold.setCardId(card.getId());
-    carLimitHold.setAmount(command.amount());
+    carLimitHold.setMinorUnits(command.minorUnits());
     carLimitHold.setTransactionId(command.transactionId());
     carLimitHold.setStatus(ReservationStatus.RESERVED);
     carLimitHold.setExpiresAt(LocalDateTime.now().plusMinutes(HOLD_TTL_MINUTES));
@@ -381,8 +408,10 @@ public class CardService {
   }
 
   private void reserveLimitOnCard(ReserveLimitsForTransactionCommand command, CardEntity card) {
-    card.setSpendDailyLimit(card.getSpendDailyLimit().add(command.amount()));
-    card.setSpendMonthlyLimit(card.getSpendMonthlyLimit().add(command.amount()));
+    card.setSpendDailyLimitMinorUnits(
+        card.getSpendDailyLimitMinorUnits().add(command.minorUnits()));
+    card.setSpendMonthlyLimitMinorUnits(
+        card.getSpendMonthlyLimitMinorUnits().add(command.minorUnits()));
     cardRepository.save(card);
   }
 
@@ -449,11 +478,13 @@ public class CardService {
   private void releaseReservedLimits(
       CardEntity card, CardLimitHoldEntity limitHold, LocalDateTime releasedAt) {
     if (isSameDay(limitHold.getCreatedAt(), releasedAt)) {
-      card.setSpendDailyLimit(card.getSpendDailyLimit().subtract(limitHold.getAmount()));
+      card.setSpendDailyLimitMinorUnits(
+          card.getSpendDailyLimitMinorUnits().subtract(limitHold.getMinorUnits()));
     }
 
     if (isSameMonth(limitHold.getCreatedAt(), releasedAt)) {
-      card.setSpendMonthlyLimit(card.getSpendMonthlyLimit().subtract(limitHold.getAmount()));
+      card.setSpendMonthlyLimitMinorUnits(
+          card.getSpendMonthlyLimitMinorUnits().subtract(limitHold.getMinorUnits()));
     }
   }
 

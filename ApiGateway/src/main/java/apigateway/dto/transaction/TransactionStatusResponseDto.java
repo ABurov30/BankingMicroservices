@@ -1,12 +1,12 @@
 package apigateway.dto.transaction;
 
-import enums.account.AccountCurrency;
+import enums.common.Currency;
 import enums.transaction.TransactionStatus;
 import java.math.BigDecimal;
 
 public record TransactionStatusResponseDto(
-    BigDecimal amount,
-    AccountCurrency currency,
+    BigDecimal minorUnits,
+    Currency currency,
     TransactionStatus status,
     TransactionStatusAccountResponseDto sourceAccount,
     TransactionStatusAccountResponseDto targetAccount) {}

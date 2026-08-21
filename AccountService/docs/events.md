@@ -15,6 +15,8 @@
 
 Account and transaction-funds changes are published through the account outbox.
 
+`ACCOUNT_CREATED` payload contains `accountId`, `authUserId`, `accountNumber`, and `currency`.
+
 Known produced event categories include:
 
 - account created

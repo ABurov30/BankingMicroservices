@@ -58,7 +58,7 @@ browser to `SITE_URL`.
 
 ## DTO Notes
 
-- Card responses map `CardResponse` from `CardService`, including configured limits and spend counters: `dailyLimit`, `monthlyLimit`, `spendDailyLimit`, and `spendMonthlyLimit`.
+- Card responses map `CardResponse` from `CardService`, including card `currency`, configured limits, and spend counters as minor-unit values: `dailyLimitMinorUnits`, `monthlyLimitMinorUnits`, `spendDailyLimitMinorUnits`, and `spendMonthlyLimitMinorUnits`.
 - Transaction creation requests require `sourceCardId`; the transaction flow uses it for card limit reservation before account funds are requested.
 - Transaction list responses include `transactionId`, which the UI uses to open a live status subscription for the selected transaction.
 - User auth info responses include linked social provider accounts as `socialAccounts`.
@@ -77,7 +77,7 @@ authenticated user. Clients subscribe to these user destinations:
 | Destination | Message |
 | --- | --- |
 | `/user/queue/notifications` | `NotificationResponseDto`: `title`, `body`, `type` |
-| `/user/queue/transactions/{transactionId}` | `TransactionStatusResponseDto`: `amount`, `currency`, `status`, and optional `sourceAccount`/`targetAccount` fields with `accountNumber`, `currency` |
+| `/user/queue/transactions/{transactionId}` | `TransactionStatusResponseDto`: `minorUnits`, `currency`, `status`, and optional `sourceAccount`/`targetAccount` fields with `accountNumber`, `currency` |
 
 The transaction list provides the `transactionId` required to build the transaction stream
 destination. For the transaction stream itself, `transactionId` is currently part of the destination

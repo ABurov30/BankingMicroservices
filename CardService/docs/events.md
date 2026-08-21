@@ -6,7 +6,7 @@
 
 | Event | Source | Purpose |
 | --- | --- | --- |
-| `ACCOUNT_CREATED` | `AccountService` | Create or update account ownership projection |
+| `ACCOUNT_CREATED` | `AccountService` | Create a card and store account ownership and currency in the local projection |
 | `ACCOUNT_FROZEN` | `AccountService` | Freeze related card availability |
 | `ACCOUNT_UNFROZEN` | `AccountService` | Restore related card availability |
 | `TRANSACTION_COMPLETED` | `AccountService` | Mark card limit reservation as released after a completed transaction |
@@ -31,5 +31,7 @@ Known produced event categories include:
 Kafka consumers treat stale account/card state and card-limit hold events as no-ops: they log the current state and return instead of retrying the same event.
 
 If account event semantics change, update both the projection listener and any card status logic that depends on account state.
+
+`ACCOUNT_CREATED` payload must include `currency`; CardService stores it in `account_ownership_projection.currency` and uses that projection value as the card currency in responses.
 
 If transaction completion or compensation semantics change, update card limit hold release behavior and the scheduler assumptions together.

@@ -1,8 +1,8 @@
 package apigateway.dto.account;
 
-import enums.account.AccountCurrency;
 import enums.account.AccountStatus;
 import enums.account.AccountType;
+import enums.common.Currency;
 import java.math.BigDecimal;
 import java.util.UUID;
 
@@ -14,4 +14,4 @@ public record GetAccountResponseDto(
     AccountStatus status,
     BigDecimal availableBalance,
     BigDecimal reservedBalance,
-    AccountCurrency currency) {}
+    Currency currency) {}

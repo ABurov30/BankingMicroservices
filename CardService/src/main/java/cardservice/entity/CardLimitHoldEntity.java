@@ -24,8 +24,8 @@ public class CardLimitHoldEntity {
   @Column(name = "transaction_id", nullable = false)
   private UUID transactionId;
 
-  @Column(name = "amount", nullable = false)
-  private BigDecimal amount;
+  @Column(name = "minor_units", nullable = false)
+  private BigDecimal minorUnits;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "status", nullable = false)

@@ -6,9 +6,9 @@ import account.contract.v1.GetAccountByIdGrpcResponse;
 import account.contract.v1.GetAccountsGrpcResponse;
 import apigateway.dto.account.CreateAccountResponseDto;
 import apigateway.dto.account.GetAccountResponseDto;
-import enums.account.AccountCurrency;
 import enums.account.AccountStatus;
 import enums.account.AccountType;
+import enums.common.Currency;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -24,9 +24,9 @@ public interface AccountDtoMapper {
         account.getAccountNumber(),
         AccountType.valueOf(account.getType()),
         AccountStatus.valueOf(account.getStatus()),
-        toAmount(account.getAvailableBalance()),
-        toAmount(account.getReservedBalance()),
-        AccountCurrency.valueOf(account.getCurrency()));
+        toAmount(account.getAvailableBalance(), Currency.valueOf(account.getCurrency())),
+        toAmount(account.getReservedBalance(), Currency.valueOf(account.getCurrency())),
+        Currency.valueOf(account.getCurrency()));
   }
 
   default GetAccountResponseDto toGetAccountResponseDto(AccountResponse account) {
@@ -36,9 +36,9 @@ public interface AccountDtoMapper {
         account.getAccountNumber(),
         AccountType.valueOf(account.getType()),
         AccountStatus.valueOf(account.getStatus()),
-        toAmount(account.getAvailableBalance()),
-        toAmount(account.getReservedBalance()),
-        AccountCurrency.valueOf(account.getCurrency()));
+        toAmount(account.getAvailableBalance(), Currency.valueOf(account.getCurrency())),
+        toAmount(account.getReservedBalance(), Currency.valueOf(account.getCurrency())),
+        Currency.valueOf(account.getCurrency()));
   }
 
   default GetAccountResponseDto toGetAccountByIdResponseDto(GetAccountByIdGrpcResponse response) {
@@ -50,7 +50,7 @@ public interface AccountDtoMapper {
     return response.getAccountsList().stream().map(this::toGetAccountResponseDto).toList();
   }
 
-  private BigDecimal toAmount(long amount) {
-    return BigDecimal.valueOf(amount);
+  private BigDecimal toAmount(long amount, Currency currency) {
+    return BigDecimal.valueOf(amount).movePointLeft(currency.getMinorUnit());
   }
 }

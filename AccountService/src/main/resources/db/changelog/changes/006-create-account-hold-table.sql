@@ -7,7 +7,7 @@ create table account_holds
     account_id     uuid        not null,
     transaction_id uuid        not null unique,
     currency       varchar(55) not null,
-    amount         decimal     not null,
+    minor_units    decimal     not null,
     status         varchar(55) not null,
     expires_at     timestamp,
     created_at     timestamp   not null,
@@ -19,6 +19,6 @@ create table account_holds
     constraint chk_account_holds_currency
         check ( currency in ('USD', 'EUR', 'CNY', 'GBP') ),
 
-    constraint chk_accounts_amount_positive
-        check ( amount > 0 )
+    constraint chk_accounts_minor_units_positive
+        check ( minor_units > 0 )
 );

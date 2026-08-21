@@ -105,11 +105,11 @@ components:
     TransactionStatusPayload:
       type: object
       required:
-        - amount
+        - minorUnits
         - currency
         - status
       properties:
-        amount:
+        minorUnits:
           type: integer
           format: int64
           description: Transaction amount in the service's minor-unit representation.

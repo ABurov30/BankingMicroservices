@@ -17,8 +17,10 @@ public interface AccountGrpcMapper {
         .setAccountNumber(value.accountNumber())
         .setType(value.type().name())
         .setStatus(value.status().name())
-        .setAvailableBalance(value.availableBalance().longValue())
-        .setReservedBalance(value.reservedBalance().longValue())
+        .setAvailableBalance(
+            value.availableBalance().movePointRight(value.currency().getMinorUnit()).longValue())
+        .setReservedBalance(
+            value.reservedBalance().movePointRight(value.currency().getMinorUnit()).longValue())
         .setCurrency(value.currency().name())
         .build();
   }

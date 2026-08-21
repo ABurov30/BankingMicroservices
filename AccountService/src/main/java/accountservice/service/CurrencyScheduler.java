@@ -4,7 +4,7 @@ import accountservice.dto.CurrencyRateResponse;
 import accountservice.entity.CurrencyEntity;
 import accountservice.exception.CurrencyExchangeRateUpdateException;
 import accountservice.repository.CurrencyRepository;
-import enums.account.AccountCurrency;
+import enums.common.Currency;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,14 +55,14 @@ public class CurrencyScheduler {
     }
 
     List<CurrencyRateResponse> rates = new ArrayList<>(Arrays.asList(response));
-    rates.add(new CurrencyRateResponse(AccountCurrency.USD, BigDecimal.ONE));
+    rates.add(new CurrencyRateResponse(Currency.USD, BigDecimal.ONE));
 
     updateCurrency(rates);
   }
 
   private void updateCurrency(List<CurrencyRateResponse> rates) {
-    List<AccountCurrency> currenciesNames = rates.stream().map((r) -> r.quote()).toList();
-    Map<AccountCurrency, BigDecimal> ratesMap =
+    List<Currency> currenciesNames = rates.stream().map((r) -> r.quote()).toList();
+    Map<Currency, BigDecimal> ratesMap =
         rates.stream()
             .collect(Collectors.toMap(CurrencyRateResponse::quote, CurrencyRateResponse::rate));
 

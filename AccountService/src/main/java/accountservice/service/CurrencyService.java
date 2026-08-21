@@ -2,7 +2,7 @@ package accountservice.service;
 
 import accountservice.entity.CurrencyEntity;
 import accountservice.repository.CurrencyRepository;
-import enums.account.AccountCurrency;
+import enums.common.Currency;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import org.springframework.stereotype.Service;
@@ -17,14 +17,14 @@ public class CurrencyService {
     this.currencyRepository = currencyRepository;
   }
 
-  public BigDecimal convertToUSD(BigDecimal amount, AccountCurrency currency) {
+  public BigDecimal convertToUSD(BigDecimal amount, Currency currency) {
     CurrencyEntity currencyEntity = currencyRepository.findByName(currency);
     return amount
         .divide(currencyEntity.getRateFromUSD(), RATE_SCALE, RoundingMode.HALF_UP)
         .setScale(MONEY_SCALE, RoundingMode.HALF_UP);
   }
 
-  public BigDecimal convertFromUSD(BigDecimal amount, AccountCurrency currency) {
+  public BigDecimal convertFromUSD(BigDecimal amount, Currency currency) {
     CurrencyEntity currencyEntity = currencyRepository.findByName(currency);
     return amount
         .multiply(currencyEntity.getRateFromUSD())

@@ -2,6 +2,7 @@ package accountservice.service;
 
 import accountservice.dto.*;
 import accountservice.entity.*;
+import accountservice.exception.AccountAlreadyExistsException;
 import accountservice.exception.AccountAlreadyFrozenException;
 import accountservice.exception.AccountClosedException;
 import accountservice.exception.AccountGenerationFailedException;
@@ -10,7 +11,6 @@ import accountservice.exception.AccountNotFrozenException;
 import accountservice.exception.AccountOwnershipException;
 import accountservice.exception.AccountsNotFoundException;
 import accountservice.exception.InsufficientFundsException;
-import accountservice.mapper.command.AccountCommandMapper;
 import accountservice.mapper.command.TransferCommandMapper;
 import accountservice.mapper.result.AccountResultMapper;
 import accountservice.repository.AccountHoldRepository;
@@ -19,17 +19,21 @@ import accountservice.repository.CurrencyRepository;
 import enums.account.AccountStatus;
 import enums.account.ReservationStatus;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import kafkacontracts.account.AccountEventType;
+import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 @Service
+@Validated
 public class AccountService {
   private final AccountRepository accountRepository;
   private static final int TRY_TO_GENERATE_ACCOUNT_NUMBER = 10;
@@ -47,7 +51,6 @@ public class AccountService {
       CurrencyRepository currencyRepository,
       AccountHoldRepository accountHoldRepository,
       TransferCommandMapper transferCommandMapper,
-      AccountCommandMapper accountCommandMapper,
       AccountOutboxService accountOutboxService,
       TransferService transferService) {
     this.accountRepository = accountRepository;
@@ -89,14 +92,42 @@ public class AccountService {
         accountEntity.setAccountNumber(generateUniqueAccountNumber());
         accountEntity.setAvailableBalance(BigDecimal.ZERO);
         accountEntity.setReservedBalance(BigDecimal.ZERO);
-        accountRepository.save(accountEntity);
+        accountRepository.saveAndFlush(accountEntity);
         return accountEntity;
       } catch (DataIntegrityViolationException e) {
-        log.warn("Account-number collision; retrying account creation: attempt={}", i + 1, e);
+        String constraintName = getConstraintName(e);
+        if ("uq_accounts_owner_user_id_currency_type".equals(constraintName)) {
+          throw new AccountAlreadyExistsException(
+              createAccountCommand.userId(),
+              createAccountCommand.currency(),
+              createAccountCommand.type());
+        }
+
+        if (isAccountNumberConstraint(constraintName)) {
+          log.warn("Account-number collision; retrying account creation: attempt={}", i + 1, e);
+          continue;
+        }
+
+        throw e;
       }
     }
     throw new AccountGenerationFailedException(
         "Failed to create account with unique account number");
+  }
+
+  private String getConstraintName(Throwable throwable) {
+    Throwable current = throwable;
+    while (current != null) {
+      if (current instanceof ConstraintViolationException constraintViolationException) {
+        return constraintViolationException.getConstraintName();
+      }
+      current = current.getCause();
+    }
+    return null;
+  }
+
+  private boolean isAccountNumberConstraint(String constraintName) {
+    return constraintName != null && constraintName.contains("account_number");
   }
 
   @Transactional
@@ -107,7 +138,8 @@ public class AccountService {
         Map.of(
             "accountId", accountEntity.getId(),
             "authUserId", accountEntity.getOwnerAuthUserId(),
-            "accountNumber", accountEntity.getAccountNumber());
+            "accountNumber", accountEntity.getAccountNumber(),
+            "currency", accountEntity.getCurrency().getName().name());
 
     accountOutboxService.saveAccountOutboxEvent(
         accountEntity.getId(), AccountEventType.ACCOUNT_CREATED, payload);
@@ -268,7 +300,7 @@ public class AccountService {
   }
 
   @Transactional
-  public GetAccountResult topUpAccount(UpdateAccountBalanceCommand command) {
+  public GetAccountResult topUpAccount(@Valid UpdateAccountBalanceCommand command) {
     AccountEntity account =
         accountRepository
             .findByIdForUpdate(command.accountId())
@@ -278,14 +310,17 @@ public class AccountService {
       throw new AccountOwnershipException();
     }
 
-    account.setAvailableBalance(account.getAvailableBalance().add(command.amount()));
+    var currency = account.getCurrency().getName();
+    var amount = command.minorUnits().movePointLeft(currency.getMinorUnit());
+
+    account.setAvailableBalance(account.getAvailableBalance().add(amount));
 
     accountRepository.save(account);
     return resultMapper.toGetAccountResult(account);
   }
 
   @Transactional
-  public GetAccountResult withdrawAccount(UpdateAccountBalanceCommand command) {
+  public GetAccountResult withdrawAccount(@Valid UpdateAccountBalanceCommand command) {
     AccountEntity account =
         accountRepository
             .findByIdForUpdate(command.accountId())
@@ -295,11 +330,14 @@ public class AccountService {
       throw new AccountOwnershipException();
     }
 
-    if (account.getAvailableBalance().compareTo(command.amount()) < 0) {
+    var currency = account.getCurrency().getName();
+    var amount = command.minorUnits().movePointLeft(currency.getMinorUnit());
+
+    if (account.getAvailableBalance().compareTo(amount) < 0) {
       throw new InsufficientFundsException(account.getId());
     }
 
-    account.setAvailableBalance(account.getAvailableBalance().subtract(command.amount()));
+    account.setAvailableBalance(account.getAvailableBalance().subtract(amount));
 
     accountRepository.save(account);
     return resultMapper.toGetAccountResult(account);

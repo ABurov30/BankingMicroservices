@@ -6,6 +6,6 @@ import java.util.UUID;
 public record ReserveFundsForTransactionCommand(
     UUID sourceAccountId,
     UUID targetAccountId,
-    BigDecimal amount,
+    BigDecimal minorUnits,
     UUID transactionId,
     UUID sourceAuthUserId) {}

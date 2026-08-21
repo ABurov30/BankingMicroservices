@@ -29,17 +29,17 @@ public class CardEntity {
   @Column(name = "status", nullable = false)
   private CardStatus cardStatus = CardStatus.ACTIVE;
 
-  @Column(name = "daily_limit")
-  private BigDecimal dailyLimit;
+  @Column(name = "daily_limit_minor_units")
+  private BigDecimal dailyLimitMinorUnits;
 
-  @Column(name = "monthly_limit")
-  private BigDecimal monthlyLimit;
+  @Column(name = "monthly_limit_minor_units")
+  private BigDecimal monthlyLimitMinorUnits;
 
-  @Column(name = "spend_daily_limit", nullable = false)
-  private BigDecimal spendDailyLimit = BigDecimal.ZERO;
+  @Column(name = "spend_daily_limit_minor_units", nullable = false)
+  private BigDecimal spendDailyLimitMinorUnits = BigDecimal.ZERO;
 
-  @Column(name = "spend_monthly_limit", nullable = false)
-  private BigDecimal spendMonthlyLimit = BigDecimal.ZERO;
+  @Column(name = "spend_monthly_limit_minor_units", nullable = false)
+  private BigDecimal spendMonthlyLimitMinorUnits = BigDecimal.ZERO;
 
   @Column(name = "expires_at", nullable = false, updatable = false)
   private LocalDateTime expiresAt;

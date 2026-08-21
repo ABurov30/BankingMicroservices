@@ -23,8 +23,8 @@ public interface CardGrpcMapper {
     return UpdateCardGrpcRequest.newBuilder()
         .setCardId(request.cardId().toString())
         .setStatus(request.status().name())
-        .setDailyLimit(request.dailyLimit().longValue())
-        .setMonthlyLimit(request.monthlyLimit().longValue())
+        .setDailyLimitMinorUnits(request.dailyLimitMinorUnits().longValue())
+        .setMonthlyLimitMinorUnits(request.monthlyLimitMinorUnits().longValue())
         .setAuthUserId(authUserId.toString())
         .setRole(role == null ? "" : role)
         .build();

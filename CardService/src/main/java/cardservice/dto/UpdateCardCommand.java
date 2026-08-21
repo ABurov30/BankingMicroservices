@@ -7,7 +7,7 @@ import java.util.UUID;
 public record UpdateCardCommand(
     UUID cardId,
     CardStatus status,
-    BigDecimal dailyLimit,
-    BigDecimal monthlyLimit,
+    BigDecimal dailyLimitMinorUnits,
+    BigDecimal monthlyLimitMinorUnits,
     UUID authUserId,
     String role) {}

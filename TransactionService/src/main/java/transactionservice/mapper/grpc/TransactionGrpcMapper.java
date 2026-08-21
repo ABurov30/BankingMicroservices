@@ -18,7 +18,7 @@ public interface TransactionGrpcMapper {
       TransactionEntity transactionEntity, UUID sourceAuthUserId) {
     return ReserveFundsForTransactionGrpcRequest.newBuilder()
         .setTransactionId(transactionEntity.getId().toString())
-        .setAmount(transactionEntity.getAmount().longValue())
+        .setMinorUnits(transactionEntity.getMinorUnits().longValue())
         .setSourceAccountId(transactionEntity.getSourceAccountId().toString())
         .setTargetAccountId(transactionEntity.getTargetAccountId().toString())
         .setSourceAuthUserId(sourceAuthUserId.toString())
@@ -29,7 +29,8 @@ public interface TransactionGrpcMapper {
       TransactionEntity transactionEntity, CreateTransactionCommand command) {
     return ReserveLimitsForTransactionGrpcRequest.newBuilder()
         .setTransactionId(transactionEntity.getId().toString())
-        .setAmount(transactionEntity.getAmount().longValue())
+        .setMinorUnits(transactionEntity.getMinorUnits().longValue())
+        .setCurrency(transactionEntity.getCurrency().name())
         .setSourceAuthUserId(command.sourceAuthUserId().toString())
         .setSourceCardId(command.sourceCardId().toString())
         .build();
@@ -40,7 +41,7 @@ public interface TransactionGrpcMapper {
     var response =
         TransactionResponse.newBuilder()
             .setTransactionId(transaction.getId().toString())
-            .setAmount(transaction.getAmount().longValue())
+            .setMinorUnits(transaction.getMinorUnits().longValue())
             .setCurrency(transaction.getCurrency().name())
             .setStatus(transaction.getStatus().name());
 
@@ -48,9 +49,9 @@ public interface TransactionGrpcMapper {
       response.setCreatedAt(
           DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(transaction.getCreatedAt()));
     }
-    if (transaction.getCompletedAdt() != null) {
+    if (transaction.getCompletedAt() != null) {
       response.setCompletedAt(
-          DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(transaction.getCompletedAdt()));
+          DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(transaction.getCompletedAt()));
     }
 
     if (sourceAccount != null) {
@@ -68,7 +69,7 @@ public interface TransactionGrpcMapper {
       TransactionEntity transaction, AccountResponse sourceAccount, AccountResponse targetAccount) {
     var response =
         TransactionStatusResponse.newBuilder()
-            .setAmount(transaction.getAmount().longValue())
+            .setMinorUnits(transaction.getMinorUnits().longValue())
             .setCurrency(transaction.getCurrency().name())
             .setStatus(transaction.getStatus().name());
 

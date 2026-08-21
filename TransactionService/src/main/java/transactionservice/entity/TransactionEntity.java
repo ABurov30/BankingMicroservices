@@ -1,6 +1,6 @@
 package transactionservice.entity;
 
-import enums.account.AccountCurrency;
+import enums.common.Currency;
 import enums.transaction.TransactionStatus;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
@@ -29,12 +29,12 @@ public class TransactionEntity {
   @Column(name = "idempotency_key", nullable = false, unique = true)
   private UUID idempotencyKey;
 
-  @Column(name = "amount", nullable = false)
-  private BigDecimal amount;
+  @Column(name = "minor_units", nullable = false)
+  private BigDecimal minorUnits;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "currency", nullable = false)
-  private AccountCurrency currency;
+  private Currency currency;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "status", nullable = false)
@@ -49,7 +49,7 @@ public class TransactionEntity {
 
   @CreationTimestamp
   @Column(name = "completed_at", nullable = false, updatable = false)
-  private LocalDateTime completedAdt;
+  private LocalDateTime completedAt;
 
   @UpdateTimestamp
   @Column(name = "updated_at", nullable = false)

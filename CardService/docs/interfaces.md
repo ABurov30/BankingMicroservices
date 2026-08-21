@@ -14,7 +14,9 @@ Service implementation: `CardGrpcService`.
 | `getCardsByAccountId` | Read cards linked to an account |
 | `reserveLimitsForTransaction` | Reserve daily and monthly card limit spend for a transaction |
 
-`CardResponse` includes the configured limits and current spend counters: `dailyLimit`, `monthlyLimit`, `spendDailyLimit`, and `spendMonthlyLimit`.
+`CardResponse` includes card currency, configured limits, and current spend counters in minor units. The gRPC contract fields are `dailyLimitMinorUnits`, `monthlyLimitMinorUnits`, `spendDailyLimitMinorUnits`, `spendMonthlyLimitMinorUnits`, and `currency`.
+
+`reserveLimitsForTransaction` receives `minorUnits` from `TransactionService` and applies that value directly to card limit checks, holds, and spend counters.
 
 ## REST Exposure
 
