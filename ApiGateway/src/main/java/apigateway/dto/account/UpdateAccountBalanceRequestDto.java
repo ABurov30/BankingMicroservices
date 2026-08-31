@@ -1,8 +1,8 @@
 package apigateway.dto.account;
 
 import jakarta.validation.constraints.NotNull;
-import java.math.BigDecimal;
+import jakarta.validation.constraints.Positive;
 import java.util.UUID;
 
 public record UpdateAccountBalanceRequestDto(
-    @NotNull UUID accountId, @NotNull BigDecimal minorUnits) {}
+    @NotNull UUID accountId, @NotNull @Positive Long minorUnits) {}

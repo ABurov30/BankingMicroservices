@@ -24,205 +24,222 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class TransferService {
-    private final AccountHoldRepository accountHoldRepository;
-    private final AccountRepository accountRepository;
-    private final CurrencyService currencyService;
-    private final AccountOutboxService accountOutboxService;
-    private final AccountResultMapper resultMapper;
-    private static final Logger log = LoggerFactory.getLogger(TransferService.class);
-    private static final long HOLD_TTL_MINUTES = 5;
+  private final AccountHoldRepository accountHoldRepository;
+  private final AccountRepository accountRepository;
+  private final CurrencyService currencyService;
+  private final AccountOutboxService accountOutboxService;
+  private final AccountResultMapper resultMapper;
+  private static final Logger log = LoggerFactory.getLogger(TransferService.class);
+  private static final long HOLD_TTL_MINUTES = 5;
 
-    public TransferService(
-            AccountHoldRepository accountHoldRepository,
-            AccountRepository accountRepository,
-            CurrencyService currencyService,
-            AccountOutboxService accountOutboxService,
-            AccountResultMapper accountResultMapper) {
-        this.accountHoldRepository = accountHoldRepository;
-        this.accountRepository = accountRepository;
-        this.currencyService = currencyService;
-        this.accountOutboxService = accountOutboxService;
-        this.resultMapper = accountResultMapper;
+  public TransferService(
+      AccountHoldRepository accountHoldRepository,
+      AccountRepository accountRepository,
+      CurrencyService currencyService,
+      AccountOutboxService accountOutboxService,
+      AccountResultMapper accountResultMapper) {
+    this.accountHoldRepository = accountHoldRepository;
+    this.accountRepository = accountRepository;
+    this.currencyService = currencyService;
+    this.accountOutboxService = accountOutboxService;
+    this.resultMapper = accountResultMapper;
+  }
+
+  private BigDecimal convertAmountForTransactionToTagetCurrency(
+      BigDecimal amount, Currency sourceCurrency, Currency targetCurrency) {
+    BigDecimal amountInUSD = currencyService.convertToUSD(amount, sourceCurrency);
+    BigDecimal amountInTargetCurrency =
+        currencyService
+            .convertFromUSD(amountInUSD, targetCurrency)
+            .setScale(targetCurrency.getMinorUnit(), RoundingMode.HALF_EVEN);
+    return amountInTargetCurrency;
+  }
+
+  @Transactional
+  public void executeFundsTransfer(ExecuteFundsTransferCommand command) {
+    var optionalAccountHold =
+        accountHoldRepository.findByIdForUpdate(command.accountHold().getId());
+
+    if (optionalAccountHold.isEmpty()) {
+      log.warn(
+          "Skipping funds transfer: accountHoldId={} not found", command.accountHold().getId());
+      return;
     }
 
-    private BigDecimal convertAmountForTransactionToTagetCurrency(
-            BigDecimal amount, Currency sourceCurrency, Currency targetCurrency) {
-        BigDecimal amountInUSD = currencyService.convertToUSD(amount, sourceCurrency);
-        return currencyService.convertFromUSD(amountInUSD, targetCurrency)
-                .movePointLeft(targetCurrency.getMinorUnit())
-                .setScale(targetCurrency.getMinorUnit(), RoundingMode.HALF_UP);
+    var accountHold = optionalAccountHold.get();
+
+    if (accountHold.getStatus() != ReservationStatus.RESERVED) {
+      log.info(
+          "Skipping funds transfer: transactionId={}, status={}",
+          accountHold.getTransactionId(),
+          accountHold.getStatus());
+      return;
     }
 
-    @Transactional
-    public void executeFundsTransfer(ExecuteFundsTransferCommand command) {
-        var optionalAccountHold =
-                accountHoldRepository.findByIdForUpdate(command.accountHold().getId());
+    var targetAccount =
+        accountRepository
+            .findByIdForUpdate(command.targetAccountId())
+            .orElseThrow(() -> new AccountNotFoundException(command.targetAccountId()));
+    var sourceAccount =
+        accountRepository
+            .findByIdForUpdate(accountHold.getAccountId())
+            .orElseThrow(() -> new AccountNotFoundException(accountHold.getAccountId()));
 
-        if (optionalAccountHold.isEmpty()) {
-            log.warn(
-                    "Skipping funds transfer: accountHoldId={} not found", command.accountHold().getId());
-            return;
-        }
+    var sourceCurrency = sourceAccount.getCurrency().getName();
+    var targetCurrency = targetAccount.getCurrency().getName();
 
-        var accountHold = optionalAccountHold.get();
+    var creditedAmountBigDecimal =
+        convertAmountForTransactionToTagetCurrency(
+            BigDecimal.valueOf(accountHold.getMinorUnits(), sourceCurrency.getMinorUnit()),
+            sourceCurrency,
+            targetCurrency);
 
-        if (accountHold.getStatus() != ReservationStatus.RESERVED) {
-            log.info(
-                    "Skipping funds transfer: transactionId={}, status={}",
-                    accountHold.getTransactionId(),
-                    accountHold.getStatus());
-            return;
-        }
+    var creditedAmount =
+        creditedAmountBigDecimal.movePointRight(targetCurrency.getMinorUnit()).longValueExact();
 
-        var targetAccount =
-                accountRepository
-                        .findByIdForUpdate(command.targetAccountId())
-                        .orElseThrow(() -> new AccountNotFoundException(command.targetAccountId()));
-        var sourceAccount =
-                accountRepository
-                        .findByIdForUpdate(accountHold.getAccountId())
-                        .orElseThrow(() -> new AccountNotFoundException(accountHold.getAccountId()));
+    targetAccount.setAvailableBalanceMinorUnits(
+        targetAccount.getAvailableBalanceMinorUnits() + creditedAmount);
 
-        var sourceCurrency = sourceAccount.getCurrency().getName();
-        var targetCurrency = targetAccount.getCurrency().getName();
+    var reservedAmount = accountHold.getMinorUnits();
+    sourceAccount.setAvailableBalanceMinorUnits(
+        sourceAccount.getAvailableBalanceMinorUnits() - reservedAmount);
+    sourceAccount.setReservedBalanceMinorUnits(
+        sourceAccount.getReservedBalanceMinorUnits() - reservedAmount);
 
-        var creditedAmount =
-                convertAmountForTransactionToTagetCurrency(
-                        accountHold.getMinorUnits(), sourceCurrency, targetCurrency);
-        targetAccount.setAvailableBalance(targetAccount.getAvailableBalance().add(creditedAmount));
+    accountHold.setStatus(ReservationStatus.RELEASED);
+    accountHold.setReleasedAt(LocalDateTime.now());
 
-        var reservedAmount = accountHold.getMinorUnits().movePointLeft(sourceCurrency.getMinorUnit());
-        sourceAccount.setAvailableBalance(sourceAccount.getAvailableBalance().subtract(reservedAmount));
-        sourceAccount.setReservedBalance(sourceAccount.getReservedBalance().subtract(reservedAmount));
+    accountRepository.save(targetAccount);
+    accountRepository.save(sourceAccount);
+    accountHoldRepository.save(accountHold);
 
-        accountHold.setStatus(ReservationStatus.RELEASED);
-        accountHold.setReleasedAt(LocalDateTime.now());
+    Map<String, Object> recipientPayload =
+        Map.of(
+            "accountNumber", targetAccount.getAccountNumber(),
+            "amountMinorUnits", creditedAmount,
+            "currency", targetCurrency.name(),
+            "authUserId", targetAccount.getOwnerAuthUserId(),
+            "transactionId", accountHold.getTransactionId(),
+            "transactionDirection", TransactionDirection.RECIPIENT);
+    Map<String, Object> senderPayload =
+        Map.of(
+            "accountNumber",
+            sourceAccount.getAccountNumber(),
+            "amountMinorUnits",
+            reservedAmount,
+            "currency",
+            sourceCurrency.name(),
+            "authUserId",
+            sourceAccount.getOwnerAuthUserId(),
+            "transactionId",
+            accountHold.getTransactionId(),
+            "transactionDirection",
+            TransactionDirection.SENDER);
 
-        accountRepository.save(targetAccount);
-        accountRepository.save(sourceAccount);
-        accountHoldRepository.save(accountHold);
+    var eventKeyPrefix =
+        accountHold.getTransactionId() + ":" + AccountEventType.TRANSACTION_COMPLETED.name();
+    accountOutboxService.saveAccountOutboxEvent(
+        accountHold.getTransactionId(),
+        AccountEventType.TRANSACTION_COMPLETED,
+        eventKeyPrefix + ":" + TransactionDirection.RECIPIENT,
+        recipientPayload);
+    accountOutboxService.saveAccountOutboxEvent(
+        accountHold.getTransactionId(),
+        AccountEventType.TRANSACTION_COMPLETED,
+        eventKeyPrefix + ":" + TransactionDirection.SENDER,
+        senderPayload);
+  }
 
-        Map<String, Object> recipientPayload =
-                Map.of(
-                        "accountNumber", targetAccount.getAccountNumber(),
-                        "amount", creditedAmount,
-                        "authUserId", targetAccount.getOwnerAuthUserId(),
-                        "transactionId", accountHold.getTransactionId(),
-                        "transactionDirection", TransactionDirection.RECIPIENT);
-        Map<String, Object> senderPayload =
-                Map.of(
-                        "accountNumber", sourceAccount.getAccountNumber(),
-                        "amount", reservedAmount,
-                        "authUserId", sourceAccount.getOwnerAuthUserId(),
-                        "transactionId", accountHold.getTransactionId(),
-                        "transactionDirection", TransactionDirection.SENDER);
+  @Transactional
+  public ReserveFundsForTransactionResult reserveFundsForTransactional(
+      ReserveFundsForTransactionCommand command) {
+    try {
+      var sourceAccount =
+          accountRepository
+              .findByIdForUpdate(command.sourceAccountId())
+              .orElseThrow(() -> new AccountNotFoundException(command.sourceAccountId()));
 
-        var eventKeyPrefix =
-                accountHold.getTransactionId() + ":" + AccountEventType.TRANSACTION_COMPLETED.name();
-        accountOutboxService.saveAccountOutboxEvent(
-                accountHold.getTransactionId(),
-                AccountEventType.TRANSACTION_COMPLETED,
-                eventKeyPrefix + ":" + TransactionDirection.RECIPIENT,
-                recipientPayload);
-        accountOutboxService.saveAccountOutboxEvent(
-                accountHold.getTransactionId(),
-                AccountEventType.TRANSACTION_COMPLETED,
-                eventKeyPrefix + ":" + TransactionDirection.SENDER,
-                senderPayload);
+      var targetAccount =
+          accountRepository
+              .findById(command.targetAccountId())
+              .orElseThrow(() -> new AccountNotFoundException(command.targetAccountId()));
+
+      if (!sourceAccount.getOwnerAuthUserId().equals(command.sourceAuthUserId())) {
+        throw new AccountOwnershipException();
+      }
+
+      if (accountHoldRepository.existsByTransactionId(command.transactionId())) {
+        throw new TransactionAlreadyProcessedException(command.transactionId());
+      }
+
+      var sourceCurrency = sourceAccount.getCurrency().getName();
+      var amount = command.minorUnits();
+
+      Long availableBalanceWithoutReservedBalance =
+          sourceAccount.getAvailableBalanceMinorUnits()
+              - sourceAccount.getReservedBalanceMinorUnits();
+
+      if (availableBalanceWithoutReservedBalance.compareTo(amount) < 0) {
+        throw new InsufficientFundsException(sourceAccount.getId());
+      }
+
+      var accountHold = new AccountHoldEntity();
+      accountHold.setAccountId(sourceAccount.getId());
+      accountHold.setTransactionId(command.transactionId());
+      accountHold.setCurrency(sourceCurrency);
+      accountHold.setMinorUnits(command.minorUnits());
+      accountHold.setStatus(ReservationStatus.RESERVED);
+      accountHold.setExpiresAt(LocalDateTime.now().plusMinutes(HOLD_TTL_MINUTES));
+      accountHoldRepository.save(accountHold);
+
+      sourceAccount.setReservedBalanceMinorUnits(
+          sourceAccount.getReservedBalanceMinorUnits() + amount);
+      accountRepository.save(sourceAccount);
+
+      return new ReserveFundsForTransactionResult(
+          resultMapper.toGetAccountResult(sourceAccount),
+          resultMapper.toGetAccountResult(targetAccount),
+          ReservationStatus.RESERVED,
+          "Funds reserved for transaction " + command.transactionId());
+    } catch (Exception e) {
+      log.error("Failed to reserve funds: transactionId={}", command.transactionId(), e);
+      return new ReserveFundsForTransactionResult(
+          null, null, ReservationStatus.FAILED, e.getMessage());
+    }
+  }
+
+  @Transactional
+  public void compensateFunds(CompensationFundsCommand command) {
+    var optionalAccountHold = accountHoldRepository.findByIdForUpdate(command.accountHoldId());
+
+    if (optionalAccountHold.isEmpty()) {
+      log.warn("Skipping funds compensation: accountHoldId={} not found", command.accountHoldId());
+      return;
     }
 
-    @Transactional
-    public ReserveFundsForTransactionResult reserveFundsForTransactional(
-            ReserveFundsForTransactionCommand command) {
-        try {
-            var sourceAccount =
-                    accountRepository
-                            .findByIdForUpdate(command.sourceAccountId())
-                            .orElseThrow(() -> new AccountNotFoundException(command.sourceAccountId()));
+    var accountHold = optionalAccountHold.get();
 
-            var targetAccount =
-                    accountRepository
-                            .findById(command.targetAccountId())
-                            .orElseThrow(() -> new AccountNotFoundException(command.targetAccountId()));
-
-            if (!sourceAccount.getOwnerAuthUserId().equals(command.sourceAuthUserId())) {
-                throw new AccountOwnershipException();
-            }
-
-            if (accountHoldRepository.existsByTransactionId(command.transactionId())) {
-                throw new TransactionAlreadyProcessedException(command.transactionId());
-            }
-
-            var sourceCurrency = sourceAccount.getCurrency().getName();
-            var amount = command.minorUnits().movePointLeft(sourceCurrency.getMinorUnit());
-
-            BigDecimal availableBalanceWithoutReservedBalance =
-                    sourceAccount.getAvailableBalance().subtract(sourceAccount.getReservedBalance());
-
-            if (availableBalanceWithoutReservedBalance.compareTo(amount) < 0) {
-                throw new InsufficientFundsException(sourceAccount.getId());
-            }
-
-            var accountHold = new AccountHoldEntity();
-            accountHold.setAccountId(sourceAccount.getId());
-            accountHold.setTransactionId(command.transactionId());
-            accountHold.setCurrency(sourceCurrency);
-            accountHold.setMinorUnits(command.minorUnits());
-            accountHold.setStatus(ReservationStatus.RESERVED);
-            accountHold.setExpiresAt(LocalDateTime.now().plusMinutes(HOLD_TTL_MINUTES));
-            accountHoldRepository.save(accountHold);
-
-            sourceAccount.setReservedBalance(sourceAccount.getReservedBalance().add(amount));
-            accountRepository.save(sourceAccount);
-
-            return new ReserveFundsForTransactionResult(
-                    resultMapper.toGetAccountResult(sourceAccount),
-                    resultMapper.toGetAccountResult(targetAccount),
-                    ReservationStatus.RESERVED,
-                    "Funds reserved for transaction " + command.transactionId());
-        } catch (Exception e) {
-            log.error("Failed to reserve funds: transactionId={}", command.transactionId(), e);
-            return new ReserveFundsForTransactionResult(
-                    null, null, ReservationStatus.FAILED, e.getMessage());
-        }
+    if (accountHold.getStatus() != ReservationStatus.RESERVED) {
+      log.info(
+          "Skipping funds compensation: transactionId={}, status={}",
+          accountHold.getTransactionId(),
+          accountHold.getStatus());
+      return;
     }
 
-    @Transactional
-    public void compensateFunds(CompensationFundsCommand command) {
-        var optionalAccountHold = accountHoldRepository.findByIdForUpdate(command.accountHoldId());
+    var sourceAccount =
+        accountRepository
+            .findByIdForUpdate(accountHold.getAccountId())
+            .orElseThrow(() -> new AccountNotFoundException(accountHold.getAccountId()));
 
-        if (optionalAccountHold.isEmpty()) {
-            log.warn("Skipping funds compensation: accountHoldId={} not found", command.accountHoldId());
-            return;
-        }
+    sourceAccount.setReservedBalanceMinorUnits(
+        sourceAccount.getReservedBalanceMinorUnits() - (accountHold.getMinorUnits()));
+    accountHold.setStatus(ReservationStatus.COMPENSATED);
+    accountHold.setReleasedAt(LocalDateTime.now());
 
-        var accountHold = optionalAccountHold.get();
+    Map<String, Object> payload = Map.of("transactionId", accountHold.getTransactionId());
 
-        if (accountHold.getStatus() != ReservationStatus.RESERVED) {
-            log.info(
-                    "Skipping funds compensation: transactionId={}, status={}",
-                    accountHold.getTransactionId(),
-                    accountHold.getStatus());
-            return;
-        }
-
-        var sourceAccount =
-                accountRepository
-                        .findByIdForUpdate(accountHold.getAccountId())
-                        .orElseThrow(() -> new AccountNotFoundException(accountHold.getAccountId()));
-
-        var sourceCurrency = sourceAccount.getCurrency().getName();
-
-        sourceAccount.setReservedBalance(
-                sourceAccount
-                        .getReservedBalance()
-                        .subtract(accountHold.getMinorUnits().movePointLeft(sourceCurrency.getMinorUnit())));
-        accountHold.setStatus(ReservationStatus.COMPENSATED);
-        accountHold.setReleasedAt(LocalDateTime.now());
-
-        Map<String, Object> payload = Map.of("transactionId", accountHold.getTransactionId());
-
-        accountOutboxService.saveAccountOutboxEvent(
-                accountHold.getTransactionId(), AccountEventType.TRANSACTION_COMPENSATED, payload);
-    }
+    accountOutboxService.saveAccountOutboxEvent(
+        accountHold.getTransactionId(), AccountEventType.TRANSACTION_COMPENSATED, payload);
+  }
 }

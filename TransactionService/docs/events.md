@@ -18,7 +18,8 @@ Known produced event categories include:
 - transaction created or started
 - transaction failed
 
-`TRANSACTION_FAILED` uses `TransactionFailedEventPayload` from `kafka-contracts`; payload contains `authUserId` and `amount`.
+`TRANSACTION_FAILED` uses `TransactionFailedEventPayload` from `kafka-contracts`; payload contains
+`authUserId`, `amountMinorUnits`, and `currency`.
 
 ## Consumers
 

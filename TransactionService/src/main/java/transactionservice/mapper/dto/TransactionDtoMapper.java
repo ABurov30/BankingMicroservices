@@ -7,7 +7,6 @@ import enums.account.AccountStatus;
 import enums.account.AccountType;
 import enums.account.ReservationStatus;
 import enums.common.Currency;
-import java.math.BigDecimal;
 import java.util.UUID;
 import org.mapstruct.Mapper;
 import transactionservice.dto.AccountResponseDto;
@@ -28,8 +27,8 @@ public interface TransactionDtoMapper {
         response.getAccountNumber(),
         AccountType.valueOf(response.getType()),
         AccountStatus.valueOf(response.getStatus()),
-        BigDecimal.valueOf(response.getAvailableBalance()),
-        BigDecimal.valueOf(response.getReservedBalance()),
+        response.getAvailableBalanceMinorUnits(),
+        response.getReservedBalanceMinorUnits(),
         Currency.valueOf(response.getCurrency()));
   }
 

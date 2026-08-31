@@ -90,8 +90,12 @@ public class TransactionService {
         transaction,
         TransactionEventType.TRANSACTION_FAILED,
         Map.of(
-            "amount", transaction.getMinorUnits().movePointLeft(currency.getMinorUnit()),
-            "authUserId", command.sourceAuthUserId()));
+            "amountMinorUnits",
+            transaction.getMinorUnits(),
+            "currency",
+            transaction.getCurrency().name(),
+            "authUserId",
+            command.sourceAuthUserId()));
     throw new FundsReservationFailedException(exceptionMessage + " " + transaction.getId());
   }
 

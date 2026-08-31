@@ -5,6 +5,7 @@ import accountservice.repository.AccountHoldRepository;
 import accountservice.repository.AccountRepository;
 import enums.account.AccountType;
 import enums.account.ReservationStatus;
+import enums.common.Currency;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -37,13 +38,20 @@ public class AccountScheduler {
     accounts.stream()
         .forEach(
             account -> {
-              BigDecimal newBalance =
-                  account
-                      .getAvailableBalance()
-                      .multiply(dailyMultiplier)
-                      .setScale(2, RoundingMode.HALF_UP);
+              Currency accountCurrency = account.getCurrency().getName();
 
-              account.setAvailableBalance(newBalance);
+              BigDecimal newBalanceDecimal =
+                  BigDecimal.valueOf(
+                          account.getAvailableBalanceMinorUnits(), accountCurrency.getMinorUnit())
+                      .multiply(dailyMultiplier);
+
+              var newBalance =
+                  newBalanceDecimal
+                      .setScale(accountCurrency.getMinorUnit(), RoundingMode.HALF_EVEN)
+                      .movePointRight(accountCurrency.getMinorUnit())
+                      .longValueExact();
+
+              account.setAvailableBalanceMinorUnits(newBalance);
             });
 
     accountRepository.saveAll(accounts);
@@ -64,15 +72,9 @@ public class AccountScheduler {
                   accountRepository
                       .findByIdForUpdate(accountHold.getAccountId())
                       .orElseThrow(() -> new AccountsNotFoundException(accountHold.getAccountId()));
-              var accountCurrency = account.getCurrency().getName();
 
-              account.setReservedBalance(
-                  account
-                      .getReservedBalance()
-                      .subtract(
-                          accountHold
-                              .getMinorUnits()
-                              .movePointLeft(accountCurrency.getMinorUnit())));
+              account.setReservedBalanceMinorUnits(
+                  account.getReservedBalanceMinorUnits() - accountHold.getMinorUnits());
 
               accountRepository.save(account);
               accountHold.setStatus(ReservationStatus.RELEASED_BY_TIME);

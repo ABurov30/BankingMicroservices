@@ -23,7 +23,6 @@ import cardservice.repository.CardRepository;
 import enums.account.ReservationStatus;
 import enums.card.CardStatus;
 import enums.common.Currency;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
@@ -134,8 +133,8 @@ public class CardService {
     cardEntity.setAccountId(createdCardCommand.accountId());
     cardEntity.setPan(generateUniquePan());
     cardEntity.setCardStatus(CardStatus.ACTIVE);
-    cardEntity.setDailyLimitMinorUnits(BigDecimal.ZERO);
-    cardEntity.setMonthlyLimitMinorUnits(BigDecimal.ZERO);
+    cardEntity.setDailyLimitMinorUnits(Long.valueOf(0));
+    cardEntity.setMonthlyLimitMinorUnits(Long.valueOf(0));
     cardEntity.setExpiresAt(LocalDateTime.now().plusYears(CARD_EXPIRATION_YEARS));
     CardEntity savedCard = cardRepository.save(cardEntity);
 
@@ -164,8 +163,8 @@ public class CardService {
   }
 
   private void changeCardDailyLimit(
-      CardEntity cardEntity, BigDecimal newDailyLimit, BigDecimal newMonthlyLimit) {
-    BigDecimal monthlyLimit =
+      CardEntity cardEntity, Long newDailyLimit, Long newMonthlyLimit) {
+    Long monthlyLimit =
         newMonthlyLimit != null ? newMonthlyLimit : cardEntity.getMonthlyLimitMinorUnits();
 
     if (newDailyLimit.compareTo(monthlyLimit) > 0) {
@@ -175,7 +174,7 @@ public class CardService {
     cardEntity.setDailyLimitMinorUnits(newDailyLimit);
   }
 
-  private void changeCardMonthlyLimit(CardEntity cardEntity, BigDecimal newMonthlyLimit) {
+  private void changeCardMonthlyLimit(CardEntity cardEntity, Long newMonthlyLimit) {
     cardEntity.setMonthlyLimitMinorUnits(newMonthlyLimit);
   }
 
@@ -356,7 +355,7 @@ public class CardService {
         throw new CardLimitHoldAlreadyExistsException(command.transactionId());
       }
 
-      var isAmountNegative = command.minorUnits().compareTo(BigDecimal.ZERO) < 0;
+      var isAmountNegative = command.minorUnits().compareTo(Long.valueOf(0)) < 0;
 
       if (isAmountNegative) {
         throw new InvalidTransactionAmountException(command.transactionId());
@@ -383,10 +382,10 @@ public class CardService {
 
   private void validateLimitsForTransaction(
       ReserveLimitsForTransactionCommand command, CardEntity card) {
-    var availableDailyLimits =
-        card.getDailyLimitMinorUnits().subtract(card.getSpendDailyLimitMinorUnits());
-    var availableMonthlyLimits =
-        card.getMonthlyLimitMinorUnits().subtract(card.getSpendMonthlyLimitMinorUnits());
+    Long availableDailyLimits =
+        card.getDailyLimitMinorUnits() - card.getSpendDailyLimitMinorUnits();
+    Long availableMonthlyLimits =
+        card.getMonthlyLimitMinorUnits() - card.getSpendMonthlyLimitMinorUnits();
 
     if (availableDailyLimits.compareTo(command.minorUnits()) < 0) {
       throw new InsufficientDailyCardLimitException(command.transactionId());
@@ -408,10 +407,9 @@ public class CardService {
   }
 
   private void reserveLimitOnCard(ReserveLimitsForTransactionCommand command, CardEntity card) {
-    card.setSpendDailyLimitMinorUnits(
-        card.getSpendDailyLimitMinorUnits().add(command.minorUnits()));
+    card.setSpendDailyLimitMinorUnits(card.getSpendDailyLimitMinorUnits() + command.minorUnits());
     card.setSpendMonthlyLimitMinorUnits(
-        card.getSpendMonthlyLimitMinorUnits().add(command.minorUnits()));
+        card.getSpendMonthlyLimitMinorUnits() + command.minorUnits());
     cardRepository.save(card);
   }
 
@@ -479,12 +477,12 @@ public class CardService {
       CardEntity card, CardLimitHoldEntity limitHold, LocalDateTime releasedAt) {
     if (isSameDay(limitHold.getCreatedAt(), releasedAt)) {
       card.setSpendDailyLimitMinorUnits(
-          card.getSpendDailyLimitMinorUnits().subtract(limitHold.getMinorUnits()));
+          card.getSpendDailyLimitMinorUnits() - limitHold.getMinorUnits());
     }
 
     if (isSameMonth(limitHold.getCreatedAt(), releasedAt)) {
       card.setSpendMonthlyLimitMinorUnits(
-          card.getSpendMonthlyLimitMinorUnits().subtract(limitHold.getMinorUnits()));
+          card.getSpendMonthlyLimitMinorUnits() - limitHold.getMinorUnits());
     }
   }
 

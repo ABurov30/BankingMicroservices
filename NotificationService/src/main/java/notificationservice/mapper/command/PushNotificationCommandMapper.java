@@ -1,8 +1,8 @@
 package notificationservice.mapper.command;
 
+import enums.common.Currency;
 import enums.transaction.TransactionDirection;
 import java.math.BigDecimal;
-import java.nio.ByteBuffer;
 import kafkacontracts.account.*;
 import kafkacontracts.card.CardCreatedEventPayload;
 import kafkacontracts.card.CardFrozenEventPayload;
@@ -12,8 +12,6 @@ import notificationservice.dto.CardPushNotificationPayload;
 import notificationservice.dto.CreatePushNotificationCommand;
 import notificationservice.dto.TransactionPushNotificationPayload;
 import notificationservice.enums.push.PushNotificationType;
-import org.apache.avro.Conversions;
-import org.apache.avro.Schema;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
@@ -90,11 +88,6 @@ public interface PushNotificationCommandMapper {
   }
 
   default CreatePushNotificationCommand toCreatePushNotificationCommand(
-      TransactionCompletedEventPayload payload) {
-    return toCreatePushNotificationCommand(payload, null);
-  }
-
-  default CreatePushNotificationCommand toCreatePushNotificationCommand(
       TransactionCompletedEventPayload payload, TransactionDirection transactionDirection) {
     return new CreatePushNotificationCommand(
         toTransactionPushNotificationPayload(payload),
@@ -124,19 +117,18 @@ public interface PushNotificationCommandMapper {
 
   default TransactionPushNotificationPayload toTransactionPushNotificationPayload(
       TransactionFailedEventPayload payload) {
-    return new TransactionPushNotificationPayload(null, toBigDecimal(payload.getAmount()));
+
+    var currency = Currency.valueOf(payload.getCurrency());
+    return new TransactionPushNotificationPayload(
+        null, BigDecimal.valueOf(payload.getAmountMinorUnits(), currency.getMinorUnit()), currency);
   }
 
   default TransactionPushNotificationPayload toTransactionPushNotificationPayload(
       TransactionCompletedEventPayload payload) {
+    var currency = Currency.valueOf(payload.getCurrency());
     return new TransactionPushNotificationPayload(
-        payload.getAccountNumber(), toBigDecimal(payload.getAmount()));
-  }
-
-  private BigDecimal toBigDecimal(ByteBuffer amount) {
-    Schema schema = TransactionFailedEventPayload.getClassSchema().getField("amount").schema();
-
-    return new Conversions.DecimalConversion()
-        .fromBytes(amount.duplicate(), schema, schema.getLogicalType());
+        payload.getAccountNumber(),
+        BigDecimal.valueOf(payload.getAmountMinorUnits(), currency.getMinorUnit()),
+        currency);
   }
 }

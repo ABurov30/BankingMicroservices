@@ -20,7 +20,6 @@ import enums.account.AccountStatus;
 import enums.account.ReservationStatus;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
@@ -90,8 +89,8 @@ public class AccountService {
         accountEntity.setOwnerUserId(createAccountCommand.userId());
         accountEntity.setOwnerAuthUserId(createAccountCommand.authUserId());
         accountEntity.setAccountNumber(generateUniqueAccountNumber());
-        accountEntity.setAvailableBalance(BigDecimal.ZERO);
-        accountEntity.setReservedBalance(BigDecimal.ZERO);
+        accountEntity.setAvailableBalanceMinorUnits(Long.valueOf(0));
+        accountEntity.setReservedBalanceMinorUnits(Long.valueOf(0));
         accountRepository.saveAndFlush(accountEntity);
         return accountEntity;
       } catch (DataIntegrityViolationException e) {
@@ -151,8 +150,8 @@ public class AccountService {
         accountEntity.getAccountNumber(),
         accountEntity.getAccountType(),
         accountEntity.getAccountStatus(),
-        accountEntity.getAvailableBalance(),
-        accountEntity.getReservedBalance(),
+        accountEntity.getAvailableBalanceMinorUnits(),
+        accountEntity.getReservedBalanceMinorUnits(),
         accountEntity.getCurrency().getName());
   }
 
@@ -310,10 +309,9 @@ public class AccountService {
       throw new AccountOwnershipException();
     }
 
-    var currency = account.getCurrency().getName();
-    var amount = command.minorUnits().movePointLeft(currency.getMinorUnit());
+    var amount = command.minorUnits();
 
-    account.setAvailableBalance(account.getAvailableBalance().add(amount));
+    account.setAvailableBalanceMinorUnits(account.getAvailableBalanceMinorUnits() + amount);
 
     accountRepository.save(account);
     return resultMapper.toGetAccountResult(account);
@@ -330,14 +328,13 @@ public class AccountService {
       throw new AccountOwnershipException();
     }
 
-    var currency = account.getCurrency().getName();
-    var amount = command.minorUnits().movePointLeft(currency.getMinorUnit());
+    var amount = command.minorUnits();
 
-    if (account.getAvailableBalance().compareTo(amount) < 0) {
+    if (account.getAvailableBalanceMinorUnits().compareTo(amount) < 0) {
       throw new InsufficientFundsException(account.getId());
     }
 
-    account.setAvailableBalance(account.getAvailableBalance().subtract(amount));
+    account.setAvailableBalanceMinorUnits(account.getAvailableBalanceMinorUnits() - amount);
 
     accountRepository.save(account);
     return resultMapper.toGetAccountResult(account);

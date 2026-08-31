@@ -3,7 +3,6 @@ package transactionservice.entity;
 import enums.common.Currency;
 import enums.transaction.TransactionStatus;
 import jakarta.persistence.*;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.Getter;
@@ -30,7 +29,7 @@ public class TransactionEntity {
   private UUID idempotencyKey;
 
   @Column(name = "minor_units", nullable = false)
-  private BigDecimal minorUnits;
+  private Long minorUnits;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "currency", nullable = false)

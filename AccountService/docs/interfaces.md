@@ -21,9 +21,11 @@ Service implementation: `AccountGrpcService`.
 
 `createAccount` returns `ALREADY_EXISTS` when the owner already has an account with the requested currency and account type.
 
-`topUpAccount` and `withdrawAccount` receive `minorUnits` and convert them to the account currency amount before updating balances.
+`topUpAccount` and `withdrawAccount` receive `minorUnits` and apply them directly to account
+balances stored in minor units.
 
-`reserveFundsForTransaction` receives `minorUnits` from `TransactionService` and converts them to the source account currency amount before comparing and reserving balances.
+`reserveFundsForTransaction` receives `minorUnits` from `TransactionService` and compares/reserves
+them directly against the source account minor-unit balances.
 
 ## REST Exposure
 

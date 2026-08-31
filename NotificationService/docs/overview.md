@@ -16,7 +16,8 @@
 - Consumes auth, account, card, and transaction events.
 - Sends email through SMTP.
 - Publishes push notification events consumed by `ApiGateway`.
-- Transaction failure notifications are based on the failed amount and authenticated user because the failure event does not include account details.
+- Transaction failure notifications are based on the failed amount, currency, and authenticated user
+  because the failure event does not include account details.
 
 ## Important Packages
 

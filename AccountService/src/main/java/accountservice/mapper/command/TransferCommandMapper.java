@@ -6,7 +6,6 @@ import accountservice.dto.ExecuteFundsTransferCommand;
 import accountservice.dto.ReserveFundsForTransactionCommand;
 import accountservice.dto.TransactionFundsRequestCommand;
 import accountservice.entity.AccountHoldEntity;
-import java.math.BigDecimal;
 import java.util.UUID;
 import org.mapstruct.Mapper;
 
@@ -30,7 +29,7 @@ public interface TransferCommandMapper {
     return new ReserveFundsForTransactionCommand(
         UUID.fromString(request.getSourceAccountId()),
         UUID.fromString(request.getTargetAccountId()),
-        BigDecimal.valueOf(request.getMinorUnits()),
+        request.getMinorUnits(),
         UUID.fromString(request.getTransactionId()),
         UUID.fromString(request.getSourceAuthUserId()));
   }

@@ -13,7 +13,6 @@ import cardservice.dto.ReserveLimitsForTransactionCommand;
 import cardservice.dto.UnfreezeCardsCommand;
 import cardservice.dto.UpdateCardCommand;
 import enums.card.CardStatus;
-import java.math.BigDecimal;
 import java.util.UUID;
 import kafkacontracts.account.AccountCreatedEventPayload;
 import kafkacontracts.account.AccountFrozenEventPayload;
@@ -51,8 +50,8 @@ public interface CardCommandMapper {
     return new UpdateCardCommand(
         UUID.fromString(request.getCardId()),
         CardStatus.valueOf(request.getStatus()),
-        BigDecimal.valueOf(request.getDailyLimitMinorUnits()),
-        BigDecimal.valueOf(request.getMonthlyLimitMinorUnits()),
+        request.getDailyLimitMinorUnits(),
+        request.getMonthlyLimitMinorUnits(),
         UUID.fromString(request.getAuthUserId()),
         request.getRole());
   }
@@ -66,7 +65,7 @@ public interface CardCommandMapper {
       ReserveLimitsForTransactionGrpcRequest request) {
     return new ReserveLimitsForTransactionCommand(
         UUID.fromString(request.getSourceCardId()),
-        BigDecimal.valueOf(request.getMinorUnits()),
+        request.getMinorUnits(),
         UUID.fromString(request.getTransactionId()),
         UUID.fromString(request.getSourceAuthUserId()));
   }

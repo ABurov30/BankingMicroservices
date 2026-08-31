@@ -11,7 +11,6 @@ import enums.account.AccountStatus;
 import enums.account.AccountType;
 import enums.common.Currency;
 import enums.transaction.TransactionStatus;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -64,7 +63,7 @@ public interface TransactionGrpcMapper {
   default TransactionResponseDto toTransactionResponseDto(TransactionResponse response) {
     return new TransactionResponseDto(
         UUID.fromString(response.getTransactionId()),
-        BigDecimal.valueOf(response.getMinorUnits()),
+        response.getMinorUnits(),
         Currency.valueOf(response.getCurrency()),
         TransactionStatus.valueOf(response.getStatus()),
         toLocalDateTime(response.getCreatedAt()),
@@ -76,7 +75,7 @@ public interface TransactionGrpcMapper {
   default TransactionStatusResponseDto toTransactionStatusResponseDto(
       TransactionStatusResponse response) {
     return new TransactionStatusResponseDto(
-        BigDecimal.valueOf(response.getMinorUnits()),
+        response.getMinorUnits(),
         Currency.valueOf(response.getCurrency()),
         TransactionStatus.valueOf(response.getStatus()),
         response.hasSourceAccount()
@@ -100,8 +99,8 @@ public interface TransactionGrpcMapper {
         account.getAccountNumber(),
         AccountType.valueOf(account.getType()),
         AccountStatus.valueOf(account.getStatus()),
-        BigDecimal.valueOf(account.getAvailableBalance()),
-        BigDecimal.valueOf(account.getReservedBalance()),
+        account.getAvailableBalanceMinorUnits(),
+        account.getReservedBalanceMinorUnits(),
         Currency.valueOf(account.getCurrency()));
   }
 

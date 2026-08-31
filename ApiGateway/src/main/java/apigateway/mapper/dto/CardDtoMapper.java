@@ -8,7 +8,6 @@ import card.contract.v1.CreateCardGrpcResponse;
 import card.contract.v1.UpdateCardGrpcResponse;
 import enums.card.CardStatus;
 import enums.common.Currency;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import org.mapstruct.Mapper;
@@ -23,11 +22,11 @@ public interface CardDtoMapper {
         UUID.fromString(card.getAccountId()),
         card.getPan(),
         CardStatus.valueOf(card.getStatus()),
-        toAmount(card.getDailyLimitMinorUnits(), currency),
-        toAmount(card.getMonthlyLimitMinorUnits(), currency),
+        card.getDailyLimitMinorUnits(),
+        card.getMonthlyLimitMinorUnits(),
         LocalDateTime.parse(card.getExpiresAt()),
-        toAmount(card.getSpendDailyLimitMinorUnits(), currency),
-        toAmount(card.getSpendMonthlyLimitMinorUnits(), currency),
+        card.getSpendDailyLimitMinorUnits(),
+        card.getSpendMonthlyLimitMinorUnits(),
         currency);
   }
 
@@ -39,11 +38,11 @@ public interface CardDtoMapper {
         UUID.fromString(card.getAccountId()),
         card.getPan(),
         CardStatus.valueOf(card.getStatus()),
-        toAmount(card.getDailyLimitMinorUnits(), currency),
-        toAmount(card.getMonthlyLimitMinorUnits(), currency),
+        card.getDailyLimitMinorUnits(),
+        card.getMonthlyLimitMinorUnits(),
         LocalDateTime.parse(card.getExpiresAt()),
-        toAmount(card.getSpendDailyLimitMinorUnits(), currency),
-        toAmount(card.getSpendMonthlyLimitMinorUnits(), currency),
+        card.getSpendDailyLimitMinorUnits(),
+        card.getSpendMonthlyLimitMinorUnits(),
         currency);
   }
 
@@ -54,21 +53,15 @@ public interface CardDtoMapper {
         UUID.fromString(card.getAccountId()),
         card.getPan(),
         CardStatus.valueOf(card.getStatus()),
-        toAmount(card.getDailyLimitMinorUnits(), currency),
-        toAmount(card.getMonthlyLimitMinorUnits(), currency),
+        card.getDailyLimitMinorUnits(),
+        card.getMonthlyLimitMinorUnits(),
         LocalDateTime.parse(card.getExpiresAt()),
-        toAmount(card.getSpendDailyLimitMinorUnits(), currency),
-        toAmount(card.getSpendMonthlyLimitMinorUnits(), currency),
+        card.getSpendDailyLimitMinorUnits(),
+        card.getSpendMonthlyLimitMinorUnits(),
         currency);
   }
 
   private Currency toCurrency(String currency) {
     return currency == null || currency.isBlank() ? null : Currency.valueOf(currency);
-  }
-
-  private BigDecimal toAmount(long amount, Currency currency) {
-    return currency == null
-        ? BigDecimal.valueOf(amount)
-        : BigDecimal.valueOf(amount).movePointLeft(currency.getMinorUnit());
   }
 }

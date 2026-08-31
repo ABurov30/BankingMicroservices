@@ -20,7 +20,8 @@
 | `TRANSACTION_FAILED` | `TransactionService` | Notify transaction failure |
 | `TRANSACTION_COMPLETED` | `AccountService` | Notify transaction completion |
 
-`TRANSACTION_FAILED` payloads do not include an account number; failed transaction push notifications only include the failed amount.
+`TRANSACTION_FAILED` payloads do not include an account number; failed transaction push
+notifications include the failed `amountMinorUnits` rendered with its `currency`.
 
 ## Produced Events
 

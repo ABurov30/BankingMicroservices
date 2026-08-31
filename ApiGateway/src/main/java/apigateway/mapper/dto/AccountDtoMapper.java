@@ -9,7 +9,6 @@ import apigateway.dto.account.GetAccountResponseDto;
 import enums.account.AccountStatus;
 import enums.account.AccountType;
 import enums.common.Currency;
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import org.mapstruct.Mapper;
@@ -24,8 +23,8 @@ public interface AccountDtoMapper {
         account.getAccountNumber(),
         AccountType.valueOf(account.getType()),
         AccountStatus.valueOf(account.getStatus()),
-        toAmount(account.getAvailableBalance(), Currency.valueOf(account.getCurrency())),
-        toAmount(account.getReservedBalance(), Currency.valueOf(account.getCurrency())),
+        account.getAvailableBalanceMinorUnits(),
+        account.getReservedBalanceMinorUnits(),
         Currency.valueOf(account.getCurrency()));
   }
 
@@ -36,8 +35,8 @@ public interface AccountDtoMapper {
         account.getAccountNumber(),
         AccountType.valueOf(account.getType()),
         AccountStatus.valueOf(account.getStatus()),
-        toAmount(account.getAvailableBalance(), Currency.valueOf(account.getCurrency())),
-        toAmount(account.getReservedBalance(), Currency.valueOf(account.getCurrency())),
+        account.getAvailableBalanceMinorUnits(),
+        account.getReservedBalanceMinorUnits(),
         Currency.valueOf(account.getCurrency()));
   }
 
@@ -48,9 +47,5 @@ public interface AccountDtoMapper {
   default List<GetAccountResponseDto> toListGetAccountResponseDto(
       GetAccountsGrpcResponse response) {
     return response.getAccountsList().stream().map(this::toGetAccountResponseDto).toList();
-  }
-
-  private BigDecimal toAmount(long amount, Currency currency) {
-    return BigDecimal.valueOf(amount).movePointLeft(currency.getMinorUnit());
   }
 }

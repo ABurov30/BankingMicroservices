@@ -1,7 +1,6 @@
 package cardservice.dto;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 public record ReserveLimitsForTransactionCommand(
-    UUID sourceCardId, BigDecimal minorUnits, UUID transactionId, UUID sourceAuthUserId) {}
+    UUID sourceCardId, Long minorUnits, UUID transactionId, UUID sourceAuthUserId) {}

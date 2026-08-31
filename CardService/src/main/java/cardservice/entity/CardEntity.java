@@ -2,7 +2,6 @@ package cardservice.entity;
 
 import enums.card.CardStatus;
 import jakarta.persistence.*;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.Getter;
@@ -30,16 +29,16 @@ public class CardEntity {
   private CardStatus cardStatus = CardStatus.ACTIVE;
 
   @Column(name = "daily_limit_minor_units")
-  private BigDecimal dailyLimitMinorUnits;
+  private Long dailyLimitMinorUnits = Long.valueOf(0);
 
   @Column(name = "monthly_limit_minor_units")
-  private BigDecimal monthlyLimitMinorUnits;
+  private Long monthlyLimitMinorUnits = Long.valueOf(0);
 
   @Column(name = "spend_daily_limit_minor_units", nullable = false)
-  private BigDecimal spendDailyLimitMinorUnits = BigDecimal.ZERO;
+  private Long spendDailyLimitMinorUnits = Long.valueOf(0);
 
   @Column(name = "spend_monthly_limit_minor_units", nullable = false)
-  private BigDecimal spendMonthlyLimitMinorUnits = BigDecimal.ZERO;
+  private Long spendMonthlyLimitMinorUnits = Long.valueOf(0);
 
   @Column(name = "expires_at", nullable = false, updatable = false)
   private LocalDateTime expiresAt;

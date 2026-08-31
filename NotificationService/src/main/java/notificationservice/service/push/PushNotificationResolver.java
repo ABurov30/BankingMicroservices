@@ -1,5 +1,6 @@
 package notificationservice.service.push;
 
+import enums.common.Currency;
 import notificationservice.dto.AccountPushNotificationPayload;
 import notificationservice.dto.CardPushNotificationPayload;
 import notificationservice.dto.TransactionPushNotificationPayload;
@@ -30,6 +31,15 @@ public class PushNotificationResolver {
       case TRANSACTION_FAILED -> "Transaction failed";
       case TRANSACTION_COMPLETED -> "Transaction completed";
       case TRANSACTION_RECEIVED -> "Funds received";
+    };
+  }
+
+  private String currencyAbbreviationToSymbol(Currency currency) {
+    return switch (currency) {
+      case USD -> "$";
+      case EUR -> "€";
+      case GBP -> "£";
+      case CNY -> "¥";
     };
   }
 
@@ -76,15 +86,20 @@ public class PushNotificationResolver {
               "Your account "
                   + transactionPayload.accountNumber()
                   + " has been credited with "
-                  + transactionPayload.amount();
+                  + transactionPayload.amount()
+                  + currencyAbbreviationToSymbol(transactionPayload.currency());
           case TRANSACTION_COMPLETED ->
               "The transaction from account "
                   + transactionPayload.accountNumber()
                   + " in the amount of "
                   + transactionPayload.amount()
+                  + currencyAbbreviationToSymbol(transactionPayload.currency())
                   + " has been completed";
           case TRANSACTION_FAILED ->
-              "Transaction in the amount of " + transactionPayload.amount() + " has failed";
+              "Transaction in the amount of "
+                  + transactionPayload.amount()
+                  + currencyAbbreviationToSymbol(transactionPayload.currency())
+                  + " has failed";
           default -> throw new IllegalStateException();
         };
       }

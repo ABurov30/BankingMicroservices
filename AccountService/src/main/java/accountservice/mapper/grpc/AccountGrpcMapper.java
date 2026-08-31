@@ -17,10 +17,8 @@ public interface AccountGrpcMapper {
         .setAccountNumber(value.accountNumber())
         .setType(value.type().name())
         .setStatus(value.status().name())
-        .setAvailableBalance(
-            value.availableBalance().movePointRight(value.currency().getMinorUnit()).longValue())
-        .setReservedBalance(
-            value.reservedBalance().movePointRight(value.currency().getMinorUnit()).longValue())
+        .setAvailableBalanceMinorUnits(value.availableBalanceMinorUnits())
+        .setReservedBalanceMinorUnits(value.reservedBalanceMinorUnits())
         .setCurrency(value.currency().name())
         .build();
   }
@@ -33,8 +31,8 @@ public interface AccountGrpcMapper {
         .setAccountNumber(value.accountNumber())
         .setType(value.type().name())
         .setStatus(value.status().name())
-        .setAvailableBalance(value.availableBalance().longValue())
-        .setReservedBalance(value.reservedBalance().longValue())
+        .setAvailableBalanceMinorUnits(value.availableBalanceMinorUnits())
+        .setReservedBalanceMinorUnits(value.reservedBalanceMinorUnits())
         .setCurrency(value.currency().name())
         .build();
   }

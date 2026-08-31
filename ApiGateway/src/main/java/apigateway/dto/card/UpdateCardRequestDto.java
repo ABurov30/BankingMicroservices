@@ -2,12 +2,12 @@ package apigateway.dto.card;
 
 import enums.card.CardStatus;
 import jakarta.validation.constraints.NotNull;
-import java.math.BigDecimal;
+import jakarta.validation.constraints.Positive;
 import java.util.UUID;
 
 public record UpdateCardRequestDto(
     @NotNull UUID accountId,
     @NotNull UUID cardId,
     @NotNull CardStatus status,
-    @NotNull BigDecimal dailyLimitMinorUnits,
-    @NotNull BigDecimal monthlyLimitMinorUnits) {}
+    @NotNull @Positive Long dailyLimitMinorUnits,
+    @NotNull @Positive Long monthlyLimitMinorUnits) {}

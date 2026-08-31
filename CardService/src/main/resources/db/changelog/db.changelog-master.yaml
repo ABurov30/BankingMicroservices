@@ -9,3 +9,5 @@ databaseChangeLog:
       file: db/changelog/changes/004-store-card-limits-in-minor-units.sql
   - include:
       file: db/changelog/changes/005-add-card-currency.sql
+  - include:
+      file: db/changelog/changes/006-use-minor-units-for-card-limits.sql

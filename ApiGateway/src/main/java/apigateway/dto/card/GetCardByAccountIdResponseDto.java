@@ -2,7 +2,6 @@ package apigateway.dto.card;
 
 import enums.card.CardStatus;
 import enums.common.Currency;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -11,9 +10,9 @@ public record GetCardByAccountIdResponseDto(
     UUID accountId,
     String pan,
     CardStatus status,
-    BigDecimal dailyLimit,
-    BigDecimal monthlyLimit,
+    Long dailyLimitMinorUnits,
+    Long monthlyLimitMinorUnits,
     LocalDateTime expiresAt,
-    BigDecimal spendDailyLimit,
-    BigDecimal spendMonthlyLimit,
+    Long spendDailyLimitMinorUnits,
+    Long spendMonthlyLimitMinorUnits,
     Currency currency) {}

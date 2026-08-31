@@ -1,8 +1,5 @@
 package accountservice.mapper.eventpayload;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.UUID;
 import kafkacontracts.account.*;
@@ -35,29 +32,13 @@ public interface AccountEventPayloadMapper {
         .build();
   }
 
-  private static ByteBuffer toAvroDecimal(Object value) {
-    if (value == null) {
-      throw new IllegalArgumentException("Outbox payload field 'amount' is required");
-    }
-
-    BigDecimal amount =
-        value instanceof BigDecimal decimal ? decimal : new BigDecimal(value.toString());
-
-    BigDecimal scaledAmount = amount.setScale(2, RoundingMode.UNNECESSARY);
-
-    if (scaledAmount.precision() > 19) {
-      throw new IllegalArgumentException("Amount exceeds Avro decimal(19,2): " + amount);
-    }
-
-    return ByteBuffer.wrap(scaledAmount.unscaledValue().toByteArray());
-  }
-
   default TransactionCompletedEventPayload toTransactionCompletedEventPayload(
       Map<String, Object> payload) {
     return TransactionCompletedEventPayload.newBuilder()
         .setAccountNumber(payload.get("accountNumber").toString())
         .setTransactionId(UUID.fromString(payload.get("transactionId").toString()))
-        .setAmount(toAvroDecimal(payload.get("amount")))
+        .setAmountMinorUnits(toLong(payload.get("amountMinorUnits")))
+        .setCurrency(payload.get("currency").toString())
         .setAuthUserId(UUID.fromString(payload.get("authUserId").toString()))
         .build();
   }
@@ -67,5 +48,17 @@ public interface AccountEventPayloadMapper {
     return TransactionCompensatedEventPayload.newBuilder()
         .setTransactionId(UUID.fromString(payload.get("transactionId").toString()))
         .build();
+  }
+
+  private static Long toLong(Object value) {
+    if (value == null) {
+      throw new IllegalArgumentException("Outbox payload field 'amountMinorUnits' is required");
+    }
+
+    if (value instanceof Number number) {
+      return number.longValue();
+    }
+
+    return Long.parseLong(value.toString());
   }
 }

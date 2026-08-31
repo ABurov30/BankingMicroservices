@@ -2,7 +2,6 @@ package cardservice.dto;
 
 import enums.card.CardStatus;
 import enums.common.Currency;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -11,9 +10,9 @@ public record GetCardResult(
     UUID accountId,
     String pan,
     CardStatus status,
-    BigDecimal dailyLimitMinorUnits,
-    BigDecimal monthlyLimitMinorUnits,
+    Long dailyLimitMinorUnits,
+    Long monthlyLimitMinorUnits,
     LocalDateTime expiresAt,
-    BigDecimal spendDailyLimitMinorUnits,
-    BigDecimal spendMonthlyLimitMinorUnits,
+    Long spendDailyLimitMinorUnits,
+    Long spendMonthlyLimitMinorUnits,
     Currency currency) {}

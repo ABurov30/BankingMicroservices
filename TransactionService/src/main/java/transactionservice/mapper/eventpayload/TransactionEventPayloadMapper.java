@@ -1,6 +1,5 @@
 package transactionservice.mapper.eventpayload;
 
-import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.UUID;
 import kafkacontracts.account.TransactionFailedEventPayload;
@@ -14,7 +13,8 @@ public interface TransactionEventPayloadMapper {
       Map<String, Object> payload) {
     return TransactionFailedEventPayload.newBuilder()
         .setAuthUserId(UUID.fromString(payload.get("authUserId").toString()))
-        .setAmount((ByteBuffer) payload.get("amount"))
+        .setAmountMinorUnits(toLong(payload.get("amountMinorUnits")))
+        .setCurrency(payload.get("currency").toString())
         .build();
   }
 
@@ -25,5 +25,17 @@ public interface TransactionEventPayloadMapper {
         .setAuthUserId(UUID.fromString(payload.get("authUserId").toString()))
         .setTargetAccountId(UUID.fromString(payload.get("targetAccountId").toString()))
         .build();
+  }
+
+  private static Long toLong(Object value) {
+    if (value == null) {
+      throw new IllegalArgumentException("Outbox payload field 'amountMinorUnits' is required");
+    }
+
+    if (value instanceof Number number) {
+      return number.longValue();
+    }
+
+    return Long.parseLong(value.toString());
   }
 }

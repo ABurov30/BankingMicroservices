@@ -3,7 +3,6 @@ package accountservice.entity;
 import enums.account.AccountStatus;
 import enums.account.AccountType;
 import jakarta.persistence.*;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.Getter;
@@ -37,11 +36,11 @@ public class AccountEntity {
   @Column(name = "status", nullable = false)
   private AccountStatus accountStatus;
 
-  @Column(name = "available_balance", nullable = false)
-  private BigDecimal availableBalance;
+  @Column(name = "available_balance_minor_units", nullable = false)
+  private Long availableBalanceMinorUnits = Long.valueOf(0);
 
-  @Column(name = "reserved_balance", nullable = false)
-  private BigDecimal reservedBalance;
+  @Column(name = "reserved_balance_minor_units", nullable = false)
+  private Long reservedBalanceMinorUnits = Long.valueOf(0);
 
   @Column(name = "version", nullable = false)
   private int version;

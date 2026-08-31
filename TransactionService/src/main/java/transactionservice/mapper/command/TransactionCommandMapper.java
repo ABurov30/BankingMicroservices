@@ -2,7 +2,6 @@ package transactionservice.mapper.command;
 
 import enums.common.Currency;
 import enums.transaction.TransactionStatus;
-import java.math.BigDecimal;
 import java.util.UUID;
 import kafkacontracts.account.TransactionCompensatedEventPayload;
 import kafkacontracts.account.TransactionCompletedEventPayload;
@@ -19,7 +18,7 @@ public interface TransactionCommandMapper {
     return new CreateTransactionCommand(
         UUID.fromString(grpcRequest.getSourceAccountId()),
         UUID.fromString(grpcRequest.getTargetAccountId()),
-        BigDecimal.valueOf(grpcRequest.getMinorUnits()),
+        grpcRequest.getMinorUnits(),
         Currency.valueOf(grpcRequest.getCurrency()),
         UUID.fromString(grpcRequest.getIdempotencyKey()),
         UUID.fromString(grpcRequest.getSourceAuthUserId()),

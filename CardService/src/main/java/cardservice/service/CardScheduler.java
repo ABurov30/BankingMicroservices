@@ -5,7 +5,6 @@ import cardservice.repository.CardLimitHoldRepository;
 import cardservice.repository.CardRepository;
 import enums.account.ReservationStatus;
 import jakarta.transaction.Transactional;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -39,9 +38,9 @@ public class CardScheduler {
                       .orElseThrow(() -> new CardNotFoundException(limitsHold.getCardId()));
 
               card.setSpendDailyLimitMinorUnits(
-                  card.getSpendDailyLimitMinorUnits().subtract(limitsHold.getMinorUnits()));
+                  card.getSpendDailyLimitMinorUnits() - limitsHold.getMinorUnits());
               card.setSpendMonthlyLimitMinorUnits(
-                  card.getSpendMonthlyLimitMinorUnits().subtract(limitsHold.getMinorUnits()));
+                  card.getSpendMonthlyLimitMinorUnits() - limitsHold.getMinorUnits());
               cardRepository.save(card);
               limitsHold.setStatus(ReservationStatus.RELEASED_BY_TIME);
               limitsHold.setReleasedAt(LocalDateTime.now());
@@ -53,12 +52,12 @@ public class CardScheduler {
   @Scheduled(cron = "0 0 0 * * *")
   @Transactional
   public void resetSpendDailyLimit() {
-    cardRepository.resetSpendDailyLimitMinorUnits(BigDecimal.ZERO);
+    cardRepository.resetSpendDailyLimitMinorUnits(Long.valueOf(0));
   }
 
   @Scheduled(cron = "0 0 0 1 * *")
   @Transactional
   public void resetSpendMonthlyLimit() {
-    cardRepository.resetSpendMonthlyLimitMinorUnits(BigDecimal.ZERO);
+    cardRepository.resetSpendMonthlyLimitMinorUnits(Long.valueOf(0));
   }
 }

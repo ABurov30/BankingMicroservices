@@ -2,7 +2,6 @@ package cardservice.repository;
 
 import cardservice.entity.CardEntity;
 import jakarta.persistence.LockModeType;
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -25,13 +24,13 @@ public interface CardRepository extends JpaRepository<CardEntity, UUID> {
   @Query(
       "UPDATE CardEntity c SET c.spendDailyLimitMinorUnits = :limit"
           + " WHERE c.spendDailyLimitMinorUnits <> :limit")
-  int resetSpendDailyLimitMinorUnits(@Param("limit") BigDecimal limit);
+  int resetSpendDailyLimitMinorUnits(@Param("limit") Long limit);
 
   @Modifying(clearAutomatically = true, flushAutomatically = true)
   @Query(
       "UPDATE CardEntity c SET c.spendMonthlyLimitMinorUnits = :limit"
           + " WHERE c.spendMonthlyLimitMinorUnits <> :limit")
-  int resetSpendMonthlyLimitMinorUnits(@Param("limit") BigDecimal limit);
+  int resetSpendMonthlyLimitMinorUnits(@Param("limit") Long limit);
 
   Optional<List<CardEntity>> findAllByAccountId(UUID accountId);
 }

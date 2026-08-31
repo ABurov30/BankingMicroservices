@@ -4,7 +4,6 @@ import account.contract.v1.*;
 import accountservice.dto.*;
 import enums.account.AccountType;
 import enums.common.Currency;
-import java.math.BigDecimal;
 import java.util.UUID;
 import kafkacontracts.account.TransactionFundsRequestedEventPayload;
 import kafkacontracts.user.UserProfileBlockedEventPayload;
@@ -58,7 +57,7 @@ public interface AccountCommandMapper {
       UpdateAccountBalanceGrpcRequest request) {
     return new UpdateAccountBalanceCommand(
         UUID.fromString(request.getAccountId()),
-        BigDecimal.valueOf(request.getMinorUnits()),
+        request.getMinorUnits(),
         UUID.fromString(request.getAuthUserId()));
   }
 
