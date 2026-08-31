@@ -47,8 +47,7 @@ public class TransactionEntity {
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
 
-  @CreationTimestamp
-  @Column(name = "completed_at", nullable = false, updatable = false)
+  @Column(name = "completed_at")
   private LocalDateTime completedAt;
 
   @UpdateTimestamp

@@ -81,7 +81,7 @@ public class TransactionService {
       String exceptionMessage) {
     transaction.setErrorMessage(reservationResponse.message());
     transaction.setStatus(TransactionStatus.FAILED);
-    transaction.setErrorMessage(reservationResponse.message());
+    transaction.setCompletedAt(LocalDateTime.now());
     transactionRepository.save(transaction);
     transactionStatusStreamRegistry.notifyStatusChanged(transaction);
 
@@ -95,7 +95,7 @@ public class TransactionService {
     throw new FundsReservationFailedException(exceptionMessage + " " + transaction.getId());
   }
 
-  @Transactional
+  @Transactional(dontRollbackOn = FundsReservationFailedException.class)
   public void createTransaction(CreateTransactionCommand command) {
     var transaction = saveTransaction(command);
     var reservationLimitsResponse =
