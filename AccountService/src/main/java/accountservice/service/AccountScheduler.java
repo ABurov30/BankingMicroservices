@@ -9,6 +9,7 @@ import enums.common.Currency;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import moneyunitsconverter.MoneyUnitsConverter;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -41,15 +42,15 @@ public class AccountScheduler {
               Currency accountCurrency = account.getCurrency().getName();
 
               BigDecimal newBalanceDecimal =
-                  BigDecimal.valueOf(
-                          account.getAvailableBalanceMinorUnits(), accountCurrency.getMinorUnit())
+                  MoneyUnitsConverter.toMajor(
+                          account.getAvailableBalanceMinorUnits(), accountCurrency)
                       .multiply(dailyMultiplier);
 
               var newBalance =
-                  newBalanceDecimal
-                      .setScale(accountCurrency.getMinorUnit(), RoundingMode.HALF_EVEN)
-                      .movePointRight(accountCurrency.getMinorUnit())
-                      .longValueExact();
+                  MoneyUnitsConverter.toMinor(
+                      newBalanceDecimal.setScale(
+                          accountCurrency.getMinorUnit(), RoundingMode.HALF_EVEN),
+                      accountCurrency);
 
               account.setAvailableBalanceMinorUnits(newBalance);
             });

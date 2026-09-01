@@ -2,11 +2,11 @@ package notificationservice.mapper.command;
 
 import enums.common.Currency;
 import enums.transaction.TransactionDirection;
-import java.math.BigDecimal;
 import kafkacontracts.account.*;
 import kafkacontracts.card.CardCreatedEventPayload;
 import kafkacontracts.card.CardFrozenEventPayload;
 import kafkacontracts.card.CardUnfrozenEventPayload;
+import moneyunitsconverter.MoneyUnitsConverter;
 import notificationservice.dto.AccountPushNotificationPayload;
 import notificationservice.dto.CardPushNotificationPayload;
 import notificationservice.dto.CreatePushNotificationCommand;
@@ -120,7 +120,7 @@ public interface PushNotificationCommandMapper {
 
     var currency = Currency.valueOf(payload.getCurrency());
     return new TransactionPushNotificationPayload(
-        null, BigDecimal.valueOf(payload.getAmountMinorUnits(), currency.getMinorUnit()), currency);
+        null, MoneyUnitsConverter.toMajor(payload.getAmountMinorUnits(), currency), currency);
   }
 
   default TransactionPushNotificationPayload toTransactionPushNotificationPayload(
@@ -128,7 +128,7 @@ public interface PushNotificationCommandMapper {
     var currency = Currency.valueOf(payload.getCurrency());
     return new TransactionPushNotificationPayload(
         payload.getAccountNumber(),
-        BigDecimal.valueOf(payload.getAmountMinorUnits(), currency.getMinorUnit()),
+        MoneyUnitsConverter.toMajor(payload.getAmountMinorUnits(), currency),
         currency);
   }
 }

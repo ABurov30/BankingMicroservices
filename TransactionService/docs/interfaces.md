@@ -36,4 +36,6 @@ The route name `creat-transaction` is currently spelled that way in code.
 
 ## Contracts
 
-gRPC types come from `com.burov:contracts`. Event payloads come from `com.burov:kafka-contracts`.
+gRPC types come from `com.burov:contracts` version `0.0.23`. Event payloads come from
+`com.burov:kafka-contracts`. Shared outbox and processed-event helpers come from
+`com.burov:support` version `0.0.1`.

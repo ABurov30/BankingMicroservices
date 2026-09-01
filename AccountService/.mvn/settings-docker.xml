@@ -1,7 +1,17 @@
 <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
     <servers>
         <server>
-            <id>github</id>
+            <id>github-support</id>
+            <username>ABurov30</username>
+            <password>${env.GITHUB_TOKEN}</password>
+        </server>
+        <server>
+            <id>github-proto-contracts</id>
+            <username>ABurov30</username>
+            <password>${env.GITHUB_TOKEN}</password>
+        </server>
+        <server>
+            <id>github-kafka-contracts</id>
             <username>ABurov30</username>
             <password>${env.GITHUB_TOKEN}</password>
         </server>

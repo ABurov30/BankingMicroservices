@@ -40,5 +40,7 @@ Primary storage is PostgreSQL. Schema changes are managed by Liquibase under `sr
 
 Refresh token and user status changes affect security. Avoid bypassing service methods that enforce token revocation, status checks, and event publication.
 
+Auth outbox rows use shared outbox helpers from `com.burov:support`.
+
 Social account rows are unique by provider and provider user id. A single auth user may have
 multiple linked social provider accounts.

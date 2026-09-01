@@ -1,7 +1,7 @@
 package cardservice.repository;
 
 import cardservice.entity.ProcessedEventEntity;
-import outboxsupport.BaseProcessedEventRepository;
+import processedevent.BaseProcessedEventRepository;
 
 public interface ProcessedEventRepository
     extends BaseProcessedEventRepository<ProcessedEventEntity> {}

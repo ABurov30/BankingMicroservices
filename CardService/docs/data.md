@@ -41,3 +41,6 @@ Card limits, card spend counters, and card limit holds are stored as minor-unit 
 `account_ownership_projection.currency` is required, stores the source account currency received from account events, and is constrained to `USD`, `EUR`, `CNY`, or `GBP`. Card responses read currency from this projection; the `cards` table does not store currency.
 
 `card_limit_holds.transaction_id` is unique and provides idempotency for card limit reservations.
+
+Consumed Kafka events use processed-event tracking through the `processedevent` helpers in
+`com.burov:support`.

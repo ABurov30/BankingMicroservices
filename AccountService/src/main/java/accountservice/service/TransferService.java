@@ -18,6 +18,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.Map;
 import kafkacontracts.account.AccountEventType;
+import moneyunitsconverter.MoneyUnitsConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -90,12 +91,11 @@ public class TransferService {
 
     var creditedAmountBigDecimal =
         convertAmountForTransactionToTagetCurrency(
-            BigDecimal.valueOf(accountHold.getMinorUnits(), sourceCurrency.getMinorUnit()),
+            MoneyUnitsConverter.toMajor(accountHold.getMinorUnits(), sourceCurrency),
             sourceCurrency,
             targetCurrency);
 
-    var creditedAmount =
-        creditedAmountBigDecimal.movePointRight(targetCurrency.getMinorUnit()).longValueExact();
+    var creditedAmount = MoneyUnitsConverter.toMinor(creditedAmountBigDecimal, targetCurrency);
 
     targetAccount.setAvailableBalanceMinorUnits(
         targetAccount.getAvailableBalanceMinorUnits() + creditedAmount);

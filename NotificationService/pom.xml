@@ -39,8 +39,19 @@
             <url>https://repo.maven.apache.org/maven2</url>
         </repository>
         <repository>
-            <id>github</id>
-            <url>https://maven.pkg.github.com/ABurov30/BankingProtoContracts</url>
+            <id>github-support</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/aburov30/bankingsupport</url>
+        </repository>
+        <repository>
+            <id>github-proto-contracts</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/aburov30/bankingprotocontracts</url>
+        </repository>
+        <repository>
+            <id>github-kafka-contracts</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/aburov30/bankkafkacontracts</url>
         </repository>
         <repository>
             <id>confluent</id>
@@ -50,8 +61,8 @@
     <dependencies>
         <dependency>
             <groupId>com.burov</groupId>
-            <artifactId>outbox-support</artifactId>
-            <version>0.0.5</version>
+            <artifactId>support</artifactId>
+            <version>0.0.1</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
@@ -91,7 +102,7 @@
         <dependency>
             <groupId>com.burov</groupId>
             <artifactId>contracts</artifactId>
-            <version>0.0.22</version>
+            <version>0.0.23</version>
         </dependency>
         <dependency>
             <groupId>io.grpc</groupId>

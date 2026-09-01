@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
-import outboxsupport.IdempotencyHandler;
+import processedevent.IdempotencyHandler;
 import transactionservice.annotation.EventKey;
 import transactionservice.entity.ProcessedEventEntity;
 import transactionservice.repository.ProcessedEventRepository;

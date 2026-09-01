@@ -30,4 +30,6 @@ Primary storage is PostgreSQL. Schema changes are managed by Liquibase under `sr
 
 ## Data Integrity Notes
 
-The service uses processed-event tracking for Kafka idempotency. When adding new listeners, include idempotency handling rather than applying event payloads directly.
+The service uses processed-event tracking for Kafka idempotency through the `processedevent`
+helpers in `com.burov:support`. When adding new listeners, include idempotency handling rather than
+applying event payloads directly.

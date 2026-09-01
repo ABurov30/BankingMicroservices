@@ -35,4 +35,9 @@ Templates live under `src/main/resources/templates/email` and include auth lifec
 
 ## Data Integrity Notes
 
-Notification creation should remain idempotent for consumed Kafka events. Push notification outbox rows are the source for events delivered to `ApiGateway`.
+Notification creation should remain idempotent for consumed Kafka events through the
+`processedevent` helpers in `com.burov:support`. Push notification outbox rows are the source for
+events delivered to `ApiGateway`.
+
+Transaction notification amounts are converted from minor units to major units with
+`moneyunitsconverter.MoneyUnitsConverter` before being stored in notification payloads.

@@ -21,7 +21,7 @@ Run from a service directory:
 ./mvnw test
 ```
 
-For private packages:
+For private packages from `BankingProtoContracts`, `BankKafkaContracts`, and `BankingSupport`:
 
 ```bash
 GITHUB_TOKEN=replace_me ./mvnw -s .mvn/settings-docker.xml spotless:check checkstyle:check test

@@ -36,3 +36,9 @@ Primary storage is PostgreSQL. Schema changes are managed by Liquibase under `sr
 ## Data Integrity Notes
 
 Balance mutation, hold creation, and hold release are financial operations. Keep them transactional and verify compensation behavior when changing them.
+
+Consumed Kafka events use processed-event tracking through the `processedevent` helpers in
+`com.burov:support`.
+
+Currency arithmetic should use `moneyunitsconverter.MoneyUnitsConverter` from `com.burov:support`
+when converting between major and minor units.

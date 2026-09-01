@@ -56,6 +56,9 @@ browser to `SITE_URL`.
 | `TransactionGrpcClient` | `TransactionService` |
 | `NotificationGrpcClient` | `NotificationService` |
 
+gRPC DTOs come from `com.burov:contracts` version `0.0.23`. Shared support utilities come from
+`com.burov:support` version `0.0.1`.
+
 ## DTO Notes
 
 - Card responses map `CardResponse` from `CardService`, including card `currency`, configured limits, and spend counters as minor-unit values: `dailyLimitMinorUnits`, `monthlyLimitMinorUnits`, `spendDailyLimitMinorUnits`, and `spendMonthlyLimitMinorUnits`.

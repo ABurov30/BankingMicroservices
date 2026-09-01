@@ -1,6 +1,6 @@
 package userservice.repository;
 
-import outboxsupport.BaseProcessedEventRepository;
+import processedevent.BaseProcessedEventRepository;
 import userservice.entity.ProcessedEventEntity;
 
 public interface ProcessedEventRepository

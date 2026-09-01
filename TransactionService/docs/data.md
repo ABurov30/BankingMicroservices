@@ -27,3 +27,6 @@ Primary storage is PostgreSQL. Schema changes are managed by Liquibase under `sr
 ## Data Integrity Notes
 
 Transaction state, card limit reservation state, and account reservation state are coupled through events and gRPC calls. Avoid changing one side of the flow without checking failure and compensation behavior.
+
+Consumed Kafka events use processed-event tracking through the `processedevent` helpers in
+`com.burov:support`.

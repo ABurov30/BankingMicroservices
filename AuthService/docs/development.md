@@ -19,11 +19,15 @@ Local runtime needs PostgreSQL, Kafka, Schema Registry, and JWT keys.
 ./mvnw test
 ```
 
-For GitHub Packages:
+For private GitHub Packages from `BankingProtoContracts`, `BankKafkaContracts`, and `BankingSupport`:
 
 ```bash
-GITHUB_TOKEN=replace_me ./mvnw -s .mvn/settings-docker.xml test
+GITHUB_TOKEN=replace_me ./mvnw -s .mvn/settings-docker.xml spotless:check checkstyle:check test
 ```
+
+`.mvn/settings-docker.xml` defines separate Maven server ids for `github-proto-contracts`,
+`github-kafka-contracts`, and `github-support`. The Dockerfile runs Maven with `-U` so container
+builds refresh private package metadata instead of reusing stale cached artifacts.
 
 ## Common Change Areas
 

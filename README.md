@@ -36,7 +36,7 @@ Training banking microservices project built with Spring Boot. `ApiGateway` expo
 
 ## Quick Start
 
-GitHub Packages requires a token with `read:packages`.
+GitHub Packages requires a token with `read:packages` access to the contracts, Kafka contracts, and support package repositories.
 
 ```bash
 cd Infra
@@ -71,10 +71,10 @@ Run these commands from a service directory:
 ./mvnw test
 ```
 
-For private Maven packages:
+For private Maven packages from `BankingProtoContracts`, `BankKafkaContracts`, and `BankingSupport`:
 
 ```bash
-GITHUB_TOKEN=replace_me ./mvnw -s .mvn/settings-docker.xml test
+GITHUB_TOKEN=replace_me ./mvnw -s .mvn/settings-docker.xml spotless:check checkstyle:check test
 ```
 
 CI runs formatting, Checkstyle, and tests for every service.

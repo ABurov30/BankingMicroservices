@@ -10,11 +10,11 @@ WORKDIR /app
 COPY .mvn .mvn
 COPY mvnw pom.xml ./
 RUN --mount=type=cache,target=/root/.m2,sharing=locked \
-    ./mvnw -s .mvn/settings-docker.xml dependency:go-offline -DskipTests
+    ./mvnw -U -s .mvn/settings-docker.xml dependency:go-offline -DskipTests
 
 COPY src src
 RUN --mount=type=cache,target=/root/.m2,sharing=locked \
-    ./mvnw -s .mvn/settings-docker.xml clean package -DskipTests
+    ./mvnw -U -s .mvn/settings-docker.xml clean package -DskipTests
 
 FROM eclipse-temurin:17-jre
 

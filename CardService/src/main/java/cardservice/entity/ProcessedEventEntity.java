@@ -11,6 +11,6 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "processed_events")
-public class ProcessedEventEntity extends outboxsupport.ProcessedEvent {
+public class ProcessedEventEntity extends processedevent.ProcessedEvent {
   @Id @GeneratedValue private UUID id;
 }
