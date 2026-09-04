@@ -20,9 +20,9 @@ User REST endpoints are exposed through `ApiGateway/UserGatewayController`.
 Gateway route groups include:
 
 - `GET /user/user-info`
-- `POST /user/user-info`
+- `POST /user/recipient-info`
 - `GET /user/manager/all-user-info`
-- `GET /user/manager/user-info/{userId}`
+- `POST /user/manager/user-info`
 - `GET /user/health`
 
 ## Contracts

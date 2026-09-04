@@ -1,11 +1,11 @@
 package apigateway.query;
 
-import apigateway.client.AccountGrpcClient;
 import apigateway.client.AuthGrpcClient;
 import apigateway.client.UserGrpcClient;
 import apigateway.dto.account.GetAccountResponseDto;
 import apigateway.dto.account.GetAccountWithCardsResponseDto;
 import apigateway.dto.user.*;
+import apigateway.mapper.grpc.UserGrpcMapper;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -14,18 +14,19 @@ import org.springframework.stereotype.Service;
 public class UserInfoQueryHandler {
   private final AuthGrpcClient authGrpcClient;
   private final UserGrpcClient userGrpcClient;
-  private final AccountGrpcClient accountGrpcClient;
   private final AccountQueryHandler accountQueryHandler;
+  private final UserGrpcMapper userGrpcMapper;
 
   public UserInfoQueryHandler(
       AuthGrpcClient authGrpcClient,
       UserGrpcClient userGrpcClient,
-      AccountGrpcClient accountGrpcClient,
-      AccountQueryHandler accountQueryHandler) {
+      AccountQueryHandler accountQueryHandler,
+      UserGrpcMapper userGrpcMapper
+  ) {
     this.authGrpcClient = authGrpcClient;
     this.userGrpcClient = userGrpcClient;
-    this.accountGrpcClient = accountGrpcClient;
     this.accountQueryHandler = accountQueryHandler;
+    this.userGrpcMapper = userGrpcMapper;
   }
 
   public GetUserInfoWithAuthInfoResponseDto getUserInfoWithAuthInfo(UUID autUserId) {
@@ -52,12 +53,10 @@ public class UserInfoQueryHandler {
         .toList();
   }
 
-  public GetUserInfoWithAccountResponseDto getUserInfoWithAccountsAndCardsByEmail(
-      GetUserInfoByEmailRequestDto request) {
+  public GetRecipientInfoResponseDto getRecipientInfo(GetRecipientRequestDto request) {
     var userInfo = userGrpcClient.getUserInfoByEmail(request);
     var accounts = accountQueryHandler.getAccountsWithCardsByOwnerId(userInfo.userProfileId());
-    return new GetUserInfoWithAccountResponseDto(
-        userInfo, accounts.stream().map(this::toUserInfoAccountWithCardsResponseDto).toList());
+    return userGrpcMapper.toGetRecipientInfoResponseDto(userInfo, accounts);
   }
 
   private GetUserInfoAccountWithCardsResponseDto toUserInfoAccountWithCardsResponseDto(

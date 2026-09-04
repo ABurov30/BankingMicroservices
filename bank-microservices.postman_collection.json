@@ -417,7 +417,7 @@
           "response": []
         },
         {
-          "name": "Get User Info With Accounts By Email",
+          "name": "Get Recipient Info By Email",
           "request": {
             "method": "POST",
             "header": [
@@ -426,7 +426,7 @@
                 "value": "application/json"
               }
             ],
-            "description": "Requires authenticated active user.",
+            "description": "Requires authenticated active user. Returns recipient user info without ids and accounts without balance fields.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{email}}\"\n}",
@@ -436,7 +436,7 @@
                 }
               }
             },
-            "url": "{{gatewayUrl}}/user/user-info"
+            "url": "{{gatewayUrl}}/user/recipient-info"
           },
           "response": []
         },
@@ -453,10 +453,24 @@
         {
           "name": "Manager - Get User Info By User Id",
           "request": {
-            "method": "GET",
-            "header": [],
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "description": "Requires ADMIN or active MANAGER.",
-            "url": "{{gatewayUrl}}/user/manager/user-info/{{userId}}"
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{gatewayUrl}}/user/manager/user-info"
           },
           "response": []
         }

@@ -36,10 +36,10 @@ public class UserGatewayController {
     return userInfoQueryHandler.getUserInfoWithAuthInfo(authUserId);
   }
 
-  @PostMapping("/user-info")
-  public GetUserInfoWithAccountResponseDto getUserInfoWithAccountsByEmail(
-      @Valid @RequestBody GetUserInfoByEmailRequestDto request) {
-    return userInfoQueryHandler.getUserInfoWithAccountsAndCardsByEmail(request);
+  @PostMapping("/recipient-info")
+  public GetRecipientInfoResponseDto getRecipientInfo(
+      @Valid @RequestBody GetRecipientRequestDto request) {
+    return userInfoQueryHandler.getRecipientInfo(request);
   }
 
   @GetMapping("/health")
@@ -52,8 +52,9 @@ public class UserGatewayController {
     return userInfoQueryHandler.getAllUserInfoWithAuthInfo();
   }
 
-  @GetMapping("/manager/user-info/{userId}")
-  public GetUserInfoWithAuthInfoResponseDto getUserInfoByManager(@PathVariable UUID userId) {
-    return userInfoQueryHandler.getUserInfoWithAuthInfo(userId);
+  @PostMapping("/manager/user-info")
+  public GetUserInfoWithAuthInfoResponseDto getUserInfoByManager(
+      @Valid @RequestBody GetUserInfoByManagerRequestDto request) {
+    return userInfoQueryHandler.getUserInfoWithAuthInfo(request.userId());
   }
 }

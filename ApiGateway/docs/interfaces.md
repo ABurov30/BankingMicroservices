@@ -65,7 +65,8 @@ gRPC DTOs come from `com.burov:contracts` version `0.0.23`. Shared support utili
 - Transaction creation requests require `sourceCardId`; the transaction flow uses it for card limit reservation before account funds are requested.
 - Transaction list responses include `transactionId`, which the UI uses to open a live status subscription for the selected transaction.
 - User auth info responses include linked social provider accounts as `socialAccounts`.
-- `POST /user/user-info` returns user accounts with cards but omits account `availableBalance` and `reservedBalance`.
+- `POST /user/recipient-info` resolves a recipient by email and returns user info without ids plus recipient accounts without balance fields.
+- `GET /user/user-info` returns the current user's profile and auth information.
 
 ## WebSocket
 
