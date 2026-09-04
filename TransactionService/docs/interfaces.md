@@ -39,6 +39,6 @@ the source card or source account currency.
 
 ## Contracts
 
-gRPC types come from `com.burov:contracts` version `0.0.25`. Event payloads come from
+gRPC types come from `com.burov:contracts` version `0.0.26-SNAPSHOT`. Event payloads come from
 `com.burov:kafka-contracts`. Shared outbox and processed-event helpers come from
 `com.burov:support` version `0.0.1`.

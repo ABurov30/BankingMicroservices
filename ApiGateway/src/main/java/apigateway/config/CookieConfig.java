@@ -45,6 +45,14 @@ public class CookieConfig {
     response.addHeader(HttpHeaders.SET_COOKIE, atCookie.toString());
   }
 
+  public void setRefreshTokenCookie(
+      HttpServletResponse response, String refreshToken, int refreshTokenDaysTtl) {
+    ResponseCookie rtCookie =
+        createTokenCookie("rt", refreshToken, refreshTokenDaysTtl * 24L * 60 * 60);
+
+    response.addHeader(HttpHeaders.SET_COOKIE, rtCookie.toString());
+  }
+
   public void clearCookieTokens(HttpServletResponse response) {
     ResponseCookie atCookie = createTokenCookie("at", "", 0);
 

@@ -45,6 +45,14 @@ authorization endpoint. After Google redirects back to `/login/oauth2/code/googl
 exchanges the OIDC user data with `AuthService`, sets `at` and `rt` cookies, and redirects the
 browser to `SITE_URL`.
 
+## Auth Flow Notes
+
+`PUT /auth/change-password` requires an authenticated active user. The request body contains only
+`oldPassword` and `newPassword`; the gateway reads `authUserId` from the `at` cookie subject before
+calling `AuthService`. On success, `AuthService` revokes active refresh tokens, returns a new
+refresh token, and the gateway sets a replacement HTTP-only `rt` cookie. The existing access-token
+cookie is not replaced by this endpoint.
+
 ## gRPC Clients
 
 | Client | Target service |
@@ -56,7 +64,7 @@ browser to `SITE_URL`.
 | `TransactionGrpcClient` | `TransactionService` |
 | `NotificationGrpcClient` | `NotificationService` |
 
-gRPC DTOs come from `com.burov:contracts` version `0.0.25`. Shared support utilities come from
+gRPC DTOs come from `com.burov:contracts` version `0.0.26-SNAPSHOT`. Shared support utilities come from
 `com.burov:support` version `0.0.1`.
 
 ## DTO Notes

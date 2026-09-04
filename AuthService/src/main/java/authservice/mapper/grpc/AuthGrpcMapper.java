@@ -89,4 +89,12 @@ public interface AuthGrpcMapper {
         .setRefreshTokenDaysTtl((int) refreshTtl)
         .build();
   }
+
+  default ChangePasswordGrpcResponse toChangePasswordGrpcResponse(
+      ChangePasswordResult changePasswordResult) {
+    return ChangePasswordGrpcResponse.newBuilder()
+        .setRefreshToken(changePasswordResult.refreshToken())
+        .setRefreshTokenDaysTtl((int) changePasswordResult.refreshTokenDaysTtl())
+        .build();
+  }
 }

@@ -39,6 +39,8 @@ Primary storage is PostgreSQL. Schema changes are managed by Liquibase under `sr
 ## Data Integrity Notes
 
 Refresh token and user status changes affect security. Avoid bypassing service methods that enforce token revocation, status checks, and event publication.
+Changing a password revokes all active refresh tokens for the auth user and stores one replacement
+refresh token for the current session.
 
 Auth outbox rows use shared outbox helpers from `com.burov:support`.
 

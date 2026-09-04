@@ -1,13 +1,6 @@
 package authservice.mapper.result;
 
-import authservice.dto.GetAuthUserByIdResult;
-import authservice.dto.LoginResult;
-import authservice.dto.RefreshResult;
-import authservice.dto.ResetPasswordResult;
-import authservice.dto.SocialAccountResult;
-import authservice.dto.SocialLoginResult;
-import authservice.dto.TokenPair;
-import authservice.dto.VerifyAuthUserByCodeResult;
+import authservice.dto.*;
 import authservice.entity.AuthSocialAccountsEntity;
 import authservice.entity.AuthUserEntity;
 import authservice.entity.UserRoleEntity;
@@ -70,5 +63,10 @@ public interface AuthResultMapper {
         tokenPair.refreshToken(),
         tokenPair.accessTokenMinutesTtl(),
         tokenPair.refreshTokenDaysTtl());
+  }
+
+  default ChangePasswordResult toChangePasswordResult(
+      String refreshToken, long refreshTokenDaysTtl) {
+    return new ChangePasswordResult(refreshToken, refreshTokenDaysTtl);
   }
 }

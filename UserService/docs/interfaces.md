@@ -27,6 +27,6 @@ Gateway route groups include:
 
 ## Contracts
 
-gRPC types come from `com.burov:contracts` version `0.0.25`. Auth event payloads come from
+gRPC types come from `com.burov:contracts` version `0.0.26-SNAPSHOT`. Auth event payloads come from
 `com.burov:kafka-contracts`. Shared outbox and processed-event helpers come from
 `com.burov:support` version `0.0.1`.

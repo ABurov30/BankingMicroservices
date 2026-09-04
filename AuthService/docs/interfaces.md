@@ -13,7 +13,7 @@ Service implementation: `AuthGrpcService`.
 | `login` | Validate credentials and return access/refresh tokens |
 | `logout` | Revoke refresh token |
 | `refresh` | Exchange refresh token for a new token pair |
-| `changePassword` | Change password for an authenticated user |
+| `changePassword` | Change password for an authenticated user, revoke active refresh tokens, and return a replacement refresh token |
 | `blockAuthUser` | Manager/admin user blocking |
 | `unlockAuthUser` | Manager/admin user unlocking |
 | `verifyAuthUserByPrivilegeRole` | Manager/admin verification |
@@ -29,9 +29,12 @@ Auth REST endpoints are exposed through `ApiGateway/AuthGatewayController`, not 
 
 ## Contracts
 
-gRPC request and response types come from `com.burov:contracts` version `0.0.25`. Kafka event
+gRPC request and response types come from `com.burov:contracts` version `0.0.26-SNAPSHOT`. Kafka event
 types come from `com.burov:kafka-contracts`. Shared outbox helpers come from `com.burov:support`
 version `0.0.1`.
 
 `GetAuthUserByIdGrpcResponse` returns the auth user id, status, email, role, and a repeated
 `SocialAccountResponse` list with each linked provider and provider email.
+
+`ChangePasswordGrpcResponse` returns `refreshToken` and `refreshTokenDaysTtl` so the gateway can
+replace the caller's `rt` cookie after all previously active refresh tokens are revoked.

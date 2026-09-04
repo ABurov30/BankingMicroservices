@@ -188,8 +188,8 @@ public class AuthService {
     return authResultMapper.toRefreshResult(tokenPair);
   }
 
-  public void changePassword(ChangePasswordCommand changePasswordCommand) {
-
+  @Transactional
+  public ChangePasswordResult changePassword(ChangePasswordCommand changePasswordCommand) {
     AuthUserEntity authUser =
         authUserRepository
             .findById(changePasswordCommand.authUserId())
@@ -201,6 +201,13 @@ public class AuthService {
 
     authUser.setPasswordHash(passwordEncoder.encode(changePasswordCommand.newPassword()));
     authUserRepository.save(authUser);
+    revokeActiveTokensByAuthUserId(authUser.getId());
+
+    String refreshToken = tokenService.generateRefreshToken();
+    saveRefreshToken(authUser, refreshToken);
+
+    return authResultMapper.toChangePasswordResult(
+        refreshToken, jwtProperties.refreshTokenTtlDays());
   }
 
   public void blockUser(BlockAuthUserCommand blockAuthUserCommand) {
@@ -361,18 +368,22 @@ public class AuthService {
         authUserRepository
             .findByEmail(command.email())
             .orElseThrow(() -> new AuthUserNotFoundByEmailException(command.email()));
+    revokeActiveTokensByAuthUserId(authUser.getId());
+
+    authUser.setStatus(AuthUserStatus.FORGET_PASSWORD);
+    authUserRepository.save(authUser);
+    saveAuthUserForgetPasswordOutboxEvent(authUser);
+  }
+
+  private void revokeActiveTokensByAuthUserId(UUID authUserId) {
     List<RefreshTokenEntity> refreshTokenEntityList =
-        refreshTokenRepository.findAllByAuthUserId(authUser.getId());
+        refreshTokenRepository.findAllByAuthUserId(authUserId);
     LocalDateTime now = LocalDateTime.now();
     refreshTokenEntityList.stream()
         .filter(token -> token.getRevokedAt() == null)
         .forEach(token -> token.setRevokedAt(now));
 
     refreshTokenRepository.saveAll(refreshTokenEntityList);
-
-    authUser.setStatus(AuthUserStatus.FORGET_PASSWORD);
-    authUserRepository.save(authUser);
-    saveAuthUserForgetPasswordOutboxEvent(authUser);
   }
 
   public ResetPasswordResult resetPassword(ResetPasswordCommand command) {
@@ -400,16 +411,20 @@ public class AuthService {
     return authResultMapper.toResetPasswordResult(tokenPair);
   }
 
-  private TokenPair issueTokenPair(AuthUserEntity authUser, Roles role) {
-    String accessToken = tokenService.generateAccessToken(authUser, role).getTokenValue();
-    String refreshToken = tokenService.generateRefreshToken();
+  private RefreshTokenEntity saveRefreshToken(AuthUserEntity authUser, String refreshToken) {
     String refreshTokenHash = tokenService.hashToken(refreshToken);
 
     RefreshTokenEntity refreshTokenEntity = new RefreshTokenEntity();
     refreshTokenEntity.setAuthUser(authUser);
     refreshTokenEntity.setTokenHash(refreshTokenHash);
     refreshTokenEntity.setExpiresAt(tokenService.refreshTokenExpiresAt());
-    refreshTokenRepository.save(refreshTokenEntity);
+    return refreshTokenRepository.save(refreshTokenEntity);
+  }
+
+  private TokenPair issueTokenPair(AuthUserEntity authUser, Roles role) {
+    String accessToken = tokenService.generateAccessToken(authUser, role).getTokenValue();
+    String refreshToken = tokenService.generateRefreshToken();
+    saveRefreshToken(authUser, refreshToken);
 
     return new TokenPair(
         accessToken,

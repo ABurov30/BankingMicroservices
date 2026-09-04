@@ -77,11 +77,12 @@ public class AuthGrpcService extends AuthRpcServiceGrpc.AuthRpcServiceImplBase {
 
   @Override
   public void changePassword(
-      ChangePasswordGrpcRequest request, StreamObserver<Empty> responseObserver) {
+      ChangePasswordGrpcRequest request,
+      StreamObserver<ChangePasswordGrpcResponse> responseObserver) {
     ChangePasswordCommand changePasswordCommand = commandMapper.toChangePasswordCommand(request);
-    authService.changePassword(changePasswordCommand);
+    ChangePasswordResult changePasswordResult = authService.changePassword(changePasswordCommand);
 
-    responseObserver.onNext(Empty.getDefaultInstance());
+    responseObserver.onNext(grpcMapper.toChangePasswordGrpcResponse(changePasswordResult));
     responseObserver.onCompleted();
   }
 

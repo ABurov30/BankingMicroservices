@@ -4,6 +4,7 @@ import apigateway.dto.auth.*;
 import apigateway.dto.user.GetRoleByAuthUserIdRequestDto;
 import auth.contract.v1.*;
 import java.util.Locale;
+import java.util.UUID;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
@@ -32,9 +33,10 @@ public interface AuthGrpcMapper {
     return RefreshAuthGrpcRequest.newBuilder().setRefreshToken(value.refreshToken()).build();
   }
 
-  default ChangePasswordGrpcRequest toChangePasswordGrpcRequest(ChangePasswordRequestDto value) {
+  default ChangePasswordGrpcRequest toChangePasswordGrpcRequest(
+      ChangePasswordRequestDto value, UUID authUserId) {
     return ChangePasswordGrpcRequest.newBuilder()
-        .setAuthUserId(value.authUserId())
+        .setAuthUserId(authUserId.toString())
         .setNewPassword(value.newPassword())
         .setOldPassword(value.oldPassword())
         .build();

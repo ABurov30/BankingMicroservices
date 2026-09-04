@@ -75,8 +75,17 @@ public class AuthGatewayController {
   }
 
   @PutMapping("/change-password")
-  public void changePassword(@Valid @RequestBody ChangePasswordRequestDto request) {
-    authClient.changePassword(request);
+  public void changePassword(
+      @Valid @RequestBody ChangePasswordRequestDto request,
+      HttpServletRequest httpRequest,
+      HttpServletResponse servletResponse) {
+    Jwt jwt = cookieConfig.getAccessTokenJwt(httpRequest);
+
+    ChangePasswordResponseDto response =
+        authClient.changePassword(request, UUID.fromString(jwt.getSubject()));
+
+    cookieConfig.setRefreshTokenCookie(
+        servletResponse, response.refreshToken(), Math.toIntExact(response.refreshTokenDaysTtl()));
   }
 
   @PutMapping("/verify-user")

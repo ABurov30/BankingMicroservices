@@ -24,5 +24,5 @@ Service implementation: `NotificationGrpcService`.
 ## Contracts
 
 Kafka event payloads come from `com.burov:kafka-contracts`. gRPC health contract types come from
-`com.burov:contracts` version `0.0.25`. Shared outbox, processed-event, and money-unit helpers come
+`com.burov:contracts` version `0.0.26-SNAPSHOT`. Shared outbox, processed-event, and money-unit helpers come
 from `com.burov:support` version `0.0.1`.

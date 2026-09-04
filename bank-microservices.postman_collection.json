@@ -213,10 +213,10 @@
                 "value": "application/json"
               }
             ],
-            "description": "Requires authenticated active user.",
+            "description": "Requires authenticated active user. authUserId is read from the `at` cookie subject. Revokes active refresh tokens and sets a new HttpOnly `rt` cookie.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"authUserId\": \"{{authUserId}}\",\n  \"oldPassword\": \"{{password}}\",\n  \"newPassword\": \"{{newPassword}}\"\n}",
+              "raw": "{\n  \"oldPassword\": \"{{password}}\",\n  \"newPassword\": \"{{newPassword}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

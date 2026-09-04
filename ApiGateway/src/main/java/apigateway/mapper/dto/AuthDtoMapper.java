@@ -1,10 +1,7 @@
 package apigateway.mapper.dto;
 
-import apigateway.dto.auth.LoginResponseDto;
-import apigateway.dto.auth.RefreshResponseDto;
-import apigateway.dto.auth.ResetPasswordsResponseDto;
+import apigateway.dto.auth.*;
 import apigateway.dto.auth.SocialAccountResponse;
-import apigateway.dto.auth.VerifyAuthUserByCodeResponseDto;
 import apigateway.dto.user.GetAuthUserByIdResponseDto;
 import auth.contract.v1.*;
 import enums.auth.AuthUserStatus;
@@ -75,5 +72,11 @@ public interface AuthDtoMapper {
         tokens.getRefreshToken(),
         tokens.getAccessTokenMinutesTtl(),
         tokens.getRefreshTokenDaysTtl());
+  }
+
+  default ChangePasswordResponseDto toChangePasswordResponseDto(
+      ChangePasswordGrpcResponse response) {
+    return new ChangePasswordResponseDto(
+        response.getRefreshToken(), response.getRefreshTokenDaysTtl());
   }
 }

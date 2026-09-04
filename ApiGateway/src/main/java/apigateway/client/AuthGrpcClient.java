@@ -7,6 +7,7 @@ import apigateway.mapper.dto.AuthDtoMapper;
 import apigateway.mapper.grpc.AuthGrpcMapper;
 import auth.contract.v1.*;
 import com.google.protobuf.Empty;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import org.springframework.stereotype.Service;
 
@@ -53,9 +54,13 @@ public class AuthGrpcClient {
         stub.withDeadlineAfter(2, TimeUnit.SECONDS).refresh(grpcRequest));
   }
 
-  public void changePassword(ChangePasswordRequestDto request) {
-    ChangePasswordGrpcRequest grpcRequest = grpcMapper.toChangePasswordGrpcRequest(request);
-    stub.withDeadlineAfter(2, TimeUnit.SECONDS).changePassword(grpcRequest);
+  public ChangePasswordResponseDto changePassword(
+      ChangePasswordRequestDto request, UUID authUserId) {
+    ChangePasswordGrpcRequest grpcRequest =
+        grpcMapper.toChangePasswordGrpcRequest(request, authUserId);
+
+    return dtoMapper.toChangePasswordResponseDto(
+        stub.withDeadlineAfter(2, TimeUnit.SECONDS).changePassword(grpcRequest));
   }
 
   public void blockUser(BlockAuthUserRequestDto request) {
