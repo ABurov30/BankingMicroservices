@@ -4,15 +4,9 @@ import card.contract.v1.CreateCardGrpcRequest;
 import card.contract.v1.GetCardByAccountIdGrpcRequest;
 import card.contract.v1.ReserveLimitsForTransactionGrpcRequest;
 import card.contract.v1.UpdateCardGrpcRequest;
-import cardservice.dto.CompensateLimitsForTransactionCommand;
-import cardservice.dto.CreatedCardCommand;
-import cardservice.dto.FreezeCardsCommand;
-import cardservice.dto.GetCardsByAccountIdCommand;
-import cardservice.dto.MarkLimitReservationAsReleasedCommand;
-import cardservice.dto.ReserveLimitsForTransactionCommand;
-import cardservice.dto.UnfreezeCardsCommand;
-import cardservice.dto.UpdateCardCommand;
+import cardservice.dto.*;
 import enums.card.CardStatus;
+import enums.common.Currency;
 import java.util.UUID;
 import kafkacontracts.account.AccountCreatedEventPayload;
 import kafkacontracts.account.AccountFrozenEventPayload;
@@ -25,12 +19,17 @@ import org.mapstruct.Mapper;
 public interface CardCommandMapper {
   default CreatedCardCommand toCreateCardCommand(AccountCreatedEventPayload payload) {
     return new CreatedCardCommand(
-        payload.getAccountId(), payload.getAuthUserId(), payload.getAccountNumber(), null);
+        payload.getAccountId(),
+        Currency.valueOf(payload.getCurrency()),
+        payload.getAuthUserId(),
+        payload.getAccountNumber(),
+        null);
   }
 
   default CreatedCardCommand toCreateCardCommand(CreateCardGrpcRequest request) {
     return new CreatedCardCommand(
         UUID.fromString(request.getAccountId()),
+        Currency.valueOf(request.getCurrency()),
         UUID.fromString(request.getAuthUserId()),
         null,
         request.getRole());
@@ -67,7 +66,8 @@ public interface CardCommandMapper {
         UUID.fromString(request.getSourceCardId()),
         request.getMinorUnits(),
         UUID.fromString(request.getTransactionId()),
-        UUID.fromString(request.getSourceAuthUserId()));
+        UUID.fromString(request.getSourceAuthUserId()),
+        Currency.valueOf(request.getCurrency()));
   }
 
   default CompensateLimitsForTransactionCommand toCompensateLimitsForTransactionCommand(

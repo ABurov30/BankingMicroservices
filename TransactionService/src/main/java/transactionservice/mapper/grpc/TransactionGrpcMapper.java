@@ -22,6 +22,7 @@ public interface TransactionGrpcMapper {
         .setSourceAccountId(transactionEntity.getSourceAccountId().toString())
         .setTargetAccountId(transactionEntity.getTargetAccountId().toString())
         .setSourceAuthUserId(sourceAuthUserId.toString())
+        .setCurrency(transactionEntity.getCurrency().name())
         .build();
   }
 

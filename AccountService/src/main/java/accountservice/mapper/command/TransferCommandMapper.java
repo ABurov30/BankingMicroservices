@@ -6,6 +6,7 @@ import accountservice.dto.ExecuteFundsTransferCommand;
 import accountservice.dto.ReserveFundsForTransactionCommand;
 import accountservice.dto.TransactionFundsRequestCommand;
 import accountservice.entity.AccountHoldEntity;
+import enums.common.Currency;
 import java.util.UUID;
 import org.mapstruct.Mapper;
 
@@ -31,6 +32,7 @@ public interface TransferCommandMapper {
         UUID.fromString(request.getTargetAccountId()),
         request.getMinorUnits(),
         UUID.fromString(request.getTransactionId()),
-        UUID.fromString(request.getSourceAuthUserId()));
+        UUID.fromString(request.getSourceAuthUserId()),
+        Currency.valueOf(request.getCurrency()));
   }
 }

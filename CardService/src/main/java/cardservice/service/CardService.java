@@ -6,6 +6,7 @@ import cardservice.entity.CardEntity;
 import cardservice.entity.CardLimitHoldEntity;
 import cardservice.entity.CardOutboxEventEntity;
 import cardservice.exception.CardBlockedException;
+import cardservice.exception.CardCurrencyMismatchException;
 import cardservice.exception.CardExpiredException;
 import cardservice.exception.CardGenerationFailedException;
 import cardservice.exception.CardLimitHoldAlreadyExistsException;
@@ -133,6 +134,7 @@ public class CardService {
     cardEntity.setAccountId(createdCardCommand.accountId());
     cardEntity.setPan(generateUniquePan());
     cardEntity.setCardStatus(CardStatus.ACTIVE);
+    cardEntity.setCurrency(createdCardCommand.currency());
     cardEntity.setDailyLimitMinorUnits(Long.valueOf(0));
     cardEntity.setMonthlyLimitMinorUnits(Long.valueOf(0));
     cardEntity.setExpiresAt(LocalDateTime.now().plusYears(CARD_EXPIRATION_YEARS));
@@ -365,6 +367,11 @@ public class CardService {
           cardRepository
               .findById(command.sourceCardId())
               .orElseThrow(() -> new CardNotFoundException(command.sourceCardId()));
+
+      if (card.getCurrency() != command.currency()) {
+        throw new CardCurrencyMismatchException(
+            command.transactionId(), card.getCurrency(), command.currency());
+      }
 
       validateLimitsForTransaction(command, card);
 

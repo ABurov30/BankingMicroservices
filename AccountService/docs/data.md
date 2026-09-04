@@ -37,6 +37,9 @@ Primary storage is PostgreSQL. Schema changes are managed by Liquibase under `sr
 
 Balance mutation, hold creation, and hold release are financial operations. Keep them transactional and verify compensation behavior when changing them.
 
+Funds reservation rejects transactions whose requested currency does not match the source account
+currency. The hold stores the source account currency used for the reserved minor-unit amount.
+
 Consumed Kafka events use processed-event tracking through the `processedevent` helpers in
 `com.burov:support`.
 

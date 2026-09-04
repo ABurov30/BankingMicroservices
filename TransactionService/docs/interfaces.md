@@ -32,10 +32,13 @@ The route name `creat-transaction` is currently spelled that way in code.
 
 ## External gRPC Calls
 
-`TransactionService` calls `CardService` through `CardGrpcClient` for card limit reservation, then calls `AccountService` through `AccountGrpcClient` for funds reservation.
+`TransactionService` calls `CardService` through `CardGrpcClient` for card limit reservation, then
+calls `AccountService` through `AccountGrpcClient` for funds reservation. Both reservation requests
+carry the transaction `currency`; downstream services reject the reservation when it does not match
+the source card or source account currency.
 
 ## Contracts
 
-gRPC types come from `com.burov:contracts` version `0.0.23`. Event payloads come from
+gRPC types come from `com.burov:contracts` version `0.0.24`. Event payloads come from
 `com.burov:kafka-contracts`. Shared outbox and processed-event helpers come from
 `com.burov:support` version `0.0.1`.

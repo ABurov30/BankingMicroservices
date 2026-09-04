@@ -32,6 +32,7 @@ Kafka consumers treat stale account/card state and card-limit hold events as no-
 
 If account event semantics change, update both the projection listener and any card status logic that depends on account state.
 
-`ACCOUNT_CREATED` payload must include `currency`; CardService stores it in `account_ownership_projection.currency` and uses that projection value as the card currency in responses.
+`ACCOUNT_CREATED` payload must include `currency`; CardService stores it in both
+`cards.currency` and `account_ownership_projection.currency`.
 
 If transaction completion or compensation semantics change, update card limit hold release behavior and the scheduler assumptions together.

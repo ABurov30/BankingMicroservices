@@ -24,8 +24,9 @@ Service implementation: `AccountGrpcService`.
 `topUpAccount` and `withdrawAccount` receive `minorUnits` and apply them directly to account
 balances stored in minor units.
 
-`reserveFundsForTransaction` receives `minorUnits` from `TransactionService` and compares/reserves
-them directly against the source account minor-unit balances.
+`reserveFundsForTransaction` receives `minorUnits` and `currency` from `TransactionService`.
+The requested currency must match the source account currency. AccountService compares and reserves
+the requested minor units directly against the source account minor-unit balances.
 
 ## REST Exposure
 
@@ -44,6 +45,6 @@ Gateway route groups include:
 
 ## Contracts
 
-gRPC types come from `com.burov:contracts` version `0.0.23`. Event payloads come from
+gRPC types come from `com.burov:contracts` version `0.0.24`. Event payloads come from
 `com.burov:kafka-contracts`. Shared outbox, processed-event, and money-unit helpers come from
 `com.burov:support` version `0.0.1`.

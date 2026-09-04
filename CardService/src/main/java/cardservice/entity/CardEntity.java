@@ -1,6 +1,7 @@
 package cardservice.entity;
 
 import enums.card.CardStatus;
+import enums.common.Currency;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -27,6 +28,10 @@ public class CardEntity {
   @Enumerated(EnumType.STRING)
   @Column(name = "status", nullable = false)
   private CardStatus cardStatus = CardStatus.ACTIVE;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "currency", nullable = false)
+  private Currency currency;
 
   @Column(name = "daily_limit_minor_units")
   private Long dailyLimitMinorUnits = Long.valueOf(0);

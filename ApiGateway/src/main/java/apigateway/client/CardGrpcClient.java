@@ -1,5 +1,6 @@
 package apigateway.client;
 
+import apigateway.dto.account.GetAccountResponseDto;
 import apigateway.dto.card.CreateCardRequestDto;
 import apigateway.dto.card.CreateCardResponseDto;
 import apigateway.dto.card.GetCardByAccountIdResponseDto;
@@ -36,9 +37,9 @@ public class CardGrpcClient {
   }
 
   public CreateCardResponseDto createCard(
-      CreateCardRequestDto request, UUID authUserId, String role) {
+      CreateCardRequestDto request, UUID authUserId, String role, GetAccountResponseDto account) {
     CreateCardGrpcRequest grpcRequest =
-        grpcMapper.toCreateCardGrpcRequest(request, authUserId, role);
+        grpcMapper.toCreateCardGrpcRequest(request, authUserId, role, account);
     return dtoMapper.toCreateCardResponseDto(
         stub.withDeadlineAfter(2, TimeUnit.SECONDS).createCard(grpcRequest));
   }

@@ -19,7 +19,8 @@ Known produced event categories include:
 - transaction failed
 
 `TRANSACTION_FAILED` uses `TransactionFailedEventPayload` from `kafka-contracts`; payload contains
-`authUserId`, `amountMinorUnits`, and `currency`.
+`authUserId`, `amountMinorUnits`, and `currency`. Currency mismatch during card-limit or
+account-funds reservation fails the transaction and emits this event.
 
 ## Consumers
 

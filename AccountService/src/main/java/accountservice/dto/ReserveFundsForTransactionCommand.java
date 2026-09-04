@@ -1,5 +1,6 @@
 package accountservice.dto;
 
+import enums.common.Currency;
 import java.util.UUID;
 
 public record ReserveFundsForTransactionCommand(
@@ -7,4 +8,5 @@ public record ReserveFundsForTransactionCommand(
     UUID targetAccountId,
     Long minorUnits,
     UUID transactionId,
-    UUID sourceAuthUserId) {}
+    UUID sourceAuthUserId,
+    Currency currency) {}

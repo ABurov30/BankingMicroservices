@@ -159,6 +159,14 @@ public class TransferService {
               .findByIdForUpdate(command.sourceAccountId())
               .orElseThrow(() -> new AccountNotFoundException(command.sourceAccountId()));
 
+      if (sourceAccount.getCurrency().getName() != command.currency()) {
+        throw new AccountCurrencyMismatchException(
+            command.transactionId(),
+            sourceAccount.getId(),
+            sourceAccount.getCurrency().getName(),
+            command.currency());
+      }
+
       var targetAccount =
           accountRepository
               .findById(command.targetAccountId())

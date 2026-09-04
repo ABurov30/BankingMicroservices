@@ -3,6 +3,7 @@ package apigateway.query;
 import apigateway.client.AccountGrpcClient;
 import apigateway.client.CardGrpcClient;
 import apigateway.dto.account.GetAccountByIdRequestDto;
+import apigateway.dto.account.GetAccountResponseDto;
 import apigateway.dto.card.CreateCardRequestDto;
 import apigateway.dto.card.CreateCardResponseDto;
 import apigateway.dto.card.UpdateCardRequestDto;
@@ -24,8 +25,8 @@ public class CardQueryHandler {
 
   public CreateCardResponseDto createCard(
       CreateCardRequestDto request, UUID authUserId, String role) {
-    checkAccountStatus(request.accountId());
-    return cardGrpcClient.createCard(request, authUserId, role);
+    GetAccountResponseDto account = checkAccountStatus(request.accountId());
+    return cardGrpcClient.createCard(request, authUserId, role, account);
   }
 
   public UpdateCardResponseDto updateCard(
@@ -34,10 +35,12 @@ public class CardQueryHandler {
     return cardGrpcClient.updateCard(request, authUserId, role);
   }
 
-  private void checkAccountStatus(UUID accountId) {
-    var account = accountGrpcClient.getAccountById(new GetAccountByIdRequestDto(accountId));
+  private GetAccountResponseDto checkAccountStatus(UUID accountId) {
+    GetAccountResponseDto account =
+        accountGrpcClient.getAccountById(new GetAccountByIdRequestDto(accountId));
     if (account.status() != AccountStatus.ACTIVE) {
       throw new AccountNotActiveException(accountId);
     }
+    return account;
   }
 }

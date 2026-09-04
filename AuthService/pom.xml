@@ -125,7 +125,7 @@
         <dependency>
             <groupId>com.burov</groupId>
             <artifactId>contracts</artifactId>
-            <version>0.0.23</version>
+            <version>0.0.24</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

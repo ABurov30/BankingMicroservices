@@ -5,7 +5,7 @@ create table card_limit_holds
 (
     id             uuid primary key,
     card_id        uuid        not null,
-    transaction_id uuid        not null,
+    transaction_id uuid        not null unique,
     amount         decimal     not null,
     status         varchar(55) not null,
     expires_at     timestamp,
@@ -19,7 +19,7 @@ create table card_limit_holds
         check ( amount > 0 ),
 
     constraint uq_card_limit_holds_transaction_id
-        unique ( transaction_id )
+        unique (transaction_id)
 );
 
 alter table cards
