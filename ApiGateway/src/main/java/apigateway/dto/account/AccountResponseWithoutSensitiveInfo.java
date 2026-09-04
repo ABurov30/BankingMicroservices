@@ -1,6 +1,5 @@
 package apigateway.dto.account;
 
-import enums.account.AccountStatus;
 import enums.account.AccountType;
 import enums.common.Currency;
 import java.util.UUID;

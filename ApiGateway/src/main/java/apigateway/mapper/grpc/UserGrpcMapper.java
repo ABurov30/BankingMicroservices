@@ -20,8 +20,7 @@ public interface UserGrpcMapper {
         .build();
   }
 
-  default GetUserInfoByEmailRequest toGetUserInfoByEmailRequest(
-      GetRecipientRequestDto request) {
+  default GetUserInfoByEmailRequest toGetUserInfoByEmailRequest(GetRecipientRequestDto request) {
     return GetUserInfoByEmailRequest.newBuilder().setEmail(request.email()).build();
   }
 

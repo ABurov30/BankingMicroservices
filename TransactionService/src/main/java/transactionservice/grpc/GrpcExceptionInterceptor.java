@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import transactionservice.exception.FundsReservationFailedException;
+import transactionservice.exception.IdempotencyPayloadMismatchException;
+import transactionservice.exception.IdempotentTransactionNotFoundException;
 import transactionservice.exception.TransactionNotFoundException;
 
 @Component
@@ -42,6 +44,14 @@ public class GrpcExceptionInterceptor implements ServerInterceptor {
   private Status mapException(Exception exception) {
     if (exception instanceof TransactionNotFoundException) {
       return Status.NOT_FOUND;
+    }
+
+    if (exception instanceof IdempotentTransactionNotFoundException) {
+      return Status.NOT_FOUND;
+    }
+
+    if (exception instanceof IdempotencyPayloadMismatchException) {
+      return Status.ALREADY_EXISTS;
     }
 
     if (exception instanceof FundsReservationFailedException) {

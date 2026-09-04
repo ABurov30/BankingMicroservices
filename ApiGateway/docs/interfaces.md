@@ -56,13 +56,14 @@ browser to `SITE_URL`.
 | `TransactionGrpcClient` | `TransactionService` |
 | `NotificationGrpcClient` | `NotificationService` |
 
-gRPC DTOs come from `com.burov:contracts` version `0.0.23`. Shared support utilities come from
+gRPC DTOs come from `com.burov:contracts` version `0.0.25`. Shared support utilities come from
 `com.burov:support` version `0.0.1`.
 
 ## DTO Notes
 
 - Card responses map `CardResponse` from `CardService`, including card `currency`, configured limits, and spend counters as minor-unit values: `dailyLimitMinorUnits`, `monthlyLimitMinorUnits`, `spendDailyLimitMinorUnits`, and `spendMonthlyLimitMinorUnits`.
 - Transaction creation requests require `sourceCardId`; the transaction flow uses it for card limit reservation before account funds are requested.
+- Transaction creation responses include `transactionId`, `minorUnits`, `currency`, and `status`.
 - Transaction list responses include `transactionId`, which the UI uses to open a live status subscription for the selected transaction.
 - User auth info responses include linked social provider accounts as `socialAccounts`.
 - `POST /user/recipient-info` resolves a recipient by email and returns user info without ids plus recipient accounts without balance fields.

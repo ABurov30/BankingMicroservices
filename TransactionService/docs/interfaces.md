@@ -9,7 +9,7 @@ Service implementation: `TransactionGrpcService`.
 | Operation | Purpose |
 | --- | --- |
 | `getTransactionHealth` | Health check |
-| `createTransaction` | Create a transaction, reserve card limits, and start funds reservation |
+| `createTransaction` | Create a transaction, reserve card limits, start funds reservation, and return the created transaction summary |
 | `getTransactionsByAccounts` | Read transactions for account ids |
 | `watchTransactionStatus` | Stream status updates for one transaction after verifying that the subscribing auth user owns the source or target account |
 
@@ -28,7 +28,7 @@ Gateway route groups include:
 
 The route name `creat-transaction` is currently spelled that way in code.
 
-`POST /transaction/creat-transaction` requires `sourceCardId` in addition to source account, target account, `minorUnits`, currency, and idempotency key.
+`POST /transaction/creat-transaction` requires `sourceCardId` in addition to source account, target account, `minorUnits`, currency, and idempotency key. The response includes `transactionId`, `minorUnits`, `currency`, and `status`.
 
 ## External gRPC Calls
 
@@ -39,6 +39,6 @@ the source card or source account currency.
 
 ## Contracts
 
-gRPC types come from `com.burov:contracts` version `0.0.24`. Event payloads come from
+gRPC types come from `com.burov:contracts` version `0.0.25`. Event payloads come from
 `com.burov:kafka-contracts`. Shared outbox and processed-event helpers come from
 `com.burov:support` version `0.0.1`.

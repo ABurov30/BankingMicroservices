@@ -21,8 +21,7 @@ public class UserInfoQueryHandler {
       AuthGrpcClient authGrpcClient,
       UserGrpcClient userGrpcClient,
       AccountQueryHandler accountQueryHandler,
-      UserGrpcMapper userGrpcMapper
-  ) {
+      UserGrpcMapper userGrpcMapper) {
     this.authGrpcClient = authGrpcClient;
     this.userGrpcClient = userGrpcClient;
     this.accountQueryHandler = accountQueryHandler;

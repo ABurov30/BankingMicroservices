@@ -712,7 +712,41 @@
             },
             "url": "{{gatewayUrl}}/transaction/creat-transaction"
           },
-          "response": []
+          "response": [
+            {
+              "name": "Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"sourceAccountId\": \"{{accountId}}\",\n  \"sourceCardId\": \"{{cardId}}\",\n  \"targetAccountId\": \"{{targetAccountId}}\",\n  \"minorUnits\": 2500,\n  \"currency\": \"USD\",\n  \"idempotencyKey\": \"{{idempotencyKey}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{gatewayUrl}}/transaction/creat-transaction"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"transactionId\": \"{{transactionId}}\",\n  \"minorUnits\": 2500,\n  \"currency\": \"USD\",\n  \"status\": \"FUNDS_REQUESTED\"\n}"
+            }
+          ]
         },
         {
           "name": "Get Transactions By User Id",

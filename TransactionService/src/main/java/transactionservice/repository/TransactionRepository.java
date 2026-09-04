@@ -25,4 +25,6 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
       ORDER BY tr.createdAt DESC
       """)
   List<TransactionEntity> findByAccountIds(@Param("accountIds") Collection<UUID> accountIds);
+
+  Optional<TransactionEntity> findByIdempotencyKey(UUID idempotencyKey);
 }

@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import transaction.contract.v1.*;
 import transactionservice.client.AccountGrpcClient;
+import transactionservice.dto.CreateTransactionResult;
 import transactionservice.mapper.command.TransactionCommandMapper;
 import transactionservice.mapper.grpc.TransactionGrpcMapper;
 import transactionservice.service.TransactionService;
@@ -54,10 +55,12 @@ public class TransactionGrpcService
 
   @Override
   public void createTransaction(
-      CreateTransactionGrpcRequest request, StreamObserver<Empty> responseObserver) {
-    transactionService.createTransaction(commandMapper.toCreateTransactionCommand(request));
+      CreateTransactionGrpcRequest request,
+      StreamObserver<CreateTransactionGrpcResponse> responseObserver) {
+    CreateTransactionResult transactionResult =
+        transactionService.createTransaction(commandMapper.toCreateTransactionCommand(request));
 
-    responseObserver.onNext(Empty.getDefaultInstance());
+    responseObserver.onNext(grpcMapper.toCreateTransactionGrpcResponse(transactionResult));
     responseObserver.onCompleted();
   }
 

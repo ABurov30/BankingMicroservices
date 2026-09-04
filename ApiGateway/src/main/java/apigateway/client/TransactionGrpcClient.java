@@ -2,7 +2,9 @@ package apigateway.client;
 
 import account.contract.v1.AccountResponse;
 import apigateway.dto.transaction.CreateTransactionRequestDto;
+import apigateway.dto.transaction.CreateTransactionResponseDto;
 import apigateway.dto.transaction.TransactionResponseDto;
+import apigateway.mapper.dto.TransactionDtoMapper;
 import apigateway.mapper.grpc.TransactionGrpcMapper;
 import com.google.protobuf.Empty;
 import java.util.List;
@@ -15,12 +17,15 @@ import transaction.contract.v1.*;
 public class TransactionGrpcClient {
   private final TransactionRpcServiceGrpc.TransactionRpcServiceBlockingStub stub;
   private final TransactionGrpcMapper grpcMapper;
+  private final TransactionDtoMapper dtoMapper;
 
   public TransactionGrpcClient(
       TransactionRpcServiceGrpc.TransactionRpcServiceBlockingStub stub,
-      TransactionGrpcMapper grpcMapper) {
+      TransactionGrpcMapper grpcMapper,
+      TransactionDtoMapper dtoMapper) {
     this.stub = stub;
     this.grpcMapper = grpcMapper;
+    this.dtoMapper = dtoMapper;
   }
 
   public String getTransactionHealth() {
@@ -30,11 +35,14 @@ public class TransactionGrpcClient {
     return response.getMessage();
   }
 
-  public void createTransaction(
+  public CreateTransactionResponseDto createTransaction(
       CreateTransactionRequestDto request, UUID sourceAuthUserId, UUID targetAuthUserId) {
-    stub.withDeadlineAfter(2, TimeUnit.SECONDS)
-        .createTransaction(
-            grpcMapper.toCreateTransactionGrpcRequest(request, sourceAuthUserId, targetAuthUserId));
+    CreateTransactionGrpcResponse response =
+        stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+            .createTransaction(
+                grpcMapper.toCreateTransactionGrpcRequest(
+                    request, sourceAuthUserId, targetAuthUserId));
+    return dtoMapper.toCreateTransactionResponseDto(response);
   }
 
   public List<TransactionResponseDto> getTransactionsByAccounts(List<AccountResponse> accounts) {

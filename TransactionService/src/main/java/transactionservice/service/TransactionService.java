@@ -11,17 +11,21 @@ import java.util.UUID;
 import kafkacontracts.transaction.TransactionEventType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import transactionservice.client.AccountGrpcClient;
 import transactionservice.client.CardGrpcClient;
 import transactionservice.dto.CreateTransactionCommand;
+import transactionservice.dto.CreateTransactionResult;
 import transactionservice.dto.MarkAsCommand;
 import transactionservice.dto.ReservationResponseDto;
 import transactionservice.entity.TransactionEntity;
 import transactionservice.entity.TransactionOutboxEventEntity;
 import transactionservice.exception.FundsReservationFailedException;
+import transactionservice.exception.IdempotencyPayloadMismatchException;
 import transactionservice.grpc.TransactionStatusStreamRegistry;
 import transactionservice.mapper.grpc.TransactionGrpcMapper;
+import transactionservice.mapper.result.TransactionResultMapper;
 import transactionservice.repository.TransactionOutboxEventRepository;
 import transactionservice.repository.TransactionRepository;
 
@@ -33,6 +37,8 @@ public class TransactionService {
   private final TransactionGrpcMapper grpcMapper;
   private final CardGrpcClient cardGrpcClient;
   private final TransactionStatusStreamRegistry transactionStatusStreamRegistry;
+  private final TransactionResultMapper transactionResultMapper;
+  private final TransactionIdempotencyService transactionIdempotencyService;
   private static final Logger log = LoggerFactory.getLogger(TransactionService.class);
 
   public TransactionService(
@@ -41,13 +47,17 @@ public class TransactionService {
       TransactionRepository transactionRepository,
       TransactionGrpcMapper grpcMapper,
       CardGrpcClient cardGrpcClient,
-      TransactionStatusStreamRegistry transactionStatusStreamRegistry) {
+      TransactionStatusStreamRegistry transactionStatusStreamRegistry,
+      TransactionResultMapper transactionResultMapper,
+      TransactionIdempotencyService transactionIdempotencyService) {
     this.accountGrpcClient = accountGrpcClient;
     this.transactionRepository = transactionRepository;
     this.transactionOutboxEventRepository = transactionOutboxEventRepository;
     this.grpcMapper = grpcMapper;
     this.cardGrpcClient = cardGrpcClient;
     this.transactionStatusStreamRegistry = transactionStatusStreamRegistry;
+    this.transactionResultMapper = transactionResultMapper;
+    this.transactionIdempotencyService = transactionIdempotencyService;
   }
 
   private TransactionEntity saveTransaction(CreateTransactionCommand command) {
@@ -58,7 +68,7 @@ public class TransactionService {
     transaction.setMinorUnits(command.minorUnits());
     transaction.setCurrency(command.currency());
     transaction.setStatus(TransactionStatus.FUNDS_RESERVED);
-    return transactionRepository.save(transaction);
+    return transactionRepository.saveAndFlush(transaction);
   }
 
   private TransactionOutboxEventEntity saveTransactionOutboxEvent(
@@ -85,7 +95,6 @@ public class TransactionService {
     transactionRepository.save(transaction);
     transactionStatusStreamRegistry.notifyStatusChanged(transaction);
 
-    var currency = transaction.getCurrency();
     saveTransactionOutboxEvent(
         transaction,
         TransactionEventType.TRANSACTION_FAILED,
@@ -100,8 +109,29 @@ public class TransactionService {
   }
 
   @Transactional(dontRollbackOn = FundsReservationFailedException.class)
-  public void createTransaction(CreateTransactionCommand command) {
-    var transaction = saveTransaction(command);
+  public CreateTransactionResult createTransaction(CreateTransactionCommand command) {
+
+    var optionalTransaction = transactionRepository.findByIdempotencyKey(command.idempotencyKey());
+
+    if (optionalTransaction.isPresent()) {
+
+      var existedTransaction = optionalTransaction.get();
+
+      if (!transactionIdempotencyService.checkIsSamePayloadOfTransaction(
+          command, existedTransaction)) {
+        throw new IdempotencyPayloadMismatchException(command.idempotencyKey());
+      }
+
+      return transactionResultMapper.toCreateTransactionResult(existedTransaction);
+    }
+
+    TransactionEntity transaction;
+    try {
+      transaction = saveTransaction(command);
+    } catch (DataIntegrityViolationException ex) {
+      return transactionIdempotencyService.getExistingTransactionResult(command);
+    }
+
     var reservationLimitsResponse =
         cardGrpcClient.reserveLimitsForTransaction(
             grpcMapper.toReserveLimitsForTransactionGrpcRequest(transaction, command));
@@ -134,6 +164,8 @@ public class TransactionService {
             "transactionId", transaction.getId(),
             "targetAccountId", transaction.getTargetAccountId(),
             "authUserId", command.targetAuthUserId()));
+
+    return transactionResultMapper.toCreateTransactionResult(transaction);
   }
 
   public List<TransactionEntity> getTransactionsByAccountIds(Collection<UUID> accountIds) {

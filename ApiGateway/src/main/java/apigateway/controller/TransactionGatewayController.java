@@ -3,6 +3,7 @@ package apigateway.controller;
 import apigateway.client.TransactionGrpcClient;
 import apigateway.config.CookieConfig;
 import apigateway.dto.transaction.CreateTransactionRequestDto;
+import apigateway.dto.transaction.CreateTransactionResponseDto;
 import apigateway.dto.transaction.TransactionResponseDto;
 import apigateway.query.TransactionQueryHandler;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,12 +36,12 @@ public class TransactionGatewayController {
   }
 
   @PostMapping("/creat-transaction")
-  public void createTransaction(
+  public CreateTransactionResponseDto createTransaction(
       @Valid @RequestBody CreateTransactionRequestDto request, HttpServletRequest httpRequest) {
     Jwt jwt = cookieConfig.getAccessTokenJwt(httpRequest);
     UUID authUserId = UUID.fromString(jwt.getSubject());
 
-    transactionQueryHandler.startTransaction(request, authUserId);
+    return transactionQueryHandler.startTransaction(request, authUserId);
   }
 
   @GetMapping("/user/{userId}")

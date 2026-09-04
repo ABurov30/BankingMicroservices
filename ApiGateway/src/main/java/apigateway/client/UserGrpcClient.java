@@ -38,8 +38,7 @@ public class UserGrpcClient {
         stub.withDeadlineAfter(2, TimeUnit.SECONDS).getAllUserInfo(Empty.getDefaultInstance()));
   }
 
-  public GetUserInfoResponseDto getUserInfoByEmail(
-      GetRecipientRequestDto request) {
+  public GetUserInfoResponseDto getUserInfoByEmail(GetRecipientRequestDto request) {
     return dtoMapper.toGetInfoResponseDto(
         stub.withDeadlineAfter(2, TimeUnit.SECONDS)
             .getUserInfoByEmail(grpcMapper.toGetUserInfoByEmailRequest(request)));

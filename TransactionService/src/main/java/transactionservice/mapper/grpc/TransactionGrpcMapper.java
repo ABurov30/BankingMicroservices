@@ -7,9 +7,11 @@ import card.contract.v1.ReserveLimitsForTransactionGrpcRequest;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 import org.mapstruct.Mapper;
+import transaction.contract.v1.CreateTransactionGrpcResponse;
 import transaction.contract.v1.TransactionResponse;
 import transaction.contract.v1.TransactionStatusResponse;
 import transactionservice.dto.CreateTransactionCommand;
+import transactionservice.dto.CreateTransactionResult;
 import transactionservice.entity.TransactionEntity;
 
 @Mapper(componentModel = "spring")
@@ -90,6 +92,16 @@ public interface TransactionGrpcMapper {
     return AccountResponseWithoutSensitiveInfo.newBuilder()
         .setAccountNumber(account.getAccountNumber())
         .setCurrency(account.getCurrency())
+        .build();
+  }
+
+  default CreateTransactionGrpcResponse toCreateTransactionGrpcResponse(
+      CreateTransactionResult transactionResult) {
+    return CreateTransactionGrpcResponse.newBuilder()
+        .setTransactionId(transactionResult.transactionId().toString())
+        .setMinorUnits(transactionResult.minorUnits())
+        .setStatus(transactionResult.status().name())
+        .setCurrency(transactionResult.currency().name())
         .build();
   }
 }
