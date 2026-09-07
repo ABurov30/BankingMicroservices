@@ -104,12 +104,14 @@ public class TransactionGrpcService
                   if (sourceAccount == null) {
                     sourceAccount =
                         fetchedAccountsById.computeIfAbsent(
-                            transaction.getSourceAccountId(), accountGrpcClient::getAccountById);
+                            transaction.getSourceAccountId(),
+                            accountGrpcClient::getAccountByIdForTransaction);
                   }
 
                   AccountResponse targetAccount =
                       fetchedAccountsById.computeIfAbsent(
-                          transaction.getTargetAccountId(), accountGrpcClient::getAccountById);
+                          transaction.getTargetAccountId(),
+                          accountGrpcClient::getAccountByIdForTransaction);
                   return grpcMapper.toTransactionResponse(
                       transaction, sourceAccount, targetAccount);
                 })

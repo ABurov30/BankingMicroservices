@@ -1,10 +1,11 @@
 package apigateway.client;
 
-import apigateway.dto.user.GetRecipientRequestDto;
-import apigateway.dto.user.GetUserInfoRequestDto;
-import apigateway.dto.user.GetUserInfoResponseDto;
-import apigateway.mapper.dto.UserDtoMapper;
+import apigateway.dto.request.user.GetRecipientRequestDto;
+import apigateway.dto.request.user.GetUserInfoRequestDto;
+import apigateway.dto.response.user.GetUserInfoResponseDto;
+import apigateway.dto.result.user.GetRecipientResultDto;
 import apigateway.mapper.grpc.UserGrpcMapper;
+import apigateway.mapper.result.UserResultMapper;
 import com.google.protobuf.Empty;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -15,12 +16,12 @@ import user.contract.v1.*;
 public class UserGrpcClient {
   private final UserRpcServiceGrpc.UserRpcServiceBlockingStub stub;
   private final UserGrpcMapper grpcMapper;
-  private final UserDtoMapper dtoMapper;
+  private final UserResultMapper dtoMapper;
 
   public UserGrpcClient(
       UserRpcServiceGrpc.UserRpcServiceBlockingStub stub,
       UserGrpcMapper grpcMapper,
-      UserDtoMapper dtoMapper) {
+      UserResultMapper dtoMapper) {
     this.stub = stub;
     this.grpcMapper = grpcMapper;
     this.dtoMapper = dtoMapper;
@@ -38,10 +39,10 @@ public class UserGrpcClient {
         stub.withDeadlineAfter(2, TimeUnit.SECONDS).getAllUserInfo(Empty.getDefaultInstance()));
   }
 
-  public GetUserInfoResponseDto getUserInfoByEmail(GetRecipientRequestDto request) {
-    return dtoMapper.toGetInfoResponseDto(
+  public GetRecipientResultDto getRecipientByEmail(GetRecipientRequestDto request) {
+    return dtoMapper.toGetRecipientResultDto(
         stub.withDeadlineAfter(2, TimeUnit.SECONDS)
-            .getUserInfoByEmail(grpcMapper.toGetUserInfoByEmailRequest(request)));
+            .getRecipientByEmail(grpcMapper.toGetRecipientByEmailRequest(request)));
   }
 
   public String getUserHealth() {

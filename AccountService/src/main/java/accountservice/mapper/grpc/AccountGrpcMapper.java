@@ -56,4 +56,24 @@ public interface AccountGrpcMapper {
         .setMessage(result.message())
         .build();
   }
+
+  default RecipientAccount toRecipientAccount(GetAccountResult value) {
+    String accountNumber = value.accountNumber();
+    String lastFourChars = accountNumber.substring(Math.max(0, accountNumber.length() - 4));
+
+    return RecipientAccount.newBuilder()
+        .setAccountId(value.accountId().toString())
+        .setAccountNumberLast4Chars(lastFourChars)
+        .setType(value.type().name())
+        .setStatus(value.status().name())
+        .setCurrency(value.currency().name())
+        .build();
+  }
+
+  default GetRecipientAccountsByOwnerUserIdGrpcResponse
+      toGetRecipientAccountsByOwnerUserIdGrpcResponse(List<GetAccountResult> values) {
+    return GetRecipientAccountsByOwnerUserIdGrpcResponse.newBuilder()
+        .addAllAccounts(values.stream().map(this::toRecipientAccount).toList())
+        .build();
+  }
 }

@@ -2,13 +2,12 @@ package apigateway.controller;
 
 import apigateway.client.UserGrpcClient;
 import apigateway.config.CookieConfig;
-import apigateway.dto.user.*;
+import apigateway.dto.request.user.*;
+import apigateway.dto.response.user.*;
 import apigateway.query.UserInfoQueryHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.List;
-import java.util.UUID;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -30,10 +29,7 @@ public class UserGatewayController {
 
   @GetMapping("/user-info")
   public GetUserInfoWithAuthInfoResponseDto getUserInfo(HttpServletRequest request) {
-    Jwt jwt = cookieConfig.getAccessTokenJwt(request);
-    UUID authUserId = UUID.fromString(jwt.getSubject());
-
-    return userInfoQueryHandler.getUserInfoWithAuthInfo(authUserId);
+    return userInfoQueryHandler.getUserInfoWithAuthInfo(cookieConfig.getAuthUserId(request));
   }
 
   @PostMapping("/recipient-info")

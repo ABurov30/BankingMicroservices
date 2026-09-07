@@ -60,12 +60,12 @@ public class UserGrpcService extends UserRpcServiceGrpc.UserRpcServiceImplBase {
   }
 
   @Override
-  public void getUserInfoByEmail(
-      GetUserInfoByEmailRequest request, StreamObserver<GetUserInfoGrpcResponse> responseObserver) {
+  public void getRecipientByEmail(
+      GetRecipientByEmailRequest request, StreamObserver<GetRecipientResponse> responseObserver) {
     GetUserInfoByEmailCommand getUserInfoCommand =
         commandMapper.toGetUserInfoByEmailCommand(request);
-    GetUserInfoGrpcResponse response =
-        grpcMapper.toGetUserInfoGrpcResponse(userService.getUserInfoByEmail(getUserInfoCommand));
+    GetRecipientResponse response =
+        grpcMapper.toGetRecipientResponse(userService.getUserInfoByEmail(getUserInfoCommand));
 
     responseObserver.onNext(response);
     responseObserver.onCompleted();

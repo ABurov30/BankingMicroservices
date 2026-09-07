@@ -163,7 +163,7 @@ public class TransactionService {
         Map.of(
             "transactionId", transaction.getId(),
             "targetAccountId", transaction.getTargetAccountId(),
-            "authUserId", command.targetAuthUserId()));
+            "authUserId", command.sourceAuthUserId()));
 
     return transactionResultMapper.toCreateTransactionResult(transaction);
   }

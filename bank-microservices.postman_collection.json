@@ -426,7 +426,7 @@
                 "value": "application/json"
               }
             ],
-            "description": "Requires authenticated active user. Returns recipient user info without ids and accounts without balance fields.",
+            "description": "Requires authenticated active user. Returns recipient user info without ids and recipient account ids, account number last-four values, types, statuses, and currencies.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{email}}\"\n}",
@@ -700,7 +700,7 @@
                 "value": "application/json"
               }
             ],
-            "description": "Requires authenticated active user. Endpoint path is `/creat-transaction` in code.",
+            "description": "Requires authenticated active user. The source user identity is taken from the access-token JWT, and `sourceCardId` must belong to that user. Endpoint path is `/creat-transaction` in code.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"sourceAccountId\": \"{{accountId}}\",\n  \"sourceCardId\": \"{{cardId}}\",\n  \"targetAccountId\": \"{{targetAccountId}}\",\n  \"minorUnits\": 2500,\n  \"currency\": \"USD\",\n  \"idempotencyKey\": \"{{idempotencyKey}}\"\n}",

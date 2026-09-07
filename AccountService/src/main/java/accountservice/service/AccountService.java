@@ -2,15 +2,7 @@ package accountservice.service;
 
 import accountservice.dto.*;
 import accountservice.entity.*;
-import accountservice.exception.AccountAlreadyExistsException;
-import accountservice.exception.AccountAlreadyFrozenException;
-import accountservice.exception.AccountClosedException;
-import accountservice.exception.AccountGenerationFailedException;
-import accountservice.exception.AccountNotFoundException;
-import accountservice.exception.AccountNotFrozenException;
-import accountservice.exception.AccountOwnershipException;
-import accountservice.exception.AccountsNotFoundException;
-import accountservice.exception.InsufficientFundsException;
+import accountservice.exception.*;
 import accountservice.mapper.command.TransferCommandMapper;
 import accountservice.mapper.result.AccountResultMapper;
 import accountservice.repository.AccountHoldRepository;
@@ -162,12 +154,33 @@ public class AccountService {
             .findByOwnerUserId(command.ownerUserId())
             .orElseThrow(() -> new AccountsNotFoundException(command.ownerUserId()));
 
+    accountEntityList.forEach(
+        account -> {
+          if (!canAccessAccount(account, command.authUserId(), command.role().name())) {
+            throw new AccountNotFoundException(account.getId());
+          }
+        });
+
     return accountEntityList.stream().map(resultMapper::toGetAccountResult).toList();
   }
 
-  public List<GetAccountResult> getAllAccounts() {
+  public List<GetAccountResult> getAllAccounts(GetAllAccountsCommand command) {
+    if (!isPrivileged(command.role().name())) {
+      throw new AccountAccessDeniedException();
+    }
+
     List<AccountEntity> accountEntityList = accountRepository.findAll();
     return accountEntityList.stream().map(resultMapper::toGetAccountResult).toList();
+  }
+
+  public List<GetAccountResult> getRecipientAccountsByOwnerUserId(
+      GetRecipientAccountsByOwnerUserIdCommand command) {
+    List<AccountEntity> accounts =
+        accountRepository
+            .findByOwnerUserId(command.ownerUserId())
+            .orElseThrow(() -> new AccountsNotFoundException(command.ownerUserId()));
+
+    return accounts.stream().map(resultMapper::toGetAccountResult).toList();
   }
 
   @Transactional
@@ -290,6 +303,20 @@ public class AccountService {
   }
 
   public GetAccountResult getAccountById(GetAccountByIdCommand command) {
+    AccountEntity account =
+        accountRepository
+            .findById(command.accountId())
+            .orElseThrow(() -> new AccountNotFoundException(command.accountId()));
+
+    if (!(canAccessAccount(account, command.authUserId(), command.role().name()))) {
+      throw new AccountNotFoundException(account.getId());
+    }
+
+    return resultMapper.toGetAccountResult(account);
+  }
+
+  public GetAccountResult getAccountByIdForTransaction(
+      GetAccountByIdForTransactionCommand command) {
     AccountEntity account =
         accountRepository
             .findById(command.accountId())

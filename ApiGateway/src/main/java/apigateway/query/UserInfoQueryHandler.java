@@ -1,10 +1,12 @@
 package apigateway.query;
 
+import apigateway.client.AccountGrpcClient;
 import apigateway.client.AuthGrpcClient;
 import apigateway.client.UserGrpcClient;
-import apigateway.dto.account.GetAccountResponseDto;
-import apigateway.dto.account.GetAccountWithCardsResponseDto;
-import apigateway.dto.user.*;
+import apigateway.dto.request.user.GetRecipientRequestDto;
+import apigateway.dto.request.user.GetRoleByAuthUserIdRequestDto;
+import apigateway.dto.request.user.GetUserInfoRequestDto;
+import apigateway.dto.response.user.*;
 import apigateway.mapper.grpc.UserGrpcMapper;
 import java.util.List;
 import java.util.UUID;
@@ -14,17 +16,17 @@ import org.springframework.stereotype.Service;
 public class UserInfoQueryHandler {
   private final AuthGrpcClient authGrpcClient;
   private final UserGrpcClient userGrpcClient;
-  private final AccountQueryHandler accountQueryHandler;
+  private final AccountGrpcClient accountGrpcClient;
   private final UserGrpcMapper userGrpcMapper;
 
   public UserInfoQueryHandler(
       AuthGrpcClient authGrpcClient,
       UserGrpcClient userGrpcClient,
-      AccountQueryHandler accountQueryHandler,
+      AccountGrpcClient accountGrpcClient,
       UserGrpcMapper userGrpcMapper) {
     this.authGrpcClient = authGrpcClient;
     this.userGrpcClient = userGrpcClient;
-    this.accountQueryHandler = accountQueryHandler;
+    this.accountGrpcClient = accountGrpcClient;
     this.userGrpcMapper = userGrpcMapper;
   }
 
@@ -53,25 +55,8 @@ public class UserInfoQueryHandler {
   }
 
   public GetRecipientInfoResponseDto getRecipientInfo(GetRecipientRequestDto request) {
-    var userInfo = userGrpcClient.getUserInfoByEmail(request);
-    var accounts = accountQueryHandler.getAccountsWithCardsByOwnerId(userInfo.userProfileId());
-    return userGrpcMapper.toGetRecipientInfoResponseDto(userInfo, accounts);
-  }
-
-  private GetUserInfoAccountWithCardsResponseDto toUserInfoAccountWithCardsResponseDto(
-      GetAccountWithCardsResponseDto accountWithCards) {
-    return new GetUserInfoAccountWithCardsResponseDto(
-        toUserInfoAccountResponseDto(accountWithCards.account()), accountWithCards.cards());
-  }
-
-  private GetUserInfoAccountResponseDto toUserInfoAccountResponseDto(
-      GetAccountResponseDto account) {
-    return new GetUserInfoAccountResponseDto(
-        account.accountId(),
-        account.ownerUserId(),
-        account.accountNumber(),
-        account.type(),
-        account.status(),
-        account.currency());
+    var recipient = userGrpcClient.getRecipientByEmail(request);
+    var accounts = accountGrpcClient.getRecipientAccounts(recipient.userProfileId());
+    return userGrpcMapper.toGetRecipientInfoResponseDto(recipient, accounts);
   }
 }

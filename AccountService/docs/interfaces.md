@@ -15,11 +15,23 @@ Service implementation: `AccountGrpcService`.
 | `freezeAccount` | Freeze an account |
 | `unfreezeAccount` | Unfreeze an account |
 | `getAccountById` | Read a single account |
+| `getAccountByIdForTransaction` | Read an account for internal TransactionService flows |
 | `topUpAccount` | Add funds to an account |
 | `withdrawAccount` | Withdraw funds from an account |
 | `reserveFundsForTransaction` | Reserve funds for transaction processing |
+| `getRecipientAccountsByOwnerUserId` | Read recipient-safe account data by profile id |
 
 `createAccount` returns `ALREADY_EXISTS` when the owner already has an account with the requested currency and account type.
+
+`getAccountsByOwnerUserId` returns `PERMISSION_DENIED` when the authenticated user neither owns
+the account nor has the `ADMIN` or `MANAGER` role.
+
+`getRecipientAccountsByOwnerUserId` returns account ids, account number last-four values, types,
+statuses, and currencies. It does not expose balances, full account numbers, or auth-user ids.
+
+`getAccountByIdForTransaction` is an internal service-to-service operation used by
+`TransactionService` for transaction responses and status streams. It accepts only `accountId`;
+end-user requests must use the ownership-protected `getAccountById` operation.
 
 `topUpAccount` and `withdrawAccount` receive `minorUnits` and apply them directly to account
 balances stored in minor units.

@@ -3,6 +3,7 @@ package accountservice.mapper.command;
 import account.contract.v1.*;
 import accountservice.dto.*;
 import enums.account.AccountType;
+import enums.auth.Roles;
 import enums.common.Currency;
 import java.util.UUID;
 import kafkacontracts.account.TransactionFundsRequestedEventPayload;
@@ -27,7 +28,10 @@ public interface AccountCommandMapper {
 
   default GetAccountsByOwnerUserIdCommand toGetAccountsByOwnerUserIdCommand(
       GetAccountByOwnerUserIdGrpcRequest request) {
-    return new GetAccountsByOwnerUserIdCommand(UUID.fromString(request.getOwnerUserId()));
+    return new GetAccountsByOwnerUserIdCommand(
+        UUID.fromString(request.getOwnerUserId()),
+        UUID.fromString(request.getAuthUserId()),
+        Roles.valueOf(request.getRole()));
   }
 
   default FreezeAccountCommand toFreezeAccountCommand(FreezeAccountGrpcRequest request) {
@@ -50,7 +54,15 @@ public interface AccountCommandMapper {
   }
 
   default GetAccountByIdCommand toGetAccountByIdCommand(GetAccountByIdGrpcRequest request) {
-    return new GetAccountByIdCommand(UUID.fromString(request.getAccountId()));
+    return new GetAccountByIdCommand(
+        UUID.fromString(request.getAccountId()),
+        UUID.fromString(request.getAuthUserId()),
+        Roles.valueOf(request.getRole()));
+  }
+
+  default GetAccountByIdForTransactionCommand toGetAccountByIdForTransactionCommand(
+      GetAccountByIdForTransactionGrpcRequest request) {
+    return new GetAccountByIdForTransactionCommand(UUID.fromString(request.getAccountId()));
   }
 
   default UpdateAccountBalanceCommand toUpdateAccountBalanceCommand(
@@ -65,5 +77,14 @@ public interface AccountCommandMapper {
       TransactionFundsRequestedEventPayload payload) {
     return new TransactionFundsRequestCommand(
         payload.getTransactionId(), payload.getTargetAccountId(), payload.getAuthUserId());
+  }
+
+  default GetAllAccountsCommand toGetAllAccountsCommand(GetAllAccountsGrpRequest request) {
+    return new GetAllAccountsCommand(Roles.valueOf(request.getRole()));
+  }
+
+  default GetRecipientAccountsByOwnerUserIdCommand toGetRecipientAccountsByOwnerUserIdCommand(
+      GetRecipientAccountsByOwnerUserIdGrpcRequest request) {
+    return new GetRecipientAccountsByOwnerUserIdCommand(UUID.fromString(request.getOwnerUserId()));
   }
 }

@@ -25,9 +25,13 @@ public class AccountGrpcClient {
         stub.withDeadlineAfter(2, TimeUnit.SECONDS).reserveFundsForTransaction(grpcRequest));
   }
 
-  public AccountResponse getAccountById(UUID accountId) {
-    GetAccountByIdGrpcRequest request =
-        GetAccountByIdGrpcRequest.newBuilder().setAccountId(accountId.toString()).build();
-    return stub.withDeadlineAfter(2, TimeUnit.SECONDS).getAccountById(request).getAccount();
+  public AccountResponse getAccountByIdForTransaction(UUID accountId) {
+    GetAccountByIdForTransactionGrpcRequest request =
+        GetAccountByIdForTransactionGrpcRequest.newBuilder()
+            .setAccountId(accountId.toString())
+            .build();
+    return stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+        .getAccountByIdForTransaction(request)
+        .getAccount();
   }
 }

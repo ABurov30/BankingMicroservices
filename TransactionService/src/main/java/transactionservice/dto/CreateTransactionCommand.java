@@ -10,5 +10,4 @@ public record CreateTransactionCommand(
     Currency currency,
     UUID idempotencyKey,
     UUID sourceAuthUserId,
-    UUID targetAuthUserId,
     UUID sourceCardId) {}

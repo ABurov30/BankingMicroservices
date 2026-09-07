@@ -289,7 +289,13 @@ public class CardService {
   }
 
   public List<GetCardResult> getCardsByAccountId(GetCardsByAccountIdCommand command) {
+
+    if (!canAccessAccount(command.accountId(), command.authUserId(), command.role().name())) {
+      throw new CardsNotFoundException(command.accountId());
+    }
+
     List<CardEntity> cardEntityList = cardRepository.findByAccountId(command.accountId());
+
     if (cardEntityList.isEmpty()) {
       return List.of();
     }
@@ -368,6 +374,10 @@ public class CardService {
               .findById(command.sourceCardId())
               .orElseThrow(() -> new CardNotFoundException(command.sourceCardId()));
 
+      if (!isAccountOwnedBy(card.getAccountId(), command.sourceAuthUserId())) {
+        throw new CardNotFoundException(command.sourceCardId());
+      }
+
       if (card.getCurrency() != command.currency()) {
         throw new CardCurrencyMismatchException(
             command.transactionId(), card.getCurrency(), command.currency());
@@ -418,6 +428,14 @@ public class CardService {
     card.setSpendMonthlyLimitMinorUnits(
         card.getSpendMonthlyLimitMinorUnits() + command.minorUnits());
     cardRepository.save(card);
+  }
+
+  private boolean isAccountOwnedBy(UUID accountId, UUID authUserId) {
+    return authUserId != null
+        && accountOwnershipProjectionRepository
+            .findById(accountId)
+            .map(projection -> projection.getOwnerAuthUserId().equals(authUserId))
+            .orElse(false);
   }
 
   @Transactional

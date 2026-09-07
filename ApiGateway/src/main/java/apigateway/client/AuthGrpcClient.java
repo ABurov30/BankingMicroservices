@@ -1,10 +1,11 @@
 package apigateway.client;
 
-import apigateway.dto.auth.*;
-import apigateway.dto.user.GetAuthUserByIdResponseDto;
-import apigateway.dto.user.GetRoleByAuthUserIdRequestDto;
-import apigateway.mapper.dto.AuthDtoMapper;
+import apigateway.dto.request.auth.*;
+import apigateway.dto.request.user.GetRoleByAuthUserIdRequestDto;
+import apigateway.dto.response.auth.*;
+import apigateway.dto.response.user.GetAuthUserByIdResponseDto;
 import apigateway.mapper.grpc.AuthGrpcMapper;
+import apigateway.mapper.result.AuthResultMapper;
 import auth.contract.v1.*;
 import com.google.protobuf.Empty;
 import java.util.UUID;
@@ -15,12 +16,12 @@ import org.springframework.stereotype.Service;
 public class AuthGrpcClient {
   private final AuthRpcServiceGrpc.AuthRpcServiceBlockingStub stub;
   private final AuthGrpcMapper grpcMapper;
-  private final AuthDtoMapper dtoMapper;
+  private final AuthResultMapper dtoMapper;
 
   public AuthGrpcClient(
       AuthRpcServiceGrpc.AuthRpcServiceBlockingStub stub,
       AuthGrpcMapper grpcMapper,
-      AuthDtoMapper dtoMapper) {
+      AuthResultMapper dtoMapper) {
     this.stub = stub;
     this.grpcMapper = grpcMapper;
     this.dtoMapper = dtoMapper;

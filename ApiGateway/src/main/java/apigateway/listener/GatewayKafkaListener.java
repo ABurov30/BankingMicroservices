@@ -1,6 +1,6 @@
 package apigateway.listener;
 
-import apigateway.mapper.dto.NotificationDtoMapper;
+import apigateway.mapper.result.NotificationResultMapper;
 import kafkacontracts.account.NotificationCreatedEventPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,12 +13,12 @@ public class GatewayKafkaListener {
   private static final Logger log = LoggerFactory.getLogger(GatewayKafkaListener.class);
 
   private final SimpMessagingTemplate messagingTemplate;
-  private final NotificationDtoMapper notificationDtoMapper;
+  private final NotificationResultMapper notificationResultMapper;
 
   public GatewayKafkaListener(
-      SimpMessagingTemplate messagingTemplate, NotificationDtoMapper notificationDtoMapper) {
+      SimpMessagingTemplate messagingTemplate, NotificationResultMapper notificationResultMapper) {
     this.messagingTemplate = messagingTemplate;
-    this.notificationDtoMapper = notificationDtoMapper;
+    this.notificationResultMapper = notificationResultMapper;
   }
 
   @KafkaListener(
@@ -33,6 +33,6 @@ public class GatewayKafkaListener {
     messagingTemplate.convertAndSendToUser(
         payload.getAuthUserId().toString(),
         "/queue/notifications",
-        notificationDtoMapper.toNotificationResponseDto(payload));
+        notificationResultMapper.toNotificationResponseDto(payload));
   }
 }

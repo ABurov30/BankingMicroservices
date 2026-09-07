@@ -11,7 +11,7 @@ Service implementation: `UserGrpcService`.
 | `getUserHealth` | Health check |
 | `getUserInfo` | Read profile by user id |
 | `getAllUserInfo` | Read all profiles for manager/admin flows |
-| `getUserInfoByEmail` | Read profile by email |
+| `getRecipientByEmail` | Read recipient-safe profile data by email |
 
 ## REST Exposure
 

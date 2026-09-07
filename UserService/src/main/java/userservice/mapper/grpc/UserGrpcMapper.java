@@ -3,7 +3,9 @@ package userservice.mapper.grpc;
 import java.util.List;
 import org.mapstruct.Mapper;
 import user.contract.v1.GetAllUserInfoGrpcResponse;
+import user.contract.v1.GetRecipientResponse;
 import user.contract.v1.GetUserInfoGrpcResponse;
+import user.contract.v1.RecipientResponse;
 import user.contract.v1.UserResponse;
 import userservice.dto.GetUserInfoResult;
 
@@ -26,5 +28,16 @@ public interface UserGrpcMapper {
 
   default GetAllUserInfoGrpcResponse toGetAllUserInfoGrpcResponse(List<UserResponse> users) {
     return GetAllUserInfoGrpcResponse.newBuilder().addAllUsers(users).build();
+  }
+
+  default GetRecipientResponse toGetRecipientResponse(GetUserInfoResult result) {
+    RecipientResponse recipient =
+        RecipientResponse.newBuilder()
+            .setUserProfileId(result.userProfileId().toString())
+            .setEmail(result.email())
+            .setFirstName(result.firstName())
+            .setLastName(result.lastName())
+            .build();
+    return GetRecipientResponse.newBuilder().setUser(recipient).build();
   }
 }

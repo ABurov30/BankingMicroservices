@@ -2,14 +2,17 @@ package apigateway.query;
 
 import apigateway.client.AccountGrpcClient;
 import apigateway.client.CardGrpcClient;
-import apigateway.dto.account.GetAccountByIdRequestDto;
-import apigateway.dto.account.GetAccountResponseDto;
-import apigateway.dto.card.CreateCardRequestDto;
-import apigateway.dto.card.CreateCardResponseDto;
-import apigateway.dto.card.UpdateCardRequestDto;
-import apigateway.dto.card.UpdateCardResponseDto;
+import apigateway.dto.command.account.CheckAccountStatusCommandDto;
+import apigateway.dto.request.card.CreateCardRequestDto;
+import apigateway.dto.request.card.UpdateCardRequestDto;
+import apigateway.dto.response.account.GetAccountResponseDto;
+import apigateway.dto.response.card.CreateCardResponseDto;
+import apigateway.dto.response.card.UpdateCardResponseDto;
 import apigateway.exception.AccountNotActiveException;
+import apigateway.mapper.command.AccountCommandMapper;
+import apigateway.mapper.request.AccountRequestMapper;
 import enums.account.AccountStatus;
+import enums.auth.Roles;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 
@@ -17,29 +20,42 @@ import org.springframework.stereotype.Service;
 public class CardQueryHandler {
   private final AccountGrpcClient accountGrpcClient;
   private final CardGrpcClient cardGrpcClient;
+  private final AccountCommandMapper accountCommandMapper;
+  private final AccountRequestMapper accountRequestMapper;
 
-  public CardQueryHandler(AccountGrpcClient accountGrpcClient, CardGrpcClient cardGrpcClient) {
+  public CardQueryHandler(
+      AccountGrpcClient accountGrpcClient,
+      CardGrpcClient cardGrpcClient,
+      AccountCommandMapper accountCommandMapper,
+      AccountRequestMapper accountRequestMapper) {
     this.accountGrpcClient = accountGrpcClient;
     this.cardGrpcClient = cardGrpcClient;
+    this.accountCommandMapper = accountCommandMapper;
+    this.accountRequestMapper = accountRequestMapper;
   }
 
   public CreateCardResponseDto createCard(
       CreateCardRequestDto request, UUID authUserId, String role) {
-    GetAccountResponseDto account = checkAccountStatus(request.accountId());
+    GetAccountResponseDto account =
+        checkAccountStatus(
+            accountCommandMapper.toCheckAccountStatusCommandDto(
+                request.accountId(), authUserId, Roles.valueOf(role)));
     return cardGrpcClient.createCard(request, authUserId, role, account);
   }
 
   public UpdateCardResponseDto updateCard(
       UpdateCardRequestDto request, UUID authUserId, String role) {
-    checkAccountStatus(request.accountId());
+    checkAccountStatus(
+        accountCommandMapper.toCheckAccountStatusCommandDto(
+            request.accountId(), authUserId, Roles.valueOf(role)));
     return cardGrpcClient.updateCard(request, authUserId, role);
   }
 
-  private GetAccountResponseDto checkAccountStatus(UUID accountId) {
+  private GetAccountResponseDto checkAccountStatus(CheckAccountStatusCommandDto command) {
     GetAccountResponseDto account =
-        accountGrpcClient.getAccountById(new GetAccountByIdRequestDto(accountId));
+        accountGrpcClient.getAccountById(accountRequestMapper.toGetAccountByIdRequestDto(command));
     if (account.status() != AccountStatus.ACTIVE) {
-      throw new AccountNotActiveException(accountId);
+      throw new AccountNotActiveException(command.accountId());
     }
     return account;
   }

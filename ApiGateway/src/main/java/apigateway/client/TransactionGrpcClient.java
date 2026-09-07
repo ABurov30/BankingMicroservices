@@ -1,11 +1,11 @@
 package apigateway.client;
 
 import account.contract.v1.AccountResponse;
-import apigateway.dto.transaction.CreateTransactionRequestDto;
-import apigateway.dto.transaction.CreateTransactionResponseDto;
-import apigateway.dto.transaction.TransactionResponseDto;
-import apigateway.mapper.dto.TransactionDtoMapper;
+import apigateway.dto.request.transaction.CreateTransactionRequestDto;
+import apigateway.dto.response.transaction.CreateTransactionResponseDto;
+import apigateway.dto.response.transaction.TransactionResponseDto;
 import apigateway.mapper.grpc.TransactionGrpcMapper;
+import apigateway.mapper.result.TransactionResultMapper;
 import com.google.protobuf.Empty;
 import java.util.List;
 import java.util.UUID;
@@ -17,12 +17,12 @@ import transaction.contract.v1.*;
 public class TransactionGrpcClient {
   private final TransactionRpcServiceGrpc.TransactionRpcServiceBlockingStub stub;
   private final TransactionGrpcMapper grpcMapper;
-  private final TransactionDtoMapper dtoMapper;
+  private final TransactionResultMapper dtoMapper;
 
   public TransactionGrpcClient(
       TransactionRpcServiceGrpc.TransactionRpcServiceBlockingStub stub,
       TransactionGrpcMapper grpcMapper,
-      TransactionDtoMapper dtoMapper) {
+      TransactionResultMapper dtoMapper) {
     this.stub = stub;
     this.grpcMapper = grpcMapper;
     this.dtoMapper = dtoMapper;
@@ -36,12 +36,11 @@ public class TransactionGrpcClient {
   }
 
   public CreateTransactionResponseDto createTransaction(
-      CreateTransactionRequestDto request, UUID sourceAuthUserId, UUID targetAuthUserId) {
+      CreateTransactionRequestDto request, UUID sourceAuthUserId) {
     CreateTransactionGrpcResponse response =
         stub.withDeadlineAfter(2, TimeUnit.SECONDS)
             .createTransaction(
-                grpcMapper.toCreateTransactionGrpcRequest(
-                    request, sourceAuthUserId, targetAuthUserId));
+                grpcMapper.toCreateTransactionGrpcRequest(request, sourceAuthUserId));
     return dtoMapper.toCreateTransactionResponseDto(response);
   }
 

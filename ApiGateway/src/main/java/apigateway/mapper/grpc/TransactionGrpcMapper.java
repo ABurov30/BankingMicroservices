@@ -2,11 +2,11 @@ package apigateway.mapper.grpc;
 
 import account.contract.v1.AccountResponse;
 import account.contract.v1.AccountResponseWithoutSensitiveInfo;
-import apigateway.dto.account.GetAccountResponseDto;
-import apigateway.dto.transaction.CreateTransactionRequestDto;
-import apigateway.dto.transaction.TransactionResponseDto;
-import apigateway.dto.transaction.TransactionStatusAccountResponseDto;
-import apigateway.dto.transaction.TransactionStatusResponseDto;
+import apigateway.dto.request.transaction.CreateTransactionRequestDto;
+import apigateway.dto.response.account.GetAccountResponseDto;
+import apigateway.dto.response.transaction.TransactionResponseDto;
+import apigateway.dto.response.transaction.TransactionStatusAccountResponseDto;
+import apigateway.dto.response.transaction.TransactionStatusResponseDto;
 import enums.account.AccountStatus;
 import enums.account.AccountType;
 import enums.common.Currency;
@@ -26,7 +26,7 @@ import transaction.contract.v1.WatchTransactionStatusRequest;
 public interface TransactionGrpcMapper {
 
   default CreateTransactionGrpcRequest toCreateTransactionGrpcRequest(
-      CreateTransactionRequestDto request, UUID sourceAuthUserId, UUID targetAuthUserId) {
+      CreateTransactionRequestDto request, UUID sourceAuthUserId) {
     return CreateTransactionGrpcRequest.newBuilder()
         .setSourceAccountId(request.sourceAccountId().toString())
         .setTargetAccountId(request.targetAccountId().toString())
@@ -34,7 +34,6 @@ public interface TransactionGrpcMapper {
         .setCurrency(request.currency().name())
         .setIdempotencyKey(request.idempotencyKey().toString())
         .setSourceAuthUserId(sourceAuthUserId.toString())
-        .setTargetAuthUserId(targetAuthUserId.toString())
         .setSourceCardId(request.sourceCardId().toString())
         .build();
   }

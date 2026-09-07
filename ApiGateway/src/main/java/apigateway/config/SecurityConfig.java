@@ -1,9 +1,9 @@
 package apigateway.config;
 
 import apigateway.client.AuthGrpcClient;
-import apigateway.dto.auth.LoginResponseDto;
-import apigateway.dto.auth.SocialLoginRequestDto;
-import apigateway.mapper.dto.SocialLoginDtoMapper;
+import apigateway.dto.request.auth.SocialLoginRequestDto;
+import apigateway.dto.response.auth.LoginResponseDto;
+import apigateway.mapper.request.SocialLoginRequestMapper;
 import apigateway.ratelimit.RateLimitFilter;
 import apigateway.ratelimit.RateLimitProperties;
 import apigateway.ratelimit.RedisRateLimitService;
@@ -60,15 +60,15 @@ public class SecurityConfig {
 
   private final CookieConfig cookieConfig;
   private final AuthGrpcClient authClient;
-  private final SocialLoginDtoMapper socialLoginDtoMapper;
+  private final SocialLoginRequestMapper socialLoginRequestMapper;
 
   public SecurityConfig(
       CookieConfig cookieConfig,
       AuthGrpcClient authClient,
-      SocialLoginDtoMapper socialLoginDtoMapper) {
+      SocialLoginRequestMapper socialLoginRequestMapper) {
     this.cookieConfig = cookieConfig;
     this.authClient = authClient;
-    this.socialLoginDtoMapper = socialLoginDtoMapper;
+    this.socialLoginRequestMapper = socialLoginRequestMapper;
   }
 
   @Bean
@@ -101,7 +101,8 @@ public class SecurityConfig {
   AuthenticationSuccessHandler oauth2SuccessHandler(@Value("${site.url}") String siteUrl) {
     return (request, response, authentication) -> {
       OidcUser user = (OidcUser) authentication.getPrincipal();
-      SocialLoginRequestDto socialLoginRequest = socialLoginDtoMapper.toSocialLoginRequestDto(user);
+      SocialLoginRequestDto socialLoginRequest =
+          socialLoginRequestMapper.toSocialLoginRequestDto(user);
       LoginResponseDto loginResponse = authClient.socialLogin(socialLoginRequest);
 
       cookieConfig.setCookieTokens(
@@ -138,7 +139,11 @@ public class SecurityConfig {
                                     && isActive(authentication.get())))
                     .requestMatchers(PUBLIC_ENDPOINTS)
                     .permitAll()
-                    .requestMatchers("/auth/manager/**", "/user/manager/**", "/account/manager/**")
+                    .requestMatchers(
+                        "/auth/manager/**",
+                        "/user/manager/**",
+                        "/account/manager/**",
+                        "/transaction/manager/**")
                     .access(
                         (authentication, context) ->
                             new AuthorizationDecision(

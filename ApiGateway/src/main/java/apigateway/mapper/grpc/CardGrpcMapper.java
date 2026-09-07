@@ -1,9 +1,11 @@
 package apigateway.mapper.grpc;
 
-import apigateway.dto.account.GetAccountResponseDto;
-import apigateway.dto.card.CreateCardRequestDto;
-import apigateway.dto.card.UpdateCardRequestDto;
+import apigateway.dto.command.card.GetCardsByAccountIdCommandDto;
+import apigateway.dto.request.card.CreateCardRequestDto;
+import apigateway.dto.request.card.UpdateCardRequestDto;
+import apigateway.dto.response.account.GetAccountResponseDto;
 import card.contract.v1.CreateCardGrpcRequest;
+import card.contract.v1.GetCardByAccountIdGrpcRequest;
 import card.contract.v1.UpdateCardGrpcRequest;
 import java.util.UUID;
 import org.mapstruct.Mapper;
@@ -29,6 +31,15 @@ public interface CardGrpcMapper {
         .setMonthlyLimitMinorUnits(request.monthlyLimitMinorUnits().longValue())
         .setAuthUserId(authUserId.toString())
         .setRole(role == null ? "" : role)
+        .build();
+  }
+
+  default GetCardByAccountIdGrpcRequest toGetCardByAccountIdGrpcRequest(
+      GetCardsByAccountIdCommandDto command) {
+    return GetCardByAccountIdGrpcRequest.newBuilder()
+        .setAccountId(command.accountId().toString())
+        .setAuthUserId(command.authUserId().toString())
+        .setRole(command.role().name())
         .build();
   }
 }

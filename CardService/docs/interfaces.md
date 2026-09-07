@@ -21,9 +21,11 @@ source account currency and is persisted on the card.
 The gRPC contract fields are `dailyLimitMinorUnits`, `monthlyLimitMinorUnits`,
 `spendDailyLimitMinorUnits`, `spendMonthlyLimitMinorUnits`, and `currency`.
 
-`reserveLimitsForTransaction` receives `minorUnits` and `currency` from `TransactionService`.
-The requested currency must match the source card currency. CardService applies the requested minor
-units directly to card limit checks, holds, and spend counters.
+`reserveLimitsForTransaction` receives `sourceAuthUserId`, `minorUnits`, and `currency` from
+`TransactionService`. Before creating a hold, CardService verifies through its account ownership
+projection that `sourceCardId` belongs to `sourceAuthUserId`. The requested currency must match the
+source card currency. CardService applies the requested minor units directly to card limit checks,
+holds, and spend counters.
 
 ## REST Exposure
 

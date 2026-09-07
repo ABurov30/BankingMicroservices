@@ -2,15 +2,14 @@ package apigateway.controller;
 
 import apigateway.client.CardGrpcClient;
 import apigateway.config.CookieConfig;
-import apigateway.dto.card.CreateCardRequestDto;
-import apigateway.dto.card.CreateCardResponseDto;
-import apigateway.dto.card.UpdateCardRequestDto;
-import apigateway.dto.card.UpdateCardResponseDto;
+import apigateway.dto.request.card.CreateCardRequestDto;
+import apigateway.dto.request.card.UpdateCardRequestDto;
+import apigateway.dto.response.card.CreateCardResponseDto;
+import apigateway.dto.response.card.UpdateCardResponseDto;
+import apigateway.dto.result.auth.AuthUserIdAndRoleResult;
 import apigateway.query.CardQueryHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import java.util.UUID;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -36,16 +35,14 @@ public class CardGatewayController {
   @PostMapping("/create")
   public CreateCardResponseDto createCard(
       @Valid @RequestBody CreateCardRequestDto request, HttpServletRequest httpRequest) {
-    Jwt jwt = cookieConfig.getAccessTokenJwt(httpRequest);
-    return cardQueryHandler.createCard(
-        request, UUID.fromString(jwt.getSubject()), cookieConfig.extractRole(jwt));
+    AuthUserIdAndRoleResult authUser = cookieConfig.getAuthUserIdAndRole(httpRequest);
+    return cardQueryHandler.createCard(request, authUser.authUserId(), authUser.role().name());
   }
 
   @PutMapping("/update")
   public UpdateCardResponseDto updateCard(
       @Valid @RequestBody UpdateCardRequestDto request, HttpServletRequest httpRequest) {
-    Jwt jwt = cookieConfig.getAccessTokenJwt(httpRequest);
-    return cardQueryHandler.updateCard(
-        request, UUID.fromString(jwt.getSubject()), cookieConfig.extractRole(jwt));
+    AuthUserIdAndRoleResult authUser = cookieConfig.getAuthUserIdAndRole(httpRequest);
+    return cardQueryHandler.updateCard(request, authUser.authUserId(), authUser.role().name());
   }
 }

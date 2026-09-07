@@ -1,9 +1,16 @@
 package apigateway.client;
 
 import account.contract.v1.*;
-import apigateway.dto.account.*;
-import apigateway.mapper.dto.AccountDtoMapper;
+import apigateway.dto.command.account.GetAccountsWithCardsByOwnerIdCommandDto;
+import apigateway.dto.request.account.CreateAccountRequestDto;
+import apigateway.dto.request.account.GetAccountByIdRequestDto;
+import apigateway.dto.request.account.GetAllAccountsRequestDto;
+import apigateway.dto.request.account.UpdateAccountBalanceRequestDto;
+import apigateway.dto.response.account.AccountResponseWithoutSensitiveInfo;
+import apigateway.dto.response.account.CreateAccountResponseDto;
+import apigateway.dto.response.account.GetAccountResponseDto;
 import apigateway.mapper.grpc.AccountGrpcMapper;
+import apigateway.mapper.result.AccountResultMapper;
 import com.google.protobuf.Empty;
 import java.util.List;
 import java.util.UUID;
@@ -14,12 +21,12 @@ import org.springframework.stereotype.Service;
 public class AccountGrpcClient {
   private final AccountRpcServiceGrpc.AccountRpcServiceBlockingStub stub;
   private final AccountGrpcMapper grpcMapper;
-  private final AccountDtoMapper dtoMapper;
+  private final AccountResultMapper dtoMapper;
 
   public AccountGrpcClient(
       AccountRpcServiceGrpc.AccountRpcServiceBlockingStub stub,
       AccountGrpcMapper grpcMapper,
-      AccountDtoMapper dtoMapper) {
+      AccountResultMapper dtoMapper) {
     this.stub = stub;
     this.grpcMapper = grpcMapper;
     this.dtoMapper = dtoMapper;
@@ -38,40 +45,40 @@ public class AccountGrpcClient {
         stub.withDeadlineAfter(2, TimeUnit.SECONDS).createAccount(grpcRequest));
   }
 
-  public List<GetAccountResponseDto> getAccountsByOwnerId(UUID ownerUserId) {
+  public List<GetAccountResponseDto> getAccountsByOwnerId(
+      GetAccountsWithCardsByOwnerIdCommandDto command) {
     GetAccountByOwnerUserIdGrpcRequest request =
-        GetAccountByOwnerUserIdGrpcRequest.newBuilder()
-            .setOwnerUserId(ownerUserId.toString())
-            .build();
+        grpcMapper.toGetAccountByOwnerUserIdGrpcRequest(command);
     GetAccountsGrpcResponse response =
         stub.withDeadlineAfter(2, TimeUnit.SECONDS).getAccountsByOwnerUserId(request);
 
     return dtoMapper.toListGetAccountResponseDto(response);
   }
 
-  public List<GetAccountResponseDto> getAllAccounts() {
+  public List<AccountResponseWithoutSensitiveInfo> getRecipientAccounts(UUID ownerUserId) {
+    GetRecipientAccountsByOwnerUserIdGrpcResponse response =
+        stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+            .getRecipientAccountsByOwnerUserId(
+                grpcMapper.toGetRecipientAccountsByOwnerUserIdGrpcRequest(ownerUserId));
+    return dtoMapper.toRecipientAccounts(response);
+  }
+
+  public List<GetAccountResponseDto> getAllAccounts(GetAllAccountsRequestDto request) {
     GetAccountsGrpcResponse response =
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS).getAllAccounts(Empty.getDefaultInstance());
+        stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+            .getAllAccounts(grpcMapper.toGetAllAccountsGrpRequest(request));
     return dtoMapper.toListGetAccountResponseDto(response);
   }
 
   public void freezeAccount(UUID accountId, UUID authUserId, String role) {
     FreezeAccountGrpcRequest request =
-        FreezeAccountGrpcRequest.newBuilder()
-            .setAccountId(accountId.toString())
-            .setAuthUserId(authUserId.toString())
-            .setRole(role == null ? "" : role)
-            .build();
+        grpcMapper.toFreezeAccountGrpcRequest(accountId, authUserId, role);
     stub.withDeadlineAfter(2, TimeUnit.SECONDS).freezeAccount(request);
   }
 
   public void unfreezeAccount(UUID accountId, UUID authUserId, String role) {
     UnfreezeAccountGrpcRequest request =
-        UnfreezeAccountGrpcRequest.newBuilder()
-            .setAccountId(accountId.toString())
-            .setAuthUserId(authUserId.toString())
-            .setRole(role == null ? "" : role)
-            .build();
+        grpcMapper.toUnfreezeAccountGrpcRequest(accountId, authUserId, role);
     stub.withDeadlineAfter(2, TimeUnit.SECONDS).unfreezeAccount(request);
   }
 
@@ -79,14 +86,6 @@ public class AccountGrpcClient {
     return dtoMapper.toGetAccountByIdResponseDto(
         stub.withDeadlineAfter(2, TimeUnit.SECONDS)
             .getAccountById(grpcMapper.toGetAccountByIdGrpcRequest(request)));
-  }
-
-  public UUID getAccountOwnerAuthUserId(UUID accountId) {
-    GetAccountByIdGrpcResponse response =
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS)
-            .getAccountById(
-                grpcMapper.toGetAccountByIdGrpcRequest(new GetAccountByIdRequestDto(accountId)));
-    return UUID.fromString(response.getAccount().getAuthUserId());
   }
 
   public GetAccountResponseDto topUpAccount(

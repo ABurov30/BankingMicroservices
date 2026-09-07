@@ -37,6 +37,10 @@ calls `AccountService` through `AccountGrpcClient` for funds reservation. Both r
 carry the transaction `currency`; downstream services reject the reservation when it does not match
 the source card or source account currency.
 
+Transaction response enrichment and status streaming use the internal AccountService operation
+`getAccountByIdForTransaction`. The ownership-protected `getAccountById` operation is reserved for
+end-user account reads that include authenticated user identity and role.
+
 ## Contracts
 
 gRPC types come from `com.burov:contracts` version `0.0.26-SNAPSHOT`. Event payloads come from

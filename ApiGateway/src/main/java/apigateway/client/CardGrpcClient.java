@@ -1,13 +1,14 @@
 package apigateway.client;
 
-import apigateway.dto.account.GetAccountResponseDto;
-import apigateway.dto.card.CreateCardRequestDto;
-import apigateway.dto.card.CreateCardResponseDto;
-import apigateway.dto.card.GetCardByAccountIdResponseDto;
-import apigateway.dto.card.UpdateCardRequestDto;
-import apigateway.dto.card.UpdateCardResponseDto;
-import apigateway.mapper.dto.CardDtoMapper;
+import apigateway.dto.command.card.GetCardsByAccountIdCommandDto;
+import apigateway.dto.request.card.CreateCardRequestDto;
+import apigateway.dto.request.card.UpdateCardRequestDto;
+import apigateway.dto.response.account.GetAccountResponseDto;
+import apigateway.dto.response.card.CreateCardResponseDto;
+import apigateway.dto.response.card.GetCardByAccountIdResponseDto;
+import apigateway.dto.response.card.UpdateCardResponseDto;
 import apigateway.mapper.grpc.CardGrpcMapper;
+import apigateway.mapper.result.CardResultMapper;
 import card.contract.v1.*;
 import com.google.protobuf.Empty;
 import java.util.List;
@@ -19,12 +20,12 @@ import org.springframework.stereotype.Service;
 public class CardGrpcClient {
   private final CardRpcServiceGrpc.CardRpcServiceBlockingStub stub;
   private final CardGrpcMapper grpcMapper;
-  private final CardDtoMapper dtoMapper;
+  private final CardResultMapper dtoMapper;
 
   public CardGrpcClient(
       CardRpcServiceGrpc.CardRpcServiceBlockingStub stub,
       CardGrpcMapper grpcMapper,
-      CardDtoMapper dtoMapper) {
+      CardResultMapper dtoMapper) {
     this.stub = stub;
     this.grpcMapper = grpcMapper;
     this.dtoMapper = dtoMapper;
@@ -52,9 +53,9 @@ public class CardGrpcClient {
         stub.withDeadlineAfter(2, TimeUnit.SECONDS).updateCard(grpcRequest));
   }
 
-  public List<GetCardByAccountIdResponseDto> getCardsByAccountId(UUID accountId) {
-    GetCardByAccountIdGrpcRequest request =
-        GetCardByAccountIdGrpcRequest.newBuilder().setAccountId(accountId.toString()).build();
+  public List<GetCardByAccountIdResponseDto> getCardsByAccountId(
+      GetCardsByAccountIdCommandDto command) {
+    GetCardByAccountIdGrpcRequest request = grpcMapper.toGetCardByAccountIdGrpcRequest(command);
     GetCardsGrpcResponse response =
         stub.withDeadlineAfter(2, TimeUnit.SECONDS).getCardsByAccountId(request);
 

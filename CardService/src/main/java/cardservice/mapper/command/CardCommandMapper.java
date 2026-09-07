@@ -5,6 +5,7 @@ import card.contract.v1.GetCardByAccountIdGrpcRequest;
 import card.contract.v1.ReserveLimitsForTransactionGrpcRequest;
 import card.contract.v1.UpdateCardGrpcRequest;
 import cardservice.dto.*;
+import enums.auth.Roles;
 import enums.card.CardStatus;
 import enums.common.Currency;
 import java.util.UUID;
@@ -57,7 +58,10 @@ public interface CardCommandMapper {
 
   default GetCardsByAccountIdCommand toGetCardsByAccountIdCommand(
       GetCardByAccountIdGrpcRequest request) {
-    return new GetCardsByAccountIdCommand(UUID.fromString(request.getAccountId()));
+    return new GetCardsByAccountIdCommand(
+        UUID.fromString(request.getAccountId()),
+        UUID.fromString(request.getAuthUserId()),
+        Roles.valueOf(request.getRole()));
   }
 
   default ReserveLimitsForTransactionCommand toReserveLimitsForTransactionCommand(

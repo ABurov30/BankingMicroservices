@@ -2,7 +2,8 @@ package apigateway.controller;
 
 import apigateway.client.AuthGrpcClient;
 import apigateway.config.CookieConfig;
-import apigateway.dto.auth.*;
+import apigateway.dto.request.auth.*;
+import apigateway.dto.response.auth.*;
 import apigateway.exception.MissingRefreshTokenException;
 import enums.auth.Roles;
 import jakarta.servlet.http.HttpServletRequest;
@@ -79,10 +80,8 @@ public class AuthGatewayController {
       @Valid @RequestBody ChangePasswordRequestDto request,
       HttpServletRequest httpRequest,
       HttpServletResponse servletResponse) {
-    Jwt jwt = cookieConfig.getAccessTokenJwt(httpRequest);
-
     ChangePasswordResponseDto response =
-        authClient.changePassword(request, UUID.fromString(jwt.getSubject()));
+        authClient.changePassword(request, cookieConfig.getAuthUserId(httpRequest));
 
     cookieConfig.setRefreshTokenCookie(
         servletResponse, response.refreshToken(), Math.toIntExact(response.refreshTokenDaysTtl()));

@@ -82,8 +82,10 @@ public class TransactionStatusStreamRegistry {
   }
 
   public void notifyStatusChanged(TransactionEntity transaction) {
-    var sourceAccount = accountGrpcClient.getAccountById(transaction.getSourceAccountId());
-    var targetAccount = accountGrpcClient.getAccountById(transaction.getTargetAccountId());
+    var sourceAccount =
+        accountGrpcClient.getAccountByIdForTransaction(transaction.getSourceAccountId());
+    var targetAccount =
+        accountGrpcClient.getAccountByIdForTransaction(transaction.getTargetAccountId());
     TransactionStatusResponse response =
         transactionGrpcMapper.toTransactionStatusResponse(
             transaction, sourceAccount, targetAccount);
@@ -117,8 +119,10 @@ public class TransactionStatusStreamRegistry {
 
     var transactionEntity = transaction.get();
 
-    var sourceAccount = accountGrpcClient.getAccountById(transactionEntity.getSourceAccountId());
-    var targetAccount = accountGrpcClient.getAccountById(transactionEntity.getTargetAccountId());
+    var sourceAccount =
+        accountGrpcClient.getAccountByIdForTransaction(transactionEntity.getSourceAccountId());
+    var targetAccount =
+        accountGrpcClient.getAccountByIdForTransaction(transactionEntity.getTargetAccountId());
 
     if (sourceAccount != null && sourceAccount.getAuthUserId().equals(authUserId.toString())) {
       return new AllowedTransaction(transactionEntity, sourceAccount, targetAccount);

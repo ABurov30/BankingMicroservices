@@ -1,7 +1,9 @@
 package apigateway.config;
 
+import apigateway.dto.result.auth.AuthUserIdAndRoleResult;
 import apigateway.exception.InvalidAccessTokenException;
 import apigateway.exception.MissingAccessTokenException;
+import enums.auth.Roles;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
@@ -118,5 +120,21 @@ public class CookieConfig {
     }
 
     return builder.build();
+  }
+
+  public AuthUserIdAndRoleResult getAuthUserIdAndRole(HttpServletRequest request) {
+    Jwt jwt = getAccessTokenJwt(request);
+    return new AuthUserIdAndRoleResult(
+        UUID.fromString(jwt.getSubject()), Roles.valueOf(extractRole(jwt)));
+  }
+
+  public UUID getAuthUserId(HttpServletRequest request) {
+    Jwt jwt = getAccessTokenJwt(request);
+    return UUID.fromString(jwt.getSubject());
+  }
+
+  public Roles getAutUserRole(HttpServletRequest request) {
+    Jwt jwt = getAccessTokenJwt(request);
+    return Roles.valueOf(extractRole(jwt));
   }
 }

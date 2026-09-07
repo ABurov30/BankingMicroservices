@@ -2,14 +2,13 @@ package apigateway.controller;
 
 import apigateway.client.NotificationGrpcClient;
 import apigateway.config.CookieConfig;
-import apigateway.dto.notification.GetNotificationsRequestDto;
-import apigateway.dto.notification.MarkNotificationsAsReadedCommand;
-import apigateway.dto.notification.MarkNotificationsAsReadedRequestDto;
-import apigateway.dto.notification.NotificationResponseDto;
+import apigateway.dto.command.notification.MarkNotificationsAsReadedCommand;
+import apigateway.dto.request.notification.GetNotificationsRequestDto;
+import apigateway.dto.request.notification.MarkNotificationsAsReadedRequestDto;
+import apigateway.dto.response.notification.NotificationResponseDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.List;
-import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -36,18 +35,16 @@ public class NotificationGatewayController {
 
   @GetMapping("/notifications")
   public List<NotificationResponseDto> getNotifications(HttpServletRequest request) {
-    UUID authUserId = UUID.fromString(cookieConfig.getAccessTokenJwt(request).getSubject());
-
-    return notificationClient.getNotifications(new GetNotificationsRequestDto(authUserId));
+    return notificationClient.getNotifications(
+        new GetNotificationsRequestDto(cookieConfig.getAuthUserId(request)));
   }
 
   @PatchMapping("/notifications/mark-as-readed")
   public void markAsReaded(
       HttpServletRequest request,
       @Valid @RequestBody MarkNotificationsAsReadedRequestDto markRequest) {
-    UUID authUserId = UUID.fromString(cookieConfig.getAccessTokenJwt(request).getSubject());
-
     notificationClient.markAsReaded(
-        new MarkNotificationsAsReadedCommand(authUserId, markRequest.ids()));
+        new MarkNotificationsAsReadedCommand(
+            cookieConfig.getAuthUserId(request), markRequest.ids()));
   }
 }

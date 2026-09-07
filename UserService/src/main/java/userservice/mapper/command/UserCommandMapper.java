@@ -8,7 +8,7 @@ import kafkacontracts.auth.AuthUserRoleChangedEventPayload;
 import kafkacontracts.auth.AuthUserUnlockEventPayload;
 import kafkacontracts.auth.AuthUserVerifiedEventPayload;
 import org.mapstruct.Mapper;
-import user.contract.v1.GetUserInfoByEmailRequest;
+import user.contract.v1.GetRecipientByEmailRequest;
 import user.contract.v1.GetUserInfoGrpcRequest;
 import userservice.dto.*;
 
@@ -45,7 +45,8 @@ public interface UserCommandMapper {
     return new ChangeUserRoleCommand(payload.getAuthUserId(), payload.getRole());
   }
 
-  default GetUserInfoByEmailCommand toGetUserInfoByEmailCommand(GetUserInfoByEmailRequest request) {
+  default GetUserInfoByEmailCommand toGetUserInfoByEmailCommand(
+      GetRecipientByEmailRequest request) {
     return new GetUserInfoByEmailCommand(request.getEmail());
   }
 }

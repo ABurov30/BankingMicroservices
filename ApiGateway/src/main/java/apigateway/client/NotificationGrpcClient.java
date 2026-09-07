@@ -1,8 +1,8 @@
 package apigateway.client;
 
-import apigateway.dto.notification.GetNotificationsRequestDto;
-import apigateway.dto.notification.MarkNotificationsAsReadedCommand;
-import apigateway.dto.notification.NotificationResponseDto;
+import apigateway.dto.command.notification.MarkNotificationsAsReadedCommand;
+import apigateway.dto.request.notification.GetNotificationsRequestDto;
+import apigateway.dto.response.notification.NotificationResponseDto;
 import com.google.protobuf.Empty;
 import java.util.Arrays;
 import java.util.List;

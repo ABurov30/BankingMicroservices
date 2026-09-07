@@ -74,7 +74,8 @@ gRPC DTOs come from `com.burov:contracts` version `0.0.26-SNAPSHOT`. Shared supp
 - Transaction creation responses include `transactionId`, `minorUnits`, `currency`, and `status`.
 - Transaction list responses include `transactionId`, which the UI uses to open a live status subscription for the selected transaction.
 - User auth info responses include linked social provider accounts as `socialAccounts`.
-- `POST /user/recipient-info` resolves a recipient by email and returns user info without ids plus recipient accounts without balance fields.
+- `POST /user/recipient-info` resolves a recipient by email and returns user info without ids plus
+  recipient account ids, account number last-four values, types, statuses, and currencies.
 - `GET /user/user-info` returns the current user's profile and auth information.
 
 ## WebSocket

@@ -1,7 +1,7 @@
 package apigateway.mapper.grpc;
 
-import apigateway.dto.auth.*;
-import apigateway.dto.user.GetRoleByAuthUserIdRequestDto;
+import apigateway.dto.request.auth.*;
+import apigateway.dto.request.user.GetRoleByAuthUserIdRequestDto;
 import auth.contract.v1.*;
 import java.util.Locale;
 import java.util.UUID;

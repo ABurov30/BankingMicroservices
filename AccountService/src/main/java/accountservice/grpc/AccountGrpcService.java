@@ -4,6 +4,7 @@ import account.contract.v1.*;
 import accountservice.dto.CreateAccountCommand;
 import accountservice.dto.GetAccountResult;
 import accountservice.dto.GetAccountsByOwnerUserIdCommand;
+import accountservice.dto.GetRecipientAccountsByOwnerUserIdCommand;
 import accountservice.mapper.command.AccountCommandMapper;
 import accountservice.mapper.command.TransferCommandMapper;
 import accountservice.mapper.grpc.AccountGrpcMapper;
@@ -77,8 +78,9 @@ public class AccountGrpcService extends AccountRpcServiceGrpc.AccountRpcServiceI
 
   @Override
   public void getAllAccounts(
-      Empty request, StreamObserver<GetAccountsGrpcResponse> responseObserver) {
-    List<GetAccountResult> result = accountService.getAllAccounts();
+      GetAllAccountsGrpRequest request, StreamObserver<GetAccountsGrpcResponse> responseObserver) {
+    List<GetAccountResult> result =
+        accountService.getAllAccounts(commandMapper.toGetAllAccountsCommand(request));
     List<AccountResponse> accountResponseList =
         result.stream().map(grpcMapper::toAccountResponse).toList();
 
@@ -116,6 +118,18 @@ public class AccountGrpcService extends AccountRpcServiceGrpc.AccountRpcServiceI
   }
 
   @Override
+  public void getAccountByIdForTransaction(
+      GetAccountByIdForTransactionGrpcRequest request,
+      StreamObserver<GetAccountByIdGrpcResponse> responseObserver) {
+    GetAccountResult result =
+        accountService.getAccountByIdForTransaction(
+            commandMapper.toGetAccountByIdForTransactionCommand(request));
+    AccountResponse response = grpcMapper.toAccountResponse(result);
+    responseObserver.onNext(grpcMapper.toGetAccountByIdGrpcResponse(response));
+    responseObserver.onCompleted();
+  }
+
+  @Override
   public void topUpAccount(
       UpdateAccountBalanceGrpcRequest request, StreamObserver<AccountResponse> responseObserver) {
     GetAccountResult result =
@@ -142,6 +156,18 @@ public class AccountGrpcService extends AccountRpcServiceGrpc.AccountRpcServiceI
             transferCommandMapper.toReserveFundsForTransactionCommand(request));
 
     responseObserver.onNext(grpcMapper.toReserveFundsForTransactionGrpcResponse(result));
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void getRecipientAccountsByOwnerUserId(
+      GetRecipientAccountsByOwnerUserIdGrpcRequest request,
+      StreamObserver<GetRecipientAccountsByOwnerUserIdGrpcResponse> responseObserver) {
+    GetRecipientAccountsByOwnerUserIdCommand command =
+        commandMapper.toGetRecipientAccountsByOwnerUserIdCommand(request);
+    List<GetAccountResult> result = accountService.getRecipientAccountsByOwnerUserId(command);
+
+    responseObserver.onNext(grpcMapper.toGetRecipientAccountsByOwnerUserIdGrpcResponse(result));
     responseObserver.onCompleted();
   }
 }
