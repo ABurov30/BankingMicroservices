@@ -132,9 +132,4 @@ public class CookieConfig {
     Jwt jwt = getAccessTokenJwt(request);
     return UUID.fromString(jwt.getSubject());
   }
-
-  public Roles getAutUserRole(HttpServletRequest request) {
-    Jwt jwt = getAccessTokenJwt(request);
-    return Roles.valueOf(extractRole(jwt));
-  }
 }
