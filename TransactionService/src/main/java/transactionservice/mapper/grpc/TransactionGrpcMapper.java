@@ -2,12 +2,15 @@ package transactionservice.mapper.grpc;
 
 import account.contract.v1.AccountResponse;
 import account.contract.v1.AccountResponseWithoutSensitiveInfo;
+import account.contract.v1.RecipientAccount;
 import account.contract.v1.ReserveFundsForTransactionGrpcRequest;
 import card.contract.v1.ReserveLimitsForTransactionGrpcRequest;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.UUID;
 import org.mapstruct.Mapper;
 import transaction.contract.v1.CreateTransactionGrpcResponse;
+import transaction.contract.v1.GetTransactionsByAccountsGrpcResponse;
 import transaction.contract.v1.TransactionResponse;
 import transaction.contract.v1.TransactionStatusResponse;
 import transactionservice.dto.CreateTransactionCommand;
@@ -40,7 +43,9 @@ public interface TransactionGrpcMapper {
   }
 
   default TransactionResponse toTransactionResponse(
-      TransactionEntity transaction, AccountResponse sourceAccount, AccountResponse targetAccount) {
+      TransactionEntity transaction,
+      RecipientAccount sourceAccount,
+      RecipientAccount targetAccount) {
     var response =
         TransactionResponse.newBuilder()
             .setTransactionId(transaction.getId().toString())
@@ -102,6 +107,39 @@ public interface TransactionGrpcMapper {
         .setMinorUnits(transactionResult.minorUnits())
         .setStatus(transactionResult.status().name())
         .setCurrency(transactionResult.currency().name())
+        .build();
+  }
+
+  default RecipientAccount toRecipientAccount(AccountResponse response) {
+    return RecipientAccount.newBuilder()
+        .setAccountId(response.getAccountId().toString())
+        .setCurrency(response.getCurrency())
+        .setStatus(response.getStatus())
+        .setType(response.getType())
+        .setAccountNumberLast4Chars(getLast4Chars(response.getAccountNumber()))
+        .build();
+  }
+
+  private String getLast4Chars(String string) {
+    if (string == null) {
+      return null;
+    }
+
+    if (string.length() <= 4) {
+      return string;
+    }
+
+    int len = string.length();
+
+    String last4 = string.substring(len - 4);
+    String stars = "*".repeat(len - 4);
+    return stars + last4;
+  }
+
+  default GetTransactionsByAccountsGrpcResponse toGetTransactionsByAccountsGrpcResponse(
+      List<TransactionResponse> transactionResponses) {
+    return GetTransactionsByAccountsGrpcResponse.newBuilder()
+        .addAllTransactions(transactionResponses)
         .build();
   }
 }

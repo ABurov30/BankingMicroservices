@@ -34,6 +34,12 @@ public interface AccountCommandMapper {
         Roles.valueOf(request.getRole()));
   }
 
+  default GetAccountByAuthUserIdCommand toGetAccountByAuthUserIdCommand(
+      GetAccountByAuthUserIdGrpcRequest request) {
+    return new GetAccountByAuthUserIdCommand(
+        UUID.fromString(request.getAuthUserId()), Roles.valueOf(request.getRole()));
+  }
+
   default FreezeAccountCommand toFreezeAccountCommand(FreezeAccountGrpcRequest request) {
     return new FreezeAccountCommand(
         UUID.fromString(request.getAccountId()),

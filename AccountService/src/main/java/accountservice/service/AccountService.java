@@ -164,6 +164,23 @@ public class AccountService {
     return accountEntityList.stream().map(resultMapper::toGetAccountResult).toList();
   }
 
+  public List<GetAccountResult> getAccountsByAuthUserId(GetAccountByAuthUserIdCommand command) {
+
+    List<AccountEntity> accountEntityList =
+        accountRepository
+            .findByOwnerAuthUserId(command.authUserId())
+            .orElseThrow(() -> new AccountsNotFoundException(command.authUserId()));
+
+    accountEntityList.forEach(
+        account -> {
+          if (!canAccessAccount(account, command.authUserId(), command.role().name())) {
+            throw new AccountNotFoundException(account.getId());
+          }
+        });
+
+    return accountEntityList.stream().map(resultMapper::toGetAccountResult).toList();
+  }
+
   public List<GetAccountResult> getAllAccounts(GetAllAccountsCommand command) {
     if (!isPrivileged(command.role().name())) {
       throw new AccountAccessDeniedException();
@@ -333,7 +350,7 @@ public class AccountService {
             .orElseThrow(() -> new AccountNotFoundException(command.accountId()));
 
     if (!account.getOwnerAuthUserId().equals(command.authUserId())) {
-      throw new AccountOwnershipException();
+      throw new AccountNotFoundException(account.getId());
     }
 
     var amount = command.minorUnits();
@@ -352,7 +369,7 @@ public class AccountService {
             .orElseThrow(() -> new AccountNotFoundException(command.accountId()));
 
     if (!account.getOwnerAuthUserId().equals(command.authUserId())) {
-      throw new AccountOwnershipException();
+      throw new AccountNotFoundException(account.getId());
     }
 
     var amount = command.minorUnits();

@@ -64,7 +64,7 @@ cookie is not replaced by this endpoint.
 | `TransactionGrpcClient` | `TransactionService` |
 | `NotificationGrpcClient` | `NotificationService` |
 
-gRPC DTOs come from `com.burov:contracts` version `0.0.26`. Shared support utilities come from
+gRPC DTOs come from `com.burov:contracts` version `0.0.27`. Shared support utilities come from
 `com.burov:support` version `0.0.1`.
 
 ## DTO Notes
@@ -72,7 +72,20 @@ gRPC DTOs come from `com.burov:contracts` version `0.0.26`. Shared support utili
 - Card responses map `CardResponse` from `CardService`, including card `currency`, configured limits, and spend counters as minor-unit values: `dailyLimitMinorUnits`, `monthlyLimitMinorUnits`, `spendDailyLimitMinorUnits`, and `spendMonthlyLimitMinorUnits`.
 - Transaction creation requests require `sourceCardId`; the transaction flow uses it for card limit reservation before account funds are requested.
 - Transaction creation responses include `transactionId`, `minorUnits`, `currency`, and `status`.
-- Transaction list responses include `transactionId`, which the UI uses to open a live status subscription for the selected transaction.
+- `POST /account/create` accepts only account `type` and `currency`; the account owner is derived
+  from the authenticated JWT.
+- `GET /account/accounts/me` returns only the caller's accounts and cards. Manager account reads
+  remain under `/account/manager/**`.
+- User account status changes use `/account/freeze/{accountId}` and
+  `/account/unfreeze/{accountId}` and require the `USER` role. The separate manager routes are
+  `/account/manager/freeze/{accountId}` and `/account/manager/unfreeze/{accountId}`.
+- All `/account/manager/**` and `/transaction/manager/**` endpoints require the `MANAGER`
+  or `ADMIN` role.
+- `GET /transaction/user/me` returns only transactions for the caller's accounts. Manager reads
+  remain under `/transaction/manager/user/{userId}`.
+- Transaction list source and target accounts expose only recipient-safe fields: account id, masked
+  account number, type, status, and currency. The list includes `transactionId`, which the UI uses
+  to open a live status subscription for the selected transaction.
 - User auth info responses include linked social provider accounts as `socialAccounts`.
 - `POST /user/recipient-info` resolves a recipient by email and returns user info without ids plus
   recipient account ids, account number last-four values, types, statuses, and currencies.

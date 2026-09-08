@@ -1,9 +1,7 @@
 package apigateway.mapper.command;
 
-import apigateway.dto.command.account.CheckAccountStatusCommandDto;
-import apigateway.dto.command.account.GetAccountsWithCardsByOwnerIdCommandDto;
-import apigateway.dto.command.account.GetAllAccountsWithCardsCommandDto;
-import apigateway.dto.command.transaction.GetTransactionByUserIdCommandDto;
+import apigateway.dto.command.account.*;
+import apigateway.dto.request.account.CreateAccountRequestDto;
 import enums.auth.Roles;
 import java.util.UUID;
 import org.mapstruct.Mapper;
@@ -15,9 +13,6 @@ public interface AccountCommandMapper {
     return new GetAccountsWithCardsByOwnerIdCommandDto(ownerUserId, authUserId, role);
   }
 
-  GetAccountsWithCardsByOwnerIdCommandDto toGetAccountsWithCardsByOwnerIdCommandDto(
-      GetTransactionByUserIdCommandDto command);
-
   default CheckAccountStatusCommandDto toCheckAccountStatusCommandDto(
       UUID accountId, UUID authUserId, Roles role) {
     return new CheckAccountStatusCommandDto(accountId, authUserId, role);
@@ -26,5 +21,15 @@ public interface AccountCommandMapper {
   default GetAllAccountsWithCardsCommandDto toGetAllAccountsWithCardsCommandDto(
       UUID authUserId, Roles role) {
     return new GetAllAccountsWithCardsCommandDto(authUserId, role);
+  }
+
+  default GetAllAccountsWithCardsByAuthUserIdCommandDto
+      toGetAllAccountsWithCardsByAuthUserIdCommandDto(UUID authUserId, Roles role) {
+    return new GetAllAccountsWithCardsByAuthUserIdCommandDto(authUserId, role);
+  }
+
+  default CreateAccountCommandDto toCreateAccountCommandDto(
+      CreateAccountRequestDto requestDto, UUID authUserId) {
+    return new CreateAccountCommandDto(requestDto.type(), requestDto.currency(), authUserId);
   }
 }

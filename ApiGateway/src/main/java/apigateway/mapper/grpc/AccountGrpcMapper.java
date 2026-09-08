@@ -1,11 +1,7 @@
 package apigateway.mapper.grpc;
 
 import account.contract.v1.*;
-import apigateway.dto.command.account.GetAccountsWithCardsByOwnerIdCommandDto;
-import apigateway.dto.request.account.CreateAccountRequestDto;
-import apigateway.dto.request.account.GetAccountByIdRequestDto;
-import apigateway.dto.request.account.GetAllAccountsRequestDto;
-import apigateway.dto.request.account.UpdateAccountBalanceRequestDto;
+import apigateway.dto.request.account.*;
 import apigateway.dto.response.account.GetAccountResponseDto;
 import java.util.UUID;
 import org.mapstruct.Mapper;
@@ -13,9 +9,9 @@ import org.mapstruct.Mapper;
 @Mapper(componentModel = "spring")
 public interface AccountGrpcMapper {
   default CreateAccountGrpcRequest toCreateAccountGrpcRequest(
-      CreateAccountRequestDto request, UUID authUserId) {
+      CreateAccountRequestDto request, UUID authUserId, UUID ownerUserId) {
     return CreateAccountGrpcRequest.newBuilder()
-        .setOwnerUserId(request.ownerUserId().toString())
+        .setOwnerUserId(ownerUserId.toString())
         .setAuthUserId(authUserId.toString())
         .setType(request.type().name())
         .setCurrency(request.currency().name())
@@ -53,11 +49,11 @@ public interface AccountGrpcMapper {
   }
 
   default GetAccountByOwnerUserIdGrpcRequest toGetAccountByOwnerUserIdGrpcRequest(
-      GetAccountsWithCardsByOwnerIdCommandDto command) {
+      GetAccountsWithCardsByOwnerIdRequestDto requestDto) {
     return GetAccountByOwnerUserIdGrpcRequest.newBuilder()
-        .setOwnerUserId(command.ownerUserId().toString())
-        .setAuthUserId(command.authUserId().toString())
-        .setRole(command.role().name())
+        .setOwnerUserId(requestDto.ownerUserId().toString())
+        .setAuthUserId(requestDto.authUserId().toString())
+        .setRole(requestDto.role().name())
         .build();
   }
 
@@ -65,6 +61,14 @@ public interface AccountGrpcMapper {
       UUID ownerUserId) {
     return GetAccountByOwnerUserIdGrpcRequest.newBuilder()
         .setOwnerUserId(ownerUserId.toString())
+        .build();
+  }
+
+  default GetAccountByAuthUserIdGrpcRequest toGetAccountByAuthUserIdGrpcRequest(
+      GetAccountsByAuthUserIdRequestDto requestDto) {
+    return GetAccountByAuthUserIdGrpcRequest.newBuilder()
+        .setAuthUserId(requestDto.authUserId().toString())
+        .setRole(requestDto.role().name())
         .build();
   }
 

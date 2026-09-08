@@ -46,13 +46,12 @@ public class TransactionGatewayController {
         request, cookieConfig.getAuthUserId(httpRequest));
   }
 
-  @GetMapping("/user/{userId}")
-  public List<TransactionResponseDto> getTransactionsByUserId(
-      @PathVariable UUID userId, HttpServletRequest httpRequest) {
+  @GetMapping("/user/me")
+  public List<TransactionResponseDto> getTransactionsByMe(HttpServletRequest httpRequest) {
     AuthUserIdAndRoleResult authUser = cookieConfig.getAuthUserIdAndRole(httpRequest);
-    return transactionQueryHandler.getTransactionsByUserId(
-        transactionCommandMapper.toGetTransactionByUserIdCommandDto(
-            userId, authUser.authUserId(), authUser.role()));
+    return transactionQueryHandler.getTransactionsByMe(
+        transactionCommandMapper.toGetTransactionByMeCommandDto(
+            authUser.authUserId(), authUser.role()));
   }
 
   @GetMapping("/manager/user/{userId}")

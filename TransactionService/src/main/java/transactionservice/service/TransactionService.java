@@ -1,18 +1,22 @@
 package transactionservice.service;
 
+import account.contract.v1.AccountResponse;
+import account.contract.v1.RecipientAccount;
 import enums.account.ReservationStatus;
 import enums.transaction.TransactionStatus;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 import kafkacontracts.transaction.TransactionEventType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import transaction.contract.v1.TransactionResponse;
 import transactionservice.client.AccountGrpcClient;
 import transactionservice.client.CardGrpcClient;
 import transactionservice.dto.CreateTransactionCommand;
@@ -168,12 +172,33 @@ public class TransactionService {
     return transactionResultMapper.toCreateTransactionResult(transaction);
   }
 
-  public List<TransactionEntity> getTransactionsByAccountIds(Collection<UUID> accountIds) {
+  public List<TransactionResponse> getTransactionsByAccountIds(List<AccountResponse> accountList) {
+
+    var accountIds =
+        accountList.stream().map((account) -> UUID.fromString(account.getAccountId())).toList();
+
     if (accountIds.isEmpty()) {
       return List.of();
     }
 
-    return transactionRepository.findByAccountIds(accountIds);
+    ConcurrentMap<UUID, RecipientAccount> accountMap =
+        accountList.stream()
+            .collect(
+                Collectors.toConcurrentMap(
+                    account -> UUID.fromString(account.getAccountId()),
+                    account -> grpcMapper.toRecipientAccount(account)));
+
+    var transactions = transactionRepository.findByAccountIds(accountIds);
+
+    return transactions.stream()
+        .map(
+            (transaction -> {
+              var targetAccount = accountMap.get(transaction.getTargetAccountId());
+              var sourceAccount = accountMap.get(transaction.getSourceAccountId());
+
+              return grpcMapper.toTransactionResponse(transaction, sourceAccount, targetAccount);
+            }))
+        .toList();
   }
 
   @Transactional

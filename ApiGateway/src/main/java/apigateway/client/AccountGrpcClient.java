@@ -1,11 +1,7 @@
 package apigateway.client;
 
 import account.contract.v1.*;
-import apigateway.dto.command.account.GetAccountsWithCardsByOwnerIdCommandDto;
-import apigateway.dto.request.account.CreateAccountRequestDto;
-import apigateway.dto.request.account.GetAccountByIdRequestDto;
-import apigateway.dto.request.account.GetAllAccountsRequestDto;
-import apigateway.dto.request.account.UpdateAccountBalanceRequestDto;
+import apigateway.dto.request.account.*;
 import apigateway.dto.response.account.AccountResponseWithoutSensitiveInfo;
 import apigateway.dto.response.account.CreateAccountResponseDto;
 import apigateway.dto.response.account.GetAccountResponseDto;
@@ -38,19 +34,31 @@ public class AccountGrpcClient {
     return response.getMessage();
   }
 
-  public CreateAccountResponseDto createAccount(CreateAccountRequestDto request, UUID authUserId) {
+  public CreateAccountResponseDto createAccount(
+      CreateAccountRequestDto request, UUID authUserId, UUID ownerUserId) {
     CreateAccountGrpcRequest grpcRequest =
-        grpcMapper.toCreateAccountGrpcRequest(request, authUserId);
+        grpcMapper.toCreateAccountGrpcRequest(request, authUserId, ownerUserId);
     return dtoMapper.toCreateAccountResponseDto(
         stub.withDeadlineAfter(2, TimeUnit.SECONDS).createAccount(grpcRequest));
   }
 
   public List<GetAccountResponseDto> getAccountsByOwnerId(
-      GetAccountsWithCardsByOwnerIdCommandDto command) {
+      GetAccountsWithCardsByOwnerIdRequestDto requestDto) {
     GetAccountByOwnerUserIdGrpcRequest request =
-        grpcMapper.toGetAccountByOwnerUserIdGrpcRequest(command);
+        grpcMapper.toGetAccountByOwnerUserIdGrpcRequest(requestDto);
     GetAccountsGrpcResponse response =
         stub.withDeadlineAfter(2, TimeUnit.SECONDS).getAccountsByOwnerUserId(request);
+
+    return dtoMapper.toListGetAccountResponseDto(response);
+  }
+
+  public List<GetAccountResponseDto> getAccountsByAuthUserId(
+      GetAccountsByAuthUserIdRequestDto requestDto) {
+
+    GetAccountByAuthUserIdGrpcRequest request =
+        grpcMapper.toGetAccountByAuthUserIdGrpcRequest(requestDto);
+    GetAccountsGrpcResponse response =
+        stub.withDeadlineAfter(2, TimeUnit.SECONDS).getAccountsByAuthUserId(request);
 
     return dtoMapper.toListGetAccountResponseDto(response);
   }

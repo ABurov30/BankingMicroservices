@@ -1,10 +1,7 @@
 package accountservice.grpc;
 
 import account.contract.v1.*;
-import accountservice.dto.CreateAccountCommand;
-import accountservice.dto.GetAccountResult;
-import accountservice.dto.GetAccountsByOwnerUserIdCommand;
-import accountservice.dto.GetRecipientAccountsByOwnerUserIdCommand;
+import accountservice.dto.*;
 import accountservice.mapper.command.AccountCommandMapper;
 import accountservice.mapper.command.TransferCommandMapper;
 import accountservice.mapper.grpc.AccountGrpcMapper;
@@ -69,6 +66,19 @@ public class AccountGrpcService extends AccountRpcServiceGrpc.AccountRpcServiceI
     GetAccountsByOwnerUserIdCommand command =
         commandMapper.toGetAccountsByOwnerUserIdCommand(request);
     List<GetAccountResult> result = accountService.getAccountsByOwnerUserId(command);
+    List<AccountResponse> accountResponseList =
+        result.stream().map(grpcMapper::toAccountResponse).toList();
+
+    responseObserver.onNext(grpcMapper.toGetAccountsGrpcResponse(accountResponseList));
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void getAccountsByAuthUserId(
+      GetAccountByAuthUserIdGrpcRequest request,
+      StreamObserver<GetAccountsGrpcResponse> responseObserver) {
+    GetAccountByAuthUserIdCommand command = commandMapper.toGetAccountByAuthUserIdCommand(request);
+    List<GetAccountResult> result = accountService.getAccountsByAuthUserId(command);
     List<AccountResponse> accountResponseList =
         result.stream().map(grpcMapper::toAccountResponse).toList();
 

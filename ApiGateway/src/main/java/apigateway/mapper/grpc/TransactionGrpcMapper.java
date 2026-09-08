@@ -2,8 +2,10 @@ package apigateway.mapper.grpc;
 
 import account.contract.v1.AccountResponse;
 import account.contract.v1.AccountResponseWithoutSensitiveInfo;
+import account.contract.v1.RecipientAccount;
 import apigateway.dto.request.transaction.CreateTransactionRequestDto;
 import apigateway.dto.response.account.GetAccountResponseDto;
+import apigateway.dto.response.account.GetRecipientResponseDto;
 import apigateway.dto.response.transaction.TransactionResponseDto;
 import apigateway.dto.response.transaction.TransactionStatusAccountResponseDto;
 import apigateway.dto.response.transaction.TransactionStatusResponseDto;
@@ -67,8 +69,10 @@ public interface TransactionGrpcMapper {
         TransactionStatus.valueOf(response.getStatus()),
         toLocalDateTime(response.getCreatedAt()),
         toLocalDateTime(response.getCompletedAt()),
-        response.hasSourceAccount() ? toGetAccountResponseDto(response.getSourceAccount()) : null,
-        response.hasTargetAccount() ? toGetAccountResponseDto(response.getTargetAccount()) : null);
+        response.hasSourceAccount() ? toGetRecipientResponseDto(response.getSourceAccount()) : null,
+        response.hasTargetAccount()
+            ? toGetRecipientResponseDto(response.getTargetAccount())
+            : null);
   }
 
   default TransactionStatusResponseDto toTransactionStatusResponseDto(
@@ -100,6 +104,15 @@ public interface TransactionGrpcMapper {
         AccountStatus.valueOf(account.getStatus()),
         account.getAvailableBalanceMinorUnits(),
         account.getReservedBalanceMinorUnits(),
+        Currency.valueOf(account.getCurrency()));
+  }
+
+  private GetRecipientResponseDto toGetRecipientResponseDto(RecipientAccount account) {
+    return new GetRecipientResponseDto(
+        UUID.fromString(account.getAccountId()),
+        account.getAccountNumberLast4Chars(),
+        AccountType.valueOf(account.getType()),
+        AccountStatus.valueOf(account.getStatus()),
         Currency.valueOf(account.getCurrency()));
   }
 

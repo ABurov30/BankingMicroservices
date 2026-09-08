@@ -14,6 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -42,18 +43,20 @@ public class AccountGatewayController {
   }
 
   @PostMapping("/create")
-  public CreateAccountResponseDto postCreateAccount(
+  public CreateAccountResponseDto createAccount(
       @Valid @RequestBody CreateAccountRequestDto request, HttpServletRequest httpRequest) {
-    return accountClient.createAccount(request, cookieConfig.getAuthUserId(httpRequest));
+    return accountOverviewQueryHandler.createAccount(
+        accountCommandMapper.toCreateAccountCommandDto(
+            request, cookieConfig.getAuthUserId(httpRequest)));
   }
 
-  @GetMapping("/accounts/{ownerUserId}")
-  public List<GetAccountWithCardsResponseDto> getAccountsWithCardsByOwnerId(
-      @PathVariable UUID ownerUserId, HttpServletRequest httpRequest) {
+  @GetMapping("/accounts/me")
+  public List<GetAccountWithCardsResponseDto> getAccountsWithCardsByAuthUserId(
+      HttpServletRequest httpRequest) {
     AuthUserIdAndRoleResult authUser = cookieConfig.getAuthUserIdAndRole(httpRequest);
-    return accountOverviewQueryHandler.getAccountsWithCardsByOwnerId(
-        accountCommandMapper.toGetAccountsWithCardsByOwnerIdCommandDto(
-            ownerUserId, authUser.authUserId(), authUser.role()));
+    return accountOverviewQueryHandler.getAccountsWithCardsByAuthUserId(
+        accountCommandMapper.toGetAllAccountsWithCardsByAuthUserIdCommandDto(
+            authUser.authUserId(), authUser.role()));
   }
 
   @PostMapping("/topUp")
@@ -68,14 +71,28 @@ public class AccountGatewayController {
     return accountClient.withdrawAccount(request, cookieConfig.getAuthUserId(httpRequest));
   }
 
+  @PreAuthorize("hasRole('USER')")
   @PutMapping("/freeze/{accountId}")
   public void freezeAccount(@PathVariable UUID accountId, HttpServletRequest request) {
     AuthUserIdAndRoleResult authUser = cookieConfig.getAuthUserIdAndRole(request);
     accountClient.freezeAccount(accountId, authUser.authUserId(), authUser.role().name());
   }
 
+  @PreAuthorize("hasRole('USER')")
   @PutMapping("/unfreeze/{accountId}")
   public void unfreezeAccount(@PathVariable UUID accountId, HttpServletRequest request) {
+    AuthUserIdAndRoleResult authUser = cookieConfig.getAuthUserIdAndRole(request);
+    accountClient.unfreezeAccount(accountId, authUser.authUserId(), authUser.role().name());
+  }
+
+  @PutMapping("/manager/freeze/{accountId}")
+  public void freezeAccountByManager(@PathVariable UUID accountId, HttpServletRequest request) {
+    AuthUserIdAndRoleResult authUser = cookieConfig.getAuthUserIdAndRole(request);
+    accountClient.freezeAccount(accountId, authUser.authUserId(), authUser.role().name());
+  }
+
+  @PutMapping("/manager/unfreeze/{accountId}")
+  public void unfreezeAccountByManager(@PathVariable UUID accountId, HttpServletRequest request) {
     AuthUserIdAndRoleResult authUser = cookieConfig.getAuthUserIdAndRole(request);
     accountClient.unfreezeAccount(accountId, authUser.authUserId(), authUser.role().name());
   }

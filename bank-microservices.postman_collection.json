@@ -59,11 +59,6 @@
       "type": "string"
     },
     {
-      "key": "ownerUserId",
-      "value": "22222222-2222-2222-2222-222222222222",
-      "type": "string"
-    },
-    {
       "key": "accountId",
       "value": "33333333-3333-3333-3333-333333333333",
       "type": "string"
@@ -502,7 +497,7 @@
             "description": "Requires authenticated active user. Valid type: CHECKING, SAVINGS. Valid currency: USD, EUR, CNY, GBP.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"ownerUserId\": \"{{ownerUserId}}\",\n  \"type\": \"CHECKING\",\n  \"currency\": \"USD\"\n}",
+              "raw": "{\n  \"type\": \"CHECKING\",\n  \"currency\": \"USD\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -514,12 +509,12 @@
           "response": []
         },
         {
-          "name": "Get Accounts With Cards By Owner Id",
+          "name": "Get My Accounts With Cards",
           "request": {
             "method": "GET",
             "header": [],
-            "description": "Requires authenticated active user.",
-            "url": "{{gatewayUrl}}/account/accounts/{{ownerUserId}}"
+            "description": "Requires authenticated active user. The account owner is read from the access-token JWT.",
+            "url": "{{gatewayUrl}}/account/accounts/me"
           },
           "response": []
         },
@@ -528,7 +523,7 @@
           "request": {
             "method": "PUT",
             "header": [],
-            "description": "Requires authenticated active user. Uses authUserId and role from access-token cookie.",
+            "description": "Requires an active USER. Uses authUserId and role from access-token cookie.",
             "url": "{{gatewayUrl}}/account/freeze/{{accountId}}"
           },
           "response": []
@@ -538,8 +533,28 @@
           "request": {
             "method": "PUT",
             "header": [],
-            "description": "Requires authenticated active user. Uses authUserId and role from access-token cookie.",
+            "description": "Requires an active USER. Uses authUserId and role from access-token cookie.",
             "url": "{{gatewayUrl}}/account/unfreeze/{{accountId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Manager - Freeze Account",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "description": "Requires ADMIN or active MANAGER. Uses authUserId and role from the access-token cookie.",
+            "url": "{{gatewayUrl}}/account/manager/freeze/{{accountId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Manager - Unfreeze Account",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "description": "Requires ADMIN or active MANAGER. Uses authUserId and role from the access-token cookie.",
+            "url": "{{gatewayUrl}}/account/manager/unfreeze/{{accountId}}"
           },
           "response": []
         },
@@ -749,12 +764,12 @@
           ]
         },
         {
-          "name": "Get Transactions By User Id",
+          "name": "Get My Transactions",
           "request": {
             "method": "GET",
             "header": [],
-            "description": "Requires authenticated active user.",
-            "url": "{{gatewayUrl}}/transaction/user/{{userId}}"
+            "description": "Requires authenticated active user. The user identity is read from the access-token JWT.",
+            "url": "{{gatewayUrl}}/transaction/user/me"
           },
           "response": []
         }

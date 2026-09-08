@@ -1,6 +1,6 @@
 package apigateway.dto.response.transaction;
 
-import apigateway.dto.response.account.GetAccountResponseDto;
+import apigateway.dto.response.account.GetRecipientResponseDto;
 import enums.common.Currency;
 import enums.transaction.TransactionStatus;
 import java.time.LocalDateTime;
@@ -13,5 +13,5 @@ public record TransactionResponseDto(
     TransactionStatus status,
     LocalDateTime createdAt,
     LocalDateTime completedAt,
-    GetAccountResponseDto sourceAccount,
-    GetAccountResponseDto targetAccount) {}
+    GetRecipientResponseDto sourceAccount,
+    GetRecipientResponseDto targetAccount) {}
