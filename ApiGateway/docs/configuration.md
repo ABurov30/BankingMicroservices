@@ -35,7 +35,7 @@ The default local file is `.env.local`. Set `ENV_FILE` to use a different file.
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `AUTH_COOKIE_DOMAIN` | empty | Optional `Domain` attribute for auth cookies |
-| `AUTH_COOKIE_SAME_SITE` | `Lax` | `SameSite` attribute for auth cookies |
+| `AUTH_COOKIE_SAME_SITE` | `Strict` | `SameSite` attribute for JWT auth cookies |
 | `AUTH_COOKIE_SECURE` | `true` | `Secure` attribute for auth cookies |
 
 ## Cookie Scope
@@ -45,8 +45,28 @@ default. To share cookies between the UI and gateway on the same parent domain, 
 `AUTH_COOKIE_DOMAIN` to that parent domain, for example `buro-bank.ru`.
 
 Do not include a scheme or port in `AUTH_COOKIE_DOMAIN`. Browsers cannot accept cookies for an
-unrelated domain. For cross-site deployments, use `AUTH_COOKIE_SAME_SITE=None` with
-`AUTH_COOKIE_SECURE=true` and send frontend requests with credentials.
+unrelated domain.
+
+## Cookie and CSRF Policy
+
+The gateway stores access (`at`) and refresh (`rt`) JWTs in cookies with `Path=/`,
+`HttpOnly=true`, `Secure=true`, and `SameSite=Strict` by default. `HttpOnly` keeps tokens out of
+browser JavaScript, `Secure` requires HTTPS, and `Strict` prevents the browser from automatically
+sending these cookies on cross-site requests.
+
+Google OAuth2 remains compatible with this policy. The OAuth authorization request is correlated
+through the server session; its session cookie uses `SameSite=Lax` (`server.servlet.session.cookie.same-site`),
+which allows Google's top-level `GET` redirect to `/login/oauth2/code/google`. The gateway issues
+the JWT cookies only after that callback has successfully completed, so they may remain `Strict`.
+
+`AUTH_COOKIE_SAME_SITE=None` must not be enabled until CSRF-token protection is implemented and
+verified for every state-changing endpoint. `Secure=true` is mandatory for `SameSite=None`, but it
+does not itself protect against CSRF. Prefer keeping the UI and gateway same-site so that the
+default `Strict` policy can be retained.
+
+The CORS policy accepts credentialed requests only from the exact origin derived from `SITE_URL`.
+It is a browser access-control policy, not a replacement for the cookie and CSRF policy. Do not
+introduce state-changing `GET` endpoints: mutations must use `POST`, `PUT`, `PATCH`, or `DELETE`.
 
 ## Secrets
 

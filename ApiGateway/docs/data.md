@@ -15,9 +15,11 @@ Runtime request state is derived from:
 - JWT claims such as roles and user status.
 - WebSocket handshake principal data.
 
-Auth cookies are HTTP-only, secure by default, and use path `/`. Cookie `Domain`, `SameSite`, and
-`Secure` attributes are configured through `AUTH_COOKIE_DOMAIN`, `AUTH_COOKIE_SAME_SITE`, and
-`AUTH_COOKIE_SECURE`. Logout clears cookies with the same scope attributes used when they were set.
+Auth cookies use `Path=/`, `HttpOnly=true`, `Secure=true`, and `SameSite=Strict` by default.
+Cookie `Domain`, `SameSite`, and `Secure` attributes are configured through
+`AUTH_COOKIE_DOMAIN`, `AUTH_COOKIE_SAME_SITE`, and `AUTH_COOKIE_SECURE`. Logout clears cookies
+with the same scope attributes used when they were set. See the [cookie and CSRF policy](configuration.md#cookie-and-csrf-policy)
+before changing the `SameSite` setting.
 
 ## Domain Data Flow
 

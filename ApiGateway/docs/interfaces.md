@@ -45,6 +45,11 @@ authorization endpoint. After Google redirects back to `/login/oauth2/code/googl
 exchanges the OIDC user data with `AuthService`, sets `at` and `rt` cookies, and redirects the
 browser to `SITE_URL`.
 
+The callback is a top-level `GET`. OAuth correlation uses the gateway's `SameSite=Lax` session
+cookie; the JWT cookies are not issued until the callback succeeds and remain `SameSite=Strict`.
+The OAuth `state` check is performed by Spring Security. This endpoint starts authentication only
+and must not be repurposed to change account or payment state.
+
 ## Auth Flow Notes
 
 `PUT /auth/change-password` requires an authenticated active user. The request body contains only
