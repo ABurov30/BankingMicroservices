@@ -40,8 +40,10 @@ Balance mutation, hold creation, and hold release are financial operations. Keep
 Funds reservation rejects transactions whose requested currency does not match the source account
 currency. The hold stores the source account currency used for the reserved minor-unit amount.
 
-Consumed Kafka events use processed-event tracking through the `processedevent` helpers in
-`com.burov:support`.
+Consumed Kafka events atomically claim their unique `event_key` in `processed_events` before the
+handler runs. The claim and business operation share one database transaction: duplicates are
+skipped, while a handler failure rolls back both changes. The service exports skipped-event counts
+through the `kafka.idempotency.duplicates` metric.
 
 Currency arithmetic should use `moneyunitsconverter.MoneyUnitsConverter` from `com.burov:support`
 when converting between major and minor units.

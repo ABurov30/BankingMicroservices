@@ -1,7 +1,5 @@
 package accountservice.listener;
 
-import accountservice.annotation.EventKey;
-import accountservice.annotation.IdempotentKafkaEvent;
 import accountservice.mapper.command.AccountCommandMapper;
 import accountservice.service.AccountService;
 import kafkacontracts.account.TransactionFundsRequestedEventPayload;
@@ -11,6 +9,8 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
+import processedevent.annotation.EventKey;
+import processedevent.annotation.IdempotentKafkaEvent;
 
 @Component
 public class AccountKafkaListener {

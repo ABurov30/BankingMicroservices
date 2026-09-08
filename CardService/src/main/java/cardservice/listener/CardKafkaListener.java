@@ -1,7 +1,5 @@
 package cardservice.listener;
 
-import cardservice.annotation.EventKey;
-import cardservice.annotation.IdempotentKafkaEvent;
 import cardservice.mapper.command.CardCommandMapper;
 import cardservice.service.CardService;
 import enums.common.Currency;
@@ -14,6 +12,8 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
+import processedevent.annotation.EventKey;
+import processedevent.annotation.IdempotentKafkaEvent;
 
 @Component
 public class CardKafkaListener {

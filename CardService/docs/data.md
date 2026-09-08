@@ -49,5 +49,7 @@ card/account currency.
 
 `card_limit_holds.transaction_id` is unique and provides idempotency for card limit reservations.
 
-Consumed Kafka events use processed-event tracking through the `processedevent` helpers in
-`com.burov:support`.
+Consumed Kafka events atomically claim their unique `event_key` in `processed_events` before the
+handler runs. The claim and business operation share one database transaction: duplicates are
+skipped, while a handler failure rolls back both changes. The service exports skipped-event counts
+through the `kafka.idempotency.duplicates` metric.

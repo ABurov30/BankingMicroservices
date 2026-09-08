@@ -6,8 +6,6 @@ import kafkacontracts.auth.*;
 import kafkacontracts.card.CardCreatedEventPayload;
 import kafkacontracts.card.CardFrozenEventPayload;
 import kafkacontracts.card.CardUnfrozenEventPayload;
-import notificationservice.annotation.EventKey;
-import notificationservice.annotation.IdempotentKafkaEvent;
 import notificationservice.mapper.command.EmailNotificationCommandMapper;
 import notificationservice.mapper.command.PushNotificationCommandMapper;
 import notificationservice.service.NotificationService;
@@ -15,6 +13,8 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
+import processedevent.annotation.EventKey;
+import processedevent.annotation.IdempotentKafkaEvent;
 
 @Component
 public class NotificationKafkaListener {

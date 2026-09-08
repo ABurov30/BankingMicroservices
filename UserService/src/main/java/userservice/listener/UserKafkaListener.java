@@ -6,8 +6,8 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
-import userservice.annotation.EventKey;
-import userservice.annotation.IdempotentKafkaEvent;
+import processedevent.annotation.EventKey;
+import processedevent.annotation.IdempotentKafkaEvent;
 import userservice.mapper.command.UserCommandMapper;
 import userservice.service.UserService;
 

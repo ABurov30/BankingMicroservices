@@ -35,9 +35,11 @@ Templates live under `src/main/resources/templates/email` and include auth lifec
 
 ## Data Integrity Notes
 
-Notification creation should remain idempotent for consumed Kafka events through the
-`processedevent` helpers in `com.burov:support`. Push notification outbox rows are the source for
-events delivered to `ApiGateway`.
+Notification creation atomically claims each consumed Kafka event's unique `event_key` in
+`processed_events` before its handler runs. The claim and business operation share one database
+transaction: duplicates are skipped, while a handler failure rolls back both changes. The service
+exports skipped-event counts through the `kafka.idempotency.duplicates` metric. Push notification
+outbox rows are the source for events delivered to `ApiGateway`.
 
 Transaction notification amounts are converted from minor units to major units with
 `moneyunitsconverter.MoneyUnitsConverter` before being stored in notification payloads.
