@@ -6,6 +6,7 @@ import cardservice.repository.CardOutboxEventRepository;
 import java.util.List;
 import java.util.Map;
 import kafkacontracts.card.CardEventType;
+import lombok.RequiredArgsConstructor;
 import org.apache.avro.specific.SpecificRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,20 +18,12 @@ import outboxsupport.KafkaOnSentHandler;
 import outboxsupport.OutboxEventStatus;
 
 @Service
+@RequiredArgsConstructor
 public class CardOutboxPublisher implements KafkaOnSentHandler {
   private static final Logger log = LoggerFactory.getLogger(CardOutboxPublisher.class);
   private final CardOutboxEventRepository cardOutboxEventRepository;
   private final KafkaTemplate<String, SpecificRecord> kafkaTemplate;
   private final CardEventPayloadMapper eventPayloadMapper;
-
-  public CardOutboxPublisher(
-      CardOutboxEventRepository cardOutboxEventRepository,
-      KafkaTemplate<String, SpecificRecord> kafkaTemplate,
-      CardEventPayloadMapper eventPayloadMapper) {
-    this.cardOutboxEventRepository = cardOutboxEventRepository;
-    this.kafkaTemplate = kafkaTemplate;
-    this.eventPayloadMapper = eventPayloadMapper;
-  }
 
   @Scheduled(fixedDelay = 5000)
   @Transactional

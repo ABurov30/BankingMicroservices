@@ -6,6 +6,7 @@ import accountservice.repository.AccountOutboxEventRepository;
 import java.util.List;
 import java.util.Map;
 import kafkacontracts.account.AccountEventType;
+import lombok.RequiredArgsConstructor;
 import org.apache.avro.specific.SpecificRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +20,7 @@ import outboxsupport.KafkaOnSentHandler;
 import outboxsupport.OutboxEventStatus;
 
 @Service
+@RequiredArgsConstructor
 public class AccountOutboxPublisher implements KafkaOnSentHandler {
   public static final String TRANSACTION_NOTIFICATION_DIRECTION_HEADER =
       "transaction-notification-direction";
@@ -26,15 +28,6 @@ public class AccountOutboxPublisher implements KafkaOnSentHandler {
   private final AccountOutboxEventRepository accountOutboxEventRepository;
   private final KafkaTemplate<String, SpecificRecord> kafkaTemplate;
   private final AccountEventPayloadMapper eventPayloadMapper;
-
-  public AccountOutboxPublisher(
-      AccountOutboxEventRepository accountOutboxEventRepository,
-      KafkaTemplate<String, SpecificRecord> kafkaTemplate,
-      AccountEventPayloadMapper eventPayloadMapper) {
-    this.accountOutboxEventRepository = accountOutboxEventRepository;
-    this.kafkaTemplate = kafkaTemplate;
-    this.eventPayloadMapper = eventPayloadMapper;
-  }
 
   @Scheduled(fixedDelay = 5000)
   @Transactional

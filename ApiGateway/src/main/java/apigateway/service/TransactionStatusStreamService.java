@@ -6,6 +6,7 @@ import io.grpc.stub.ClientResponseObserver;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -15,6 +16,7 @@ import transaction.contract.v1.TransactionStatusResponse;
 import transaction.contract.v1.WatchTransactionStatusRequest;
 
 @Service
+@RequiredArgsConstructor
 public class TransactionStatusStreamService {
   private static final Logger logger =
       LoggerFactory.getLogger(TransactionStatusStreamService.class);
@@ -24,15 +26,6 @@ public class TransactionStatusStreamService {
   private final TransactionGrpcMapper grpcMapper;
   private final Map<String, ClientCallStreamObserver<WatchTransactionStatusRequest>> streams =
       new ConcurrentHashMap<>();
-
-  public TransactionStatusStreamService(
-      TransactionRpcServiceGrpc.TransactionRpcServiceStub asyncStub,
-      SimpMessagingTemplate messagingTemplate,
-      TransactionGrpcMapper grpcMapper) {
-    this.asyncStub = asyncStub;
-    this.messagingTemplate = messagingTemplate;
-    this.grpcMapper = grpcMapper;
-  }
 
   public void watch(UUID transactionId, UUID authUserId, UUID subscriptionKey, String key) {
     unwatch(key);

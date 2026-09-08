@@ -7,6 +7,7 @@ import io.grpc.stub.StreamObserver;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import transactionservice.mapper.grpc.TransactionGrpcMapper;
 import transactionservice.repository.TransactionRepository;
 
 @Service
+@RequiredArgsConstructor
 public class TransactionStatusStreamRegistry {
   private final Map<UUID, Map<UUID, StreamObserver<TransactionStatusResponse>>> subscribers =
       new ConcurrentHashMap<>();
@@ -25,15 +27,6 @@ public class TransactionStatusStreamRegistry {
   private final TransactionRepository transactionRepository;
   private final AccountGrpcClient accountGrpcClient;
   private static final Logger log = LoggerFactory.getLogger(TransactionStatusStreamRegistry.class);
-
-  public TransactionStatusStreamRegistry(
-      TransactionGrpcMapper grpcMapper,
-      TransactionRepository transactionRepository,
-      AccountGrpcClient accountGrpcClient) {
-    this.transactionGrpcMapper = grpcMapper;
-    this.transactionRepository = transactionRepository;
-    this.accountGrpcClient = accountGrpcClient;
-  }
 
   public void subscribe(
       UUID transactionId,

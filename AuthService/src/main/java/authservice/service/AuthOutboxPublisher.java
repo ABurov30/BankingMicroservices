@@ -6,6 +6,7 @@ import authservice.repository.AuthOutboxEventRepository;
 import java.util.List;
 import java.util.Map;
 import kafkacontracts.auth.AuthEventType;
+import lombok.RequiredArgsConstructor;
 import org.apache.avro.specific.SpecificRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,20 +18,12 @@ import outboxsupport.KafkaOnSentHandler;
 import outboxsupport.OutboxEventStatus;
 
 @Service
+@RequiredArgsConstructor
 public class AuthOutboxPublisher implements KafkaOnSentHandler {
   private static final Logger log = LoggerFactory.getLogger(AuthOutboxPublisher.class);
   private final AuthOutboxEventRepository authOutboxEventRepository;
   private final KafkaTemplate<String, SpecificRecord> kafkaTemplate;
   private final AuthEventPayloadMapper eventPayloadMapper;
-
-  public AuthOutboxPublisher(
-      AuthOutboxEventRepository authOutboxEventRepository,
-      KafkaTemplate<String, SpecificRecord> kafkaTemplate,
-      AuthEventPayloadMapper eventPayloadMapper) {
-    this.authOutboxEventRepository = authOutboxEventRepository;
-    this.kafkaTemplate = kafkaTemplate;
-    this.eventPayloadMapper = eventPayloadMapper;
-  }
 
   @Scheduled(fixedDelay = 5000)
   @Transactional

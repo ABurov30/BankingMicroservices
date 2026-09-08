@@ -9,6 +9,7 @@ import enums.common.Currency;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import lombok.RequiredArgsConstructor;
 import moneyunitsconverter.MoneyUnitsConverter;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -16,16 +17,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class AccountScheduler {
   private final AccountRepository accountRepository;
   private final AccountHoldRepository accountHoldRepository;
   private static final BigDecimal DEBIT_RATE = new BigDecimal("7");
-
-  public AccountScheduler(
-      AccountRepository accountRepository, AccountHoldRepository accountHoldRepository) {
-    this.accountRepository = accountRepository;
-    this.accountHoldRepository = accountHoldRepository;
-  }
 
   @Scheduled(cron = "0 0 0 * * *", zone = "Europe/Paris")
   @Transactional

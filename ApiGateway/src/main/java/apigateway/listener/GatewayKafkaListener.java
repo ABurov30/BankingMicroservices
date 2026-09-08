@@ -2,6 +2,7 @@ package apigateway.listener;
 
 import apigateway.mapper.result.NotificationResultMapper;
 import kafkacontracts.account.NotificationCreatedEventPayload;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -9,17 +10,12 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class GatewayKafkaListener {
   private static final Logger log = LoggerFactory.getLogger(GatewayKafkaListener.class);
 
   private final SimpMessagingTemplate messagingTemplate;
   private final NotificationResultMapper notificationResultMapper;
-
-  public GatewayKafkaListener(
-      SimpMessagingTemplate messagingTemplate, NotificationResultMapper notificationResultMapper) {
-    this.messagingTemplate = messagingTemplate;
-    this.notificationResultMapper = notificationResultMapper;
-  }
 
   @KafkaListener(
       topics =

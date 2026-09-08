@@ -8,20 +8,15 @@ import authservice.service.AuthService;
 import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
 import java.time.LocalDateTime;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class AuthGrpcService extends AuthRpcServiceGrpc.AuthRpcServiceImplBase {
   private final AuthService authService;
   private final AuthCommandMapper commandMapper;
   private final AuthGrpcMapper grpcMapper;
-
-  public AuthGrpcService(
-      AuthService authService, AuthCommandMapper commandMapper, AuthGrpcMapper grpcMapper) {
-    this.authService = authService;
-    this.commandMapper = commandMapper;
-    this.grpcMapper = grpcMapper;
-  }
 
   @Override
   public void getAuthHealth(

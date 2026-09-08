@@ -24,7 +24,7 @@ public interface ResetPasswordTokenRepository
         WHERE rpt.tokenHash = :tokenHash
           AND rpt.usedAt IS NULL
           AND rpt.expiresAt > :now
-        """)
+      """)
   Optional<ResetPasswordTokenEntity> findByTokenHashForUpdate(
       @Param("tokenHash") String tokenHash, @Param("now") LocalDateTime now);
 
@@ -36,7 +36,7 @@ public interface ResetPasswordTokenRepository
         WHERE rpt.authUser.id = :authUserId
           AND rpt.usedAt IS NULL
           AND rpt.expiresAt > :now
-        """)
+      """)
   List<ResetPasswordTokenEntity> findAllByAuthUserIdForUpdate(
       @Param("authUserId") UUID authUserId, @Param("now") LocalDateTime now);
 }

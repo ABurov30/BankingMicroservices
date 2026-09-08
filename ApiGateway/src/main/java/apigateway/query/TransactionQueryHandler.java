@@ -14,9 +14,11 @@ import apigateway.mapper.request.AccountRequestMapper;
 import apigateway.mapper.request.UserRequestMapper;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class TransactionQueryHandler {
   private final AccountGrpcClient accountGrpcClient;
   private final TransactionGrpcClient transactionGrpcClient;
@@ -25,23 +27,6 @@ public class TransactionQueryHandler {
   private final UserGrpcClient userGrpcClient;
   private final UserRequestMapper userRequestMapper;
   private final TransactionCommandMapper transactionCommandMapper;
-
-  public TransactionQueryHandler(
-      AccountGrpcClient accountGrpcClient,
-      TransactionGrpcClient transactionGrpcClient,
-      AccountGrpcMapper accountGrpcMapper,
-      AccountRequestMapper accountRequestMapper,
-      UserGrpcClient userGrpcClient,
-      UserRequestMapper userRequestMapper,
-      TransactionCommandMapper transactionCommandMapper) {
-    this.accountGrpcClient = accountGrpcClient;
-    this.transactionGrpcClient = transactionGrpcClient;
-    this.accountGrpcMapper = accountGrpcMapper;
-    this.accountRequestMapper = accountRequestMapper;
-    this.userGrpcClient = userGrpcClient;
-    this.userRequestMapper = userRequestMapper;
-    this.transactionCommandMapper = transactionCommandMapper;
-  }
 
   public CreateTransactionResponseDto startTransaction(
       CreateTransactionRequestDto request, UUID authUserId) {

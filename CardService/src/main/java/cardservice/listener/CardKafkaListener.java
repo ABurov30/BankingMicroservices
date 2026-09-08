@@ -8,6 +8,7 @@ import kafkacontracts.account.AccountFrozenEventPayload;
 import kafkacontracts.account.AccountUnfrozenEventPayload;
 import kafkacontracts.account.TransactionCompensatedEventPayload;
 import kafkacontracts.account.TransactionCompletedEventPayload;
+import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
@@ -16,15 +17,11 @@ import processedevent.annotation.EventKey;
 import processedevent.annotation.IdempotentKafkaEvent;
 
 @Component
+@RequiredArgsConstructor
 public class CardKafkaListener {
 
   private final CardService cardService;
   private final CardCommandMapper commandMapper;
-
-  public CardKafkaListener(CardService cardService, CardCommandMapper commandMapper) {
-    this.cardService = cardService;
-    this.commandMapper = commandMapper;
-  }
 
   @IdempotentKafkaEvent
   @KafkaListener(

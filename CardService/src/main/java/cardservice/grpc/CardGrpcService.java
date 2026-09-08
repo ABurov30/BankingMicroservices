@@ -9,20 +9,15 @@ import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
 import java.time.LocalDateTime;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class CardGrpcService extends CardRpcServiceGrpc.CardRpcServiceImplBase {
   private final CardCommandMapper commandMapper;
   private final CardGrpcMapper grpcMapper;
   private final CardService cardService;
-
-  public CardGrpcService(
-      CardCommandMapper commandMapper, CardGrpcMapper grpcMapper, CardService cardService) {
-    this.commandMapper = commandMapper;
-    this.grpcMapper = grpcMapper;
-    this.cardService = cardService;
-  }
 
   @Override
   public void getCardHealth(

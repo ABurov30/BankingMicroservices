@@ -14,28 +14,19 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/account")
+@RequiredArgsConstructor
 public class AccountGatewayController {
 
   private final AccountGrpcClient accountClient;
   private final AccountQueryHandler accountOverviewQueryHandler;
   private final CookieConfig cookieConfig;
   private final AccountCommandMapper accountCommandMapper;
-
-  public AccountGatewayController(
-      AccountGrpcClient accountClient,
-      AccountQueryHandler accountOverviewQueryHandler,
-      CookieConfig cookieConfig,
-      AccountCommandMapper accountCommandMapper) {
-    this.accountClient = accountClient;
-    this.accountOverviewQueryHandler = accountOverviewQueryHandler;
-    this.cookieConfig = cookieConfig;
-    this.accountCommandMapper = accountCommandMapper;
-  }
 
   @GetMapping("/health")
   public String getAccountHealth() {

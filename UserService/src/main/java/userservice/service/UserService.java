@@ -5,6 +5,7 @@ import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Map;
 import kafkacontracts.user.UserEventType;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -17,20 +18,12 @@ import userservice.repository.UserOutboxEventRepository;
 import userservice.repository.UserProfileRepository;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
   private final UserProfileRepository userProfileRepository;
   private final UserOutboxEventRepository userOutboxEventRepository;
   private final UserResultMapper resultMapper;
   private static final Logger log = LoggerFactory.getLogger(UserService.class);
-
-  public UserService(
-      UserProfileRepository userProfileRepository,
-      UserOutboxEventRepository userOutboxEventRepository,
-      UserResultMapper resultMapper) {
-    this.userProfileRepository = userProfileRepository;
-    this.userOutboxEventRepository = userOutboxEventRepository;
-    this.resultMapper = resultMapper;
-  }
 
   @Transactional
   public GetUserInfoResult getUserInfo(GetUserInfoCommand getUserInfoCommand) {

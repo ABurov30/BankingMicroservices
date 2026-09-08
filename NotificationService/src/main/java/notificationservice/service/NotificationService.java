@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import kafkacontracts.notification.NotificationEventType;
+import lombok.RequiredArgsConstructor;
 import notificationservice.document.EmailNotificationDocument;
 import notificationservice.document.PushNotificationDocument;
 import notificationservice.dto.CreateEmailNotificationCommand;
@@ -23,25 +24,13 @@ import notificationservice.service.push.PushNotificationResolver;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class NotificationService {
   private final EmailNotificationRepository emailNotificationRepository;
   private final PushNotificationRepository pushNotificationRepository;
   private final PushNotificationResolver pushNotificationResolver;
   private final PushNotificationOutboxEventRepository pushNotificationOutboxEventRepository;
   private final Validator validator;
-
-  public NotificationService(
-      EmailNotificationRepository emailNotificationRepository,
-      PushNotificationRepository pushNotificationRepository,
-      PushNotificationResolver pushNotificationResolver,
-      PushNotificationOutboxEventRepository pushNotificationOutboxEventRepository,
-      Validator validator) {
-    this.emailNotificationRepository = emailNotificationRepository;
-    this.pushNotificationRepository = pushNotificationRepository;
-    this.pushNotificationResolver = pushNotificationResolver;
-    this.pushNotificationOutboxEventRepository = pushNotificationOutboxEventRepository;
-    this.validator = validator;
-  }
 
   public void createEmailNotification(CreateEmailNotificationCommand command) {
     EmailNotificationDocument emailNotification = new EmailNotificationDocument();

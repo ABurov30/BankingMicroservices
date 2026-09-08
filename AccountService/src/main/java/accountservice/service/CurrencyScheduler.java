@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -22,14 +23,11 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 @Service
+@RequiredArgsConstructor
 public class CurrencyScheduler {
   private final CurrencyRepository currencyRepository;
   private final RestClient restClient = RestClient.create();
   private static final Logger log = LoggerFactory.getLogger(CurrencyScheduler.class);
-
-  public CurrencyScheduler(CurrencyRepository currencyRepository) {
-    this.currencyRepository = currencyRepository;
-  }
 
   @EventListener(ApplicationReadyEvent.class)
   public void updateCurrencyExchangeRateOnStartup() {

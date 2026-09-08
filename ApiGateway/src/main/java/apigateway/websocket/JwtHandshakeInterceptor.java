@@ -4,6 +4,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
@@ -15,13 +16,10 @@ import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
 @Component
+@RequiredArgsConstructor
 public class JwtHandshakeInterceptor implements HandshakeInterceptor {
 
   private final JwtDecoder jwtDecoder;
-
-  public JwtHandshakeInterceptor(JwtDecoder jwtDecoder) {
-    this.jwtDecoder = jwtDecoder;
-  }
 
   @Override
   public boolean beforeHandshake(

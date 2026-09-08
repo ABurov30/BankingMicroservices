@@ -1,6 +1,7 @@
 package transactionservice.service;
 
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import transactionservice.dto.CreateTransactionCommand;
 import transactionservice.dto.CreateTransactionResult;
@@ -11,16 +12,10 @@ import transactionservice.mapper.result.TransactionResultMapper;
 import transactionservice.repository.TransactionRepository;
 
 @Service
+@RequiredArgsConstructor
 public class TransactionIdempotencyService {
   private final TransactionRepository transactionRepository;
   private final TransactionResultMapper transactionResultMapper;
-
-  public TransactionIdempotencyService(
-      TransactionRepository transactionRepository,
-      TransactionResultMapper transactionResultMapper) {
-    this.transactionRepository = transactionRepository;
-    this.transactionResultMapper = transactionResultMapper;
-  }
 
   @Transactional(Transactional.TxType.REQUIRES_NEW)
   public CreateTransactionResult getExistingTransactionResult(CreateTransactionCommand command) {

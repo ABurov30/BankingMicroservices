@@ -1,6 +1,7 @@
 package notificationservice.service.email;
 
 import java.time.LocalDateTime;
+import lombok.RequiredArgsConstructor;
 import notificationservice.document.EmailNotificationDocument;
 import notificationservice.enums.email.EmailNotificationStatus;
 import org.slf4j.Logger;
@@ -15,17 +16,12 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class EmailNotificationScheduler {
   private static final Logger log = LoggerFactory.getLogger(EmailNotificationScheduler.class);
   private final EmailSenderService emailSenderService;
   private final MongoTemplate mongoTemplate;
   private static final int BATCH_SIZE = 50;
-
-  public EmailNotificationScheduler(
-      EmailSenderService emailSenderService, MongoTemplate mongoTemplate) {
-    this.emailSenderService = emailSenderService;
-    this.mongoTemplate = mongoTemplate;
-  }
 
   @Scheduled(fixedDelay = 5000)
   public void sendEmailNotifications() {

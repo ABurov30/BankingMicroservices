@@ -5,6 +5,7 @@ import io.grpc.stub.ServerCallStreamObserver;
 import io.grpc.stub.StreamObserver;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import transaction.contract.v1.*;
 import transactionservice.dto.CreateTransactionResult;
@@ -13,6 +14,7 @@ import transactionservice.mapper.grpc.TransactionGrpcMapper;
 import transactionservice.service.TransactionService;
 
 @Service
+@RequiredArgsConstructor
 public class TransactionGrpcService
     extends TransactionRpcServiceGrpc.TransactionRpcServiceImplBase {
 
@@ -20,17 +22,6 @@ public class TransactionGrpcService
   private final TransactionCommandMapper commandMapper;
   private final TransactionGrpcMapper grpcMapper;
   private final TransactionStatusStreamRegistry transactionStatusStreamRegistry;
-
-  public TransactionGrpcService(
-      TransactionService transactionService,
-      TransactionCommandMapper transactionCommandMapper,
-      TransactionGrpcMapper transactionGrpcMapper,
-      TransactionStatusStreamRegistry transactionStatusStreamRegistry) {
-    this.transactionService = transactionService;
-    this.commandMapper = transactionCommandMapper;
-    this.grpcMapper = transactionGrpcMapper;
-    this.transactionStatusStreamRegistry = transactionStatusStreamRegistry;
-  }
 
   @Override
   public void getTransactionHealth(

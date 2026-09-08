@@ -4,6 +4,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import lombok.RequiredArgsConstructor;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.openssl.PEMParser;
@@ -17,13 +18,10 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 
 @Configuration
+@RequiredArgsConstructor
 public class JwtConfig {
   private static final Logger log = LoggerFactory.getLogger(JwtConfig.class);
   private final JwtProperties jwtProperties;
-
-  public JwtConfig(JwtProperties jwtProperties) {
-    this.jwtProperties = jwtProperties;
-  }
 
   @Bean
   public JwtEncoder jwtEncoder() {

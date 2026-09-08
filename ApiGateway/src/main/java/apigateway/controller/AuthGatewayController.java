@@ -11,21 +11,18 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.io.IOException;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
+@RequiredArgsConstructor
 public class AuthGatewayController {
 
   private final AuthGrpcClient authClient;
   private final CookieConfig cookieConfig;
-
-  public AuthGatewayController(AuthGrpcClient authClient, CookieConfig cookieConfig) {
-    this.cookieConfig = cookieConfig;
-    this.authClient = authClient;
-  }
 
   @ResponseStatus(HttpStatus.OK)
   @PostMapping("/signup")

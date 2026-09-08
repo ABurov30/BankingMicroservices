@@ -18,12 +18,14 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.Map;
 import kafkacontracts.account.AccountEventType;
+import lombok.RequiredArgsConstructor;
 import moneyunitsconverter.MoneyUnitsConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class TransferService {
   private final AccountHoldRepository accountHoldRepository;
   private final AccountRepository accountRepository;
@@ -32,19 +34,6 @@ public class TransferService {
   private final AccountResultMapper resultMapper;
   private static final Logger log = LoggerFactory.getLogger(TransferService.class);
   private static final long HOLD_TTL_MINUTES = 5;
-
-  public TransferService(
-      AccountHoldRepository accountHoldRepository,
-      AccountRepository accountRepository,
-      CurrencyService currencyService,
-      AccountOutboxService accountOutboxService,
-      AccountResultMapper accountResultMapper) {
-    this.accountHoldRepository = accountHoldRepository;
-    this.accountRepository = accountRepository;
-    this.currencyService = currencyService;
-    this.accountOutboxService = accountOutboxService;
-    this.resultMapper = accountResultMapper;
-  }
 
   private BigDecimal convertAmountForTransactionToTagetCurrency(
       BigDecimal amount, Currency sourceCurrency, Currency targetCurrency) {

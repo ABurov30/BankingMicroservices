@@ -31,12 +31,14 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import kafkacontracts.card.CardEventType;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class CardService {
   private final CardRepository cardRepository;
   private final AccountOwnershipProjectionRepository accountOwnershipProjectionRepository;
@@ -49,19 +51,6 @@ public class CardService {
   private static final int ATTEMPTS_TO_GENERATE_PAN = 10;
   private static final long HOLD_TTL_MINUTES = 5;
   private static final Logger log = LoggerFactory.getLogger(CardService.class);
-
-  public CardService(
-      CardRepository cardRepository,
-      AccountOwnershipProjectionRepository accountOwnershipProjectionRepository,
-      CardOutboxEventRepository cardOutboxEventRepository,
-      CardResultMapper resultMapper,
-      CardLimitHoldRepository cardLimitHoldRepository) {
-    this.cardRepository = cardRepository;
-    this.accountOwnershipProjectionRepository = accountOwnershipProjectionRepository;
-    this.cardOutboxEventRepository = cardOutboxEventRepository;
-    this.resultMapper = resultMapper;
-    this.cardLimitHoldRepository = cardLimitHoldRepository;
-  }
 
   private String generateUniquePan() {
 

@@ -14,25 +14,16 @@ import apigateway.mapper.request.AccountRequestMapper;
 import enums.account.AccountStatus;
 import enums.auth.Roles;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class CardQueryHandler {
   private final AccountGrpcClient accountGrpcClient;
   private final CardGrpcClient cardGrpcClient;
   private final AccountCommandMapper accountCommandMapper;
   private final AccountRequestMapper accountRequestMapper;
-
-  public CardQueryHandler(
-      AccountGrpcClient accountGrpcClient,
-      CardGrpcClient cardGrpcClient,
-      AccountCommandMapper accountCommandMapper,
-      AccountRequestMapper accountRequestMapper) {
-    this.accountGrpcClient = accountGrpcClient;
-    this.cardGrpcClient = cardGrpcClient;
-    this.accountCommandMapper = accountCommandMapper;
-    this.accountRequestMapper = accountRequestMapper;
-  }
 
   public CreateCardResponseDto createCard(
       CreateCardRequestDto request, UUID authUserId, String role) {

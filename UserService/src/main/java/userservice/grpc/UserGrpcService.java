@@ -4,6 +4,7 @@ import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
 import java.time.LocalDateTime;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import user.contract.v1.*;
 import userservice.dto.GetUserInfoByEmailCommand;
@@ -14,17 +15,11 @@ import userservice.mapper.grpc.UserGrpcMapper;
 import userservice.service.UserService;
 
 @Service
+@RequiredArgsConstructor
 public class UserGrpcService extends UserRpcServiceGrpc.UserRpcServiceImplBase {
   private final UserService userService;
   private final UserCommandMapper commandMapper;
   private final UserGrpcMapper grpcMapper;
-
-  public UserGrpcService(
-      UserService userService, UserCommandMapper commandMapper, UserGrpcMapper grpcMapper) {
-    this.userService = userService;
-    this.commandMapper = commandMapper;
-    this.grpcMapper = grpcMapper;
-  }
 
   @Override
   public void getUserHealth(

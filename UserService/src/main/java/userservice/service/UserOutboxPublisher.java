@@ -3,6 +3,7 @@ package userservice.service;
 import java.util.List;
 import java.util.Map;
 import kafkacontracts.user.UserEventType;
+import lombok.RequiredArgsConstructor;
 import org.apache.avro.specific.SpecificRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,20 +18,12 @@ import userservice.mapper.eventpayload.UserEventPayloadMapper;
 import userservice.repository.UserOutboxEventRepository;
 
 @Service
+@RequiredArgsConstructor
 public class UserOutboxPublisher implements KafkaOnSentHandler {
   private static final Logger log = LoggerFactory.getLogger(UserOutboxPublisher.class);
   private final UserOutboxEventRepository userOutboxEventRepository;
   private final KafkaTemplate<String, SpecificRecord> kafkaTemplate;
   private final UserEventPayloadMapper eventPayloadMapper;
-
-  public UserOutboxPublisher(
-      UserOutboxEventRepository userOutboxEventRepository,
-      KafkaTemplate<String, SpecificRecord> kafkaTemplate,
-      UserEventPayloadMapper eventPayloadMapper) {
-    this.userOutboxEventRepository = userOutboxEventRepository;
-    this.kafkaTemplate = kafkaTemplate;
-    this.eventPayloadMapper = eventPayloadMapper;
-  }
 
   @Scheduled(fixedDelay = 5000)
   @Transactional

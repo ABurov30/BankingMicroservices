@@ -3,6 +3,7 @@ package notificationservice.service.push;
 import java.util.List;
 import java.util.Map;
 import kafkacontracts.notification.NotificationEventType;
+import lombok.RequiredArgsConstructor;
 import notificationservice.entity.PushNotificationOutboxEventEntity;
 import notificationservice.mapper.eventpayload.PushNotificationEventPayloadMapper;
 import notificationservice.repository.PushNotificationOutboxEventRepository;
@@ -17,20 +18,12 @@ import outboxsupport.KafkaOnSentHandler;
 import outboxsupport.OutboxEventStatus;
 
 @Service
+@RequiredArgsConstructor
 public class PushNotificationOutboxPublisher implements KafkaOnSentHandler {
   private static final Logger log = LoggerFactory.getLogger(PushNotificationOutboxPublisher.class);
   private final PushNotificationOutboxEventRepository pushNotificationOutboxEventRepository;
   private final KafkaTemplate<String, SpecificRecord> kafkaTemplate;
   private final PushNotificationEventPayloadMapper eventPayloadMapper;
-
-  public PushNotificationOutboxPublisher(
-      PushNotificationOutboxEventRepository pushNotificationOutboxEventRepository,
-      KafkaTemplate<String, SpecificRecord> kafkaTemplate,
-      PushNotificationEventPayloadMapper eventPayloadMapper) {
-    this.pushNotificationOutboxEventRepository = pushNotificationOutboxEventRepository;
-    this.kafkaTemplate = kafkaTemplate;
-    this.eventPayloadMapper = eventPayloadMapper;
-  }
 
   @Scheduled(fixedDelay = 5000)
   @Transactional

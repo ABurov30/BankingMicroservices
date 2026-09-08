@@ -11,9 +11,11 @@ import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
 import java.time.LocalDateTime;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class AccountGrpcService extends AccountRpcServiceGrpc.AccountRpcServiceImplBase {
 
   private final AccountCommandMapper commandMapper;
@@ -21,19 +23,6 @@ public class AccountGrpcService extends AccountRpcServiceGrpc.AccountRpcServiceI
   private final AccountService accountService;
   private final TransferService transferService;
   private final TransferCommandMapper transferCommandMapper;
-
-  public AccountGrpcService(
-      AccountCommandMapper commandMapper,
-      AccountGrpcMapper grpcMapper,
-      AccountService accountService,
-      TransferService transferService,
-      TransferCommandMapper transferCommandMapper) {
-    this.commandMapper = commandMapper;
-    this.grpcMapper = grpcMapper;
-    this.accountService = accountService;
-    this.transferService = transferService;
-    this.transferCommandMapper = transferCommandMapper;
-  }
 
   @Override
   public void getAccountHealth(

@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import kafkacontracts.account.AccountEventType;
+import lombok.RequiredArgsConstructor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +26,7 @@ import org.springframework.validation.annotation.Validated;
 
 @Service
 @Validated
+@RequiredArgsConstructor
 public class AccountService {
   private final AccountRepository accountRepository;
   private static final int TRY_TO_GENERATE_ACCOUNT_NUMBER = 10;
@@ -35,23 +37,6 @@ public class AccountService {
   private final TransferCommandMapper transferCommandMapper;
   private static final Logger log = LoggerFactory.getLogger(AccountService.class);
   private final AccountOutboxService accountOutboxService;
-
-  public AccountService(
-      AccountRepository accountRepository,
-      AccountResultMapper resultMapper,
-      CurrencyRepository currencyRepository,
-      AccountHoldRepository accountHoldRepository,
-      TransferCommandMapper transferCommandMapper,
-      AccountOutboxService accountOutboxService,
-      TransferService transferService) {
-    this.accountRepository = accountRepository;
-    this.resultMapper = resultMapper;
-    this.currencyRepository = currencyRepository;
-    this.accountHoldRepository = accountHoldRepository;
-    this.transferCommandMapper = transferCommandMapper;
-    this.accountOutboxService = accountOutboxService;
-    this.transferService = transferService;
-  }
 
   private String generateUniqueAccountNumber() {
     for (int i = 0; i < TRY_TO_GENERATE_ACCOUNT_NUMBER; i++) {

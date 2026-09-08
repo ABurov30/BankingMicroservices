@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,19 +15,11 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.web.filter.OncePerRequestFilter;
 import tools.jackson.databind.json.JsonMapper;
 
+@RequiredArgsConstructor
 public class RateLimitFilter extends OncePerRequestFilter {
   private final RedisRateLimitService rateLimitService;
   private final RateLimitProperties properties;
   private final JsonMapper jsonMapper;
-
-  public RateLimitFilter(
-      RedisRateLimitService rateLimitService,
-      RateLimitProperties properties,
-      JsonMapper jsonMapper) {
-    this.rateLimitService = rateLimitService;
-    this.properties = properties;
-    this.jsonMapper = jsonMapper;
-  }
 
   @Override
   protected void doFilterInternal(

@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import kafkacontracts.auth.AuthEventType;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class AuthService {
   private static final Logger log = LoggerFactory.getLogger(AuthService.class);
   private final AuthUserRepository authUserRepository;
@@ -36,31 +38,6 @@ public class AuthService {
   private final AuthSocialAccountsRepository authSocialAccountsRepository;
   private final AuthResultMapper authResultMapper;
   private final ResetPasswordTokenRepository resetPasswordTokenRepository;
-
-  public AuthService(
-      AuthUserRepository authUserRepository,
-      UserRoleRepository userRoleRepository,
-      PasswordEncoder passwordEncoder,
-      TokenService tokenService,
-      RoleRepository roleRepository,
-      RefreshTokenRepository refreshTokenRepository,
-      JwtProperties jwtProperties,
-      AuthOutboxEventRepository authOutboxEventRepository,
-      AuthSocialAccountsRepository authSocialAccountsRepository,
-      AuthResultMapper authResultMapper,
-      ResetPasswordTokenRepository resetPasswordTokenRepository) {
-    this.authUserRepository = authUserRepository;
-    this.userRoleRepository = userRoleRepository;
-    this.passwordEncoder = passwordEncoder;
-    this.tokenService = tokenService;
-    this.roleRepository = roleRepository;
-    this.refreshTokenRepository = refreshTokenRepository;
-    this.jwtProperties = jwtProperties;
-    this.authOutboxEventRepository = authOutboxEventRepository;
-    this.authSocialAccountsRepository = authSocialAccountsRepository;
-    this.authResultMapper = authResultMapper;
-    this.resetPasswordTokenRepository = resetPasswordTokenRepository;
-  }
 
   private String generateVerificationCode() {
     int code = SECURE_RANDOM.nextInt(1_000_000);

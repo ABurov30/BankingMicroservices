@@ -11,22 +11,15 @@ import com.google.protobuf.Empty;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class AccountGrpcClient {
   private final AccountRpcServiceGrpc.AccountRpcServiceBlockingStub stub;
   private final AccountGrpcMapper grpcMapper;
   private final AccountResultMapper dtoMapper;
-
-  public AccountGrpcClient(
-      AccountRpcServiceGrpc.AccountRpcServiceBlockingStub stub,
-      AccountGrpcMapper grpcMapper,
-      AccountResultMapper dtoMapper) {
-    this.stub = stub;
-    this.grpcMapper = grpcMapper;
-    this.dtoMapper = dtoMapper;
-  }
 
   public String getAccountHealth() {
     GetAccountHealthGrpcResponse response =

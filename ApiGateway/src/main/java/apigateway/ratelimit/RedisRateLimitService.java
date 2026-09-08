@@ -1,12 +1,14 @@
 package apigateway.ratelimit;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class RedisRateLimitService {
   private static final RedisScript<Long> SCRIPT =
       new DefaultRedisScript<>(
@@ -28,10 +30,6 @@ public class RedisRateLimitService {
           Long.class);
 
   private final StringRedisTemplate redisTemplate;
-
-  public RedisRateLimitService(StringRedisTemplate redisTemplate) {
-    this.redisTemplate = redisTemplate;
-  }
 
   public RateLimitResult check(String key, int limit, int windowSeconds) {
     Long retryAfter =

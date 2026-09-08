@@ -14,22 +14,15 @@ import com.google.protobuf.Empty;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class CardGrpcClient {
   private final CardRpcServiceGrpc.CardRpcServiceBlockingStub stub;
   private final CardGrpcMapper grpcMapper;
   private final CardResultMapper dtoMapper;
-
-  public CardGrpcClient(
-      CardRpcServiceGrpc.CardRpcServiceBlockingStub stub,
-      CardGrpcMapper grpcMapper,
-      CardResultMapper dtoMapper) {
-    this.stub = stub;
-    this.grpcMapper = grpcMapper;
-    this.dtoMapper = dtoMapper;
-  }
 
   public String getCardHealth() {
     GetCardHealthGrpcResponse response =

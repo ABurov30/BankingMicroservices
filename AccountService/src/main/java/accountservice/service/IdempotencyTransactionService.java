@@ -1,5 +1,6 @@
 package accountservice.service;
 
+import accountservice.repository.ProcessedEventRepository;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Instant;
@@ -9,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import processedevent.IdempotencyHandler;
-import accountservice.repository.ProcessedEventRepository;
 
 @Service
 public class IdempotencyTransactionService implements IdempotencyHandler {

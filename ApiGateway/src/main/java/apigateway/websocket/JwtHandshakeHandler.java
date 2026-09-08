@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -14,13 +15,10 @@ import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
 
 @Component
+@RequiredArgsConstructor
 public class JwtHandshakeHandler extends DefaultHandshakeHandler {
 
   private final JwtDecoder jwtDecoder;
-
-  public JwtHandshakeHandler(JwtDecoder jwtDecoder) {
-    this.jwtDecoder = jwtDecoder;
-  }
 
   @Override
   protected Principal determineUser(

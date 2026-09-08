@@ -2,6 +2,7 @@ package transactionservice.listener;
 
 import kafkacontracts.account.TransactionCompensatedEventPayload;
 import kafkacontracts.account.TransactionCompletedEventPayload;
+import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
@@ -12,15 +13,10 @@ import transactionservice.mapper.command.TransactionCommandMapper;
 import transactionservice.service.TransactionService;
 
 @Component
+@RequiredArgsConstructor
 public class TransactionKafkaListener {
   private final TransactionService transactionService;
   private final TransactionCommandMapper transactionCommandMapper;
-
-  public TransactionKafkaListener(
-      TransactionService transactionService, TransactionCommandMapper transactionCommandMapper) {
-    this.transactionService = transactionService;
-    this.transactionCommandMapper = transactionCommandMapper;
-  }
 
   @IdempotentKafkaEvent
   @KafkaListener(

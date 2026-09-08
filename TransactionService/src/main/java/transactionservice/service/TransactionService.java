@@ -12,6 +12,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 import kafkacontracts.transaction.TransactionEventType;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -34,6 +35,7 @@ import transactionservice.repository.TransactionOutboxEventRepository;
 import transactionservice.repository.TransactionRepository;
 
 @Service
+@RequiredArgsConstructor
 public class TransactionService {
   private final AccountGrpcClient accountGrpcClient;
   private final TransactionOutboxEventRepository transactionOutboxEventRepository;
@@ -44,25 +46,6 @@ public class TransactionService {
   private final TransactionResultMapper transactionResultMapper;
   private final TransactionIdempotencyService transactionIdempotencyService;
   private static final Logger log = LoggerFactory.getLogger(TransactionService.class);
-
-  public TransactionService(
-      AccountGrpcClient accountGrpcClient,
-      TransactionOutboxEventRepository transactionOutboxEventRepository,
-      TransactionRepository transactionRepository,
-      TransactionGrpcMapper grpcMapper,
-      CardGrpcClient cardGrpcClient,
-      TransactionStatusStreamRegistry transactionStatusStreamRegistry,
-      TransactionResultMapper transactionResultMapper,
-      TransactionIdempotencyService transactionIdempotencyService) {
-    this.accountGrpcClient = accountGrpcClient;
-    this.transactionRepository = transactionRepository;
-    this.transactionOutboxEventRepository = transactionOutboxEventRepository;
-    this.grpcMapper = grpcMapper;
-    this.cardGrpcClient = cardGrpcClient;
-    this.transactionStatusStreamRegistry = transactionStatusStreamRegistry;
-    this.transactionResultMapper = transactionResultMapper;
-    this.transactionIdempotencyService = transactionIdempotencyService;
-  }
 
   private TransactionEntity saveTransaction(CreateTransactionCommand command) {
     var transaction = new TransactionEntity();

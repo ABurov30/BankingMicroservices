@@ -10,23 +10,16 @@ import com.google.protobuf.Empty;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import transaction.contract.v1.*;
 
 @Service
+@RequiredArgsConstructor
 public class TransactionGrpcClient {
   private final TransactionRpcServiceGrpc.TransactionRpcServiceBlockingStub stub;
   private final TransactionGrpcMapper grpcMapper;
   private final TransactionResultMapper dtoMapper;
-
-  public TransactionGrpcClient(
-      TransactionRpcServiceGrpc.TransactionRpcServiceBlockingStub stub,
-      TransactionGrpcMapper grpcMapper,
-      TransactionResultMapper dtoMapper) {
-    this.stub = stub;
-    this.grpcMapper = grpcMapper;
-    this.dtoMapper = dtoMapper;
-  }
 
   public String getTransactionHealth() {
     GetTransactionHealthGrpcResponse response =

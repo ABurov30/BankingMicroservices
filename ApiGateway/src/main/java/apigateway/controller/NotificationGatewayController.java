@@ -9,6 +9,7 @@ import apigateway.dto.response.notification.NotificationResponseDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,16 +18,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/notification")
+@RequiredArgsConstructor
 public class NotificationGatewayController {
 
   private final NotificationGrpcClient notificationClient;
   private final CookieConfig cookieConfig;
-
-  public NotificationGatewayController(
-      NotificationGrpcClient notificationClient, CookieConfig cookieConfig) {
-    this.notificationClient = notificationClient;
-    this.cookieConfig = cookieConfig;
-  }
 
   @GetMapping("/health")
   public String getNotificationHealth() {

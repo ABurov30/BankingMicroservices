@@ -31,7 +31,7 @@ Auth REST endpoints are exposed through `ApiGateway/AuthGatewayController`, not 
 
 gRPC request and response types come from `com.burov:contracts` version `0.0.28-SNAPSHOT`. Kafka event
 types come from `com.burov:kafka-contracts`. Shared outbox helpers come from `com.burov:support`
-version `0.0.2-SNAPSHOT`.
+version `0.0.2`.
 
 `GetAuthUserByIdGrpcResponse` returns the auth user id, status, email, role, and a repeated
 `SocialAccountResponse` list with each linked provider and provider email.

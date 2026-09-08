@@ -10,25 +10,16 @@ import apigateway.dto.response.user.*;
 import apigateway.mapper.grpc.UserGrpcMapper;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class UserInfoQueryHandler {
   private final AuthGrpcClient authGrpcClient;
   private final UserGrpcClient userGrpcClient;
   private final AccountGrpcClient accountGrpcClient;
   private final UserGrpcMapper userGrpcMapper;
-
-  public UserInfoQueryHandler(
-      AuthGrpcClient authGrpcClient,
-      UserGrpcClient userGrpcClient,
-      AccountGrpcClient accountGrpcClient,
-      UserGrpcMapper userGrpcMapper) {
-    this.authGrpcClient = authGrpcClient;
-    this.userGrpcClient = userGrpcClient;
-    this.accountGrpcClient = accountGrpcClient;
-    this.userGrpcMapper = userGrpcMapper;
-  }
 
   public GetUserInfoWithAuthInfoResponseDto getUserInfoWithAuthInfo(UUID autUserId) {
     GetUserInfoResponseDto userInfoResponseDto =

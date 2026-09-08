@@ -14,9 +14,11 @@ import apigateway.mapper.command.CardCommandMapper;
 import apigateway.mapper.request.AccountRequestMapper;
 import apigateway.mapper.request.UserRequestMapper;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class AccountQueryHandler {
   private final AccountGrpcClient accountGrpcClient;
   private final CardGrpcClient cardGrpcClient;
@@ -24,21 +26,6 @@ public class AccountQueryHandler {
   private final AccountRequestMapper accountRequestMapper;
   private final UserGrpcClient userGrpcClient;
   private final UserRequestMapper userRequestMapper;
-
-  public AccountQueryHandler(
-      AccountGrpcClient accountGrpcClient,
-      CardGrpcClient cardGrpcClient,
-      CardCommandMapper cardCommandMapper,
-      AccountRequestMapper accountRequestMapper,
-      UserGrpcClient userGrpcClient,
-      UserRequestMapper userRequestMapper) {
-    this.accountGrpcClient = accountGrpcClient;
-    this.cardGrpcClient = cardGrpcClient;
-    this.cardCommandMapper = cardCommandMapper;
-    this.accountRequestMapper = accountRequestMapper;
-    this.userGrpcClient = userGrpcClient;
-    this.userRequestMapper = userRequestMapper;
-  }
 
   public List<GetAccountWithCardsResponseDto> getAllAccountsWithCards(
       GetAllAccountsWithCardsCommandDto command) {

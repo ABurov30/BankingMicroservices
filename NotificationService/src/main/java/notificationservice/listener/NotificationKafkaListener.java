@@ -6,6 +6,7 @@ import kafkacontracts.auth.*;
 import kafkacontracts.card.CardCreatedEventPayload;
 import kafkacontracts.card.CardFrozenEventPayload;
 import kafkacontracts.card.CardUnfrozenEventPayload;
+import lombok.RequiredArgsConstructor;
 import notificationservice.mapper.command.EmailNotificationCommandMapper;
 import notificationservice.mapper.command.PushNotificationCommandMapper;
 import notificationservice.service.NotificationService;
@@ -17,21 +18,13 @@ import processedevent.annotation.EventKey;
 import processedevent.annotation.IdempotentKafkaEvent;
 
 @Component
+@RequiredArgsConstructor
 public class NotificationKafkaListener {
   private static final String TRANSACTION_NOTIFICATION_DIRECTION_HEADER =
       "transaction-notification-direction";
   private final NotificationService notificationService;
   private final EmailNotificationCommandMapper emailCommandMapper;
   private final PushNotificationCommandMapper pushCommandMapper;
-
-  public NotificationKafkaListener(
-      NotificationService notificationService,
-      EmailNotificationCommandMapper emailCommandMapper,
-      PushNotificationCommandMapper pushCommandMapper) {
-    this.notificationService = notificationService;
-    this.emailCommandMapper = emailCommandMapper;
-    this.pushCommandMapper = pushCommandMapper;
-  }
 
   @IdempotentKafkaEvent
   @KafkaListener(topics = "#{T(kafkacontracts.auth.AuthEventType).AUTH_USER_CREATED.getTopic()}")

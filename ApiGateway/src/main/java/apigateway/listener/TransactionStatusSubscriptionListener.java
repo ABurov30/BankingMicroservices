@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
@@ -16,6 +17,7 @@ import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 
 @Component
+@RequiredArgsConstructor
 public class TransactionStatusSubscriptionListener {
   private static final String DESTINATION_PREFIX = "/user/queue/transactions/";
   private static final Logger log =
@@ -23,10 +25,6 @@ public class TransactionStatusSubscriptionListener {
 
   private final TransactionStatusStreamService streamService;
   private final Map<String, Subscription> subscriptions = new ConcurrentHashMap<>();
-
-  public TransactionStatusSubscriptionListener(TransactionStatusStreamService statusStreamService) {
-    this.streamService = statusStreamService;
-  }
 
   @EventListener
   public void onSubscribe(SessionSubscribeEvent event) {

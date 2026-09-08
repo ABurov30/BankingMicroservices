@@ -5,6 +5,7 @@ import accountservice.service.AccountService;
 import kafkacontracts.account.TransactionFundsRequestedEventPayload;
 import kafkacontracts.user.UserProfileBlockedEventPayload;
 import kafkacontracts.user.UserProfileCreatedEventPayload;
+import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
@@ -13,15 +14,11 @@ import processedevent.annotation.EventKey;
 import processedevent.annotation.IdempotentKafkaEvent;
 
 @Component
+@RequiredArgsConstructor
 public class AccountKafkaListener {
 
   private final AccountService accountService;
   private final AccountCommandMapper commandMapper;
-
-  public AccountKafkaListener(AccountService accountService, AccountCommandMapper commandMapper) {
-    this.accountService = accountService;
-    this.commandMapper = commandMapper;
-  }
 
   @IdempotentKafkaEvent
   @KafkaListener(topics = "#{T(kafkacontracts.user.UserEventType).USER_PROFILE_CREATED.getTopic()}")

@@ -12,27 +12,18 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/transaction")
+@RequiredArgsConstructor
 public class TransactionGatewayController {
 
   private final TransactionGrpcClient transactionClient;
   private final TransactionQueryHandler transactionQueryHandler;
   private final CookieConfig cookieConfig;
   private final TransactionCommandMapper transactionCommandMapper;
-
-  public TransactionGatewayController(
-      TransactionGrpcClient transactionClient,
-      TransactionQueryHandler transactionQueryHandler,
-      CookieConfig cookieConfig,
-      TransactionCommandMapper transactionCommandMapper) {
-    this.transactionClient = transactionClient;
-    this.transactionQueryHandler = transactionQueryHandler;
-    this.cookieConfig = cookieConfig;
-    this.transactionCommandMapper = transactionCommandMapper;
-  }
 
   @GetMapping("/health")
   public String getTransactionHealth() {

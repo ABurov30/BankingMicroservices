@@ -5,16 +5,14 @@ import accountservice.repository.CurrencyRepository;
 import enums.common.Currency;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class CurrencyService {
   private final CurrencyRepository currencyRepository;
   private static final int RATE_SCALE = 8;
-
-  public CurrencyService(CurrencyRepository currencyRepository) {
-    this.currencyRepository = currencyRepository;
-  }
 
   public BigDecimal convertToUSD(BigDecimal amount, Currency currency) {
     CurrencyEntity currencyEntity = currencyRepository.findByName(currency);

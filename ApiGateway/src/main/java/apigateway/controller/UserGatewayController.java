@@ -8,24 +8,17 @@ import apigateway.query.UserInfoQueryHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/user")
+@RequiredArgsConstructor
 public class UserGatewayController {
 
   private final UserGrpcClient userClient;
   private final UserInfoQueryHandler userInfoQueryHandler;
   private final CookieConfig cookieConfig;
-
-  public UserGatewayController(
-      UserGrpcClient userClient,
-      CookieConfig cookieConfig,
-      UserInfoQueryHandler userInfoQueryHandler) {
-    this.userClient = userClient;
-    this.cookieConfig = cookieConfig;
-    this.userInfoQueryHandler = userInfoQueryHandler;
-  }
 
   @GetMapping("/user-info")
   public GetUserInfoWithAuthInfoResponseDto getUserInfo(HttpServletRequest request) {

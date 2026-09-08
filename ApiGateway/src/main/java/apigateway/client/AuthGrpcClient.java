@@ -10,22 +10,15 @@ import auth.contract.v1.*;
 import com.google.protobuf.Empty;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class AuthGrpcClient {
   private final AuthRpcServiceGrpc.AuthRpcServiceBlockingStub stub;
   private final AuthGrpcMapper grpcMapper;
   private final AuthResultMapper dtoMapper;
-
-  public AuthGrpcClient(
-      AuthRpcServiceGrpc.AuthRpcServiceBlockingStub stub,
-      AuthGrpcMapper grpcMapper,
-      AuthResultMapper dtoMapper) {
-    this.stub = stub;
-    this.grpcMapper = grpcMapper;
-    this.dtoMapper = dtoMapper;
-  }
 
   public String getAuthHealth() {
     GetAuthHealthGrpcResponse response =

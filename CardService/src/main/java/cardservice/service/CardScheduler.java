@@ -6,20 +6,16 @@ import cardservice.repository.CardRepository;
 import enums.account.ReservationStatus;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class CardScheduler {
   private final CardRepository cardRepository;
   private final CardLimitHoldRepository cardLimitHoldRepository;
-
-  public CardScheduler(
-      CardLimitHoldRepository cardLimitHoldRepository, CardRepository cardRepository) {
-    this.cardLimitHoldRepository = cardLimitHoldRepository;
-    this.cardRepository = cardRepository;
-  }
 
   @Scheduled(fixedDelay = 5000)
   @Transactional

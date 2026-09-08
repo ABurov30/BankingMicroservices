@@ -2,6 +2,7 @@ package userservice.listener;
 
 import kafkacontracts.auth.*;
 import kafkacontracts.common.KafkaTopics;
+import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
@@ -12,15 +13,11 @@ import userservice.mapper.command.UserCommandMapper;
 import userservice.service.UserService;
 
 @Component
+@RequiredArgsConstructor
 public class UserKafkaListener {
 
   private final UserService userService;
   private final UserCommandMapper commandMapper;
-
-  public UserKafkaListener(UserService userService, UserCommandMapper commandMapper) {
-    this.userService = userService;
-    this.commandMapper = commandMapper;
-  }
 
   @IdempotentKafkaEvent
   @KafkaListener(topics = "#{T(kafkacontracts.auth.AuthEventType).AUTH_USER_CREATED.getTopic()}")

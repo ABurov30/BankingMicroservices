@@ -11,6 +11,7 @@ import enums.auth.AuthUserStatus;
 import enums.auth.Roles;
 import java.net.URI;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -36,6 +37,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 @Configuration
 @EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
   private static final String[] PUBLIC_ENDPOINTS = {
     "/",
@@ -63,15 +65,6 @@ public class SecurityConfig {
   private final CookieConfig cookieConfig;
   private final AuthGrpcClient authClient;
   private final SocialLoginRequestMapper socialLoginRequestMapper;
-
-  public SecurityConfig(
-      CookieConfig cookieConfig,
-      AuthGrpcClient authClient,
-      SocialLoginRequestMapper socialLoginRequestMapper) {
-    this.cookieConfig = cookieConfig;
-    this.authClient = authClient;
-    this.socialLoginRequestMapper = socialLoginRequestMapper;
-  }
 
   @Bean
   FilterRegistrationBean<RateLimitFilter> rateLimitFilterRegistration(RateLimitFilter filter) {

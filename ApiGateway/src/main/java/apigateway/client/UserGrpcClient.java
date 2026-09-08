@@ -9,23 +9,16 @@ import apigateway.mapper.result.UserResultMapper;
 import com.google.protobuf.Empty;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import user.contract.v1.*;
 
 @Service
+@RequiredArgsConstructor
 public class UserGrpcClient {
   private final UserRpcServiceGrpc.UserRpcServiceBlockingStub stub;
   private final UserGrpcMapper grpcMapper;
   private final UserResultMapper dtoMapper;
-
-  public UserGrpcClient(
-      UserRpcServiceGrpc.UserRpcServiceBlockingStub stub,
-      UserGrpcMapper grpcMapper,
-      UserResultMapper dtoMapper) {
-    this.stub = stub;
-    this.grpcMapper = grpcMapper;
-    this.dtoMapper = dtoMapper;
-  }
 
   public GetUserInfoResponseDto getUserInfo(GetUserInfoRequestDto getUserInfoRequest) {
     GetUserInfoGrpcRequest getUserInfoGrpcRequest =
