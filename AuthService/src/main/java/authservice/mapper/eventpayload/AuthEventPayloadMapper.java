@@ -49,8 +49,9 @@ public interface AuthEventPayloadMapper {
   default AuthUserForgetPasswordEventPayload toAuthUserForgetPasswordEventPayload(
       Map<String, Object> value) {
     return AuthUserForgetPasswordEventPayload.newBuilder()
-        .setAuthUserId(id(value))
+        .setResetPasswordToken(value.get("resetPasswordToken").toString())
         .setEmail(value.get("email").toString())
+        .setAuthUserId(id(value))
         .build();
   }
 

@@ -10,7 +10,10 @@ public interface EmailNotificationCommandMapper {
   default CreateEmailNotificationCommand toCreateEmailNotificationCommand(
       AuthUserUnlockEventPayload payload) {
     return new CreateEmailNotificationCommand(
-        null, payload.getEmail(), EmailNotificationType.AUTH_USER_UNLOCKED, null);
+        payload.getAuthUserId(),
+        payload.getEmail(),
+        EmailNotificationType.AUTH_USER_UNLOCKED,
+        null);
   }
 
   default CreateEmailNotificationCommand toCreateEmailNotificationCommand(
@@ -25,13 +28,16 @@ public interface EmailNotificationCommandMapper {
   default CreateEmailNotificationCommand toCreateEmailNotificationCommand(
       AuthUserBlockedEventPayload payload) {
     return new CreateEmailNotificationCommand(
-        null, payload.getEmail(), EmailNotificationType.AUTH_USER_BLOCKED, null);
+        payload.getAuthUserId(), payload.getEmail(), EmailNotificationType.AUTH_USER_BLOCKED, null);
   }
 
   default CreateEmailNotificationCommand toCreateEmailNotificationCommand(
       AuthUserVerifiedEventPayload payload) {
     return new CreateEmailNotificationCommand(
-        null, payload.getEmail(), EmailNotificationType.AUTH_USER_VERIFIED, null);
+        payload.getAuthUserId(),
+        payload.getEmail(),
+        EmailNotificationType.AUTH_USER_VERIFIED,
+        null);
   }
 
   default CreateEmailNotificationCommand toCreateEmailNotificationCommand(
@@ -40,6 +46,6 @@ public interface EmailNotificationCommandMapper {
         payload.getAuthUserId(),
         payload.getEmail(),
         EmailNotificationType.AUTH_USER_FORGET_PASSWORD,
-        null);
+        payload.getResetPasswordToken());
   }
 }

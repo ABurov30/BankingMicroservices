@@ -35,6 +35,7 @@ public class AuthService {
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
   private final AuthSocialAccountsRepository authSocialAccountsRepository;
   private final AuthResultMapper authResultMapper;
+  private final ResetPasswordTokenRepository resetPasswordTokenRepository;
 
   public AuthService(
       AuthUserRepository authUserRepository,
@@ -46,7 +47,8 @@ public class AuthService {
       JwtProperties jwtProperties,
       AuthOutboxEventRepository authOutboxEventRepository,
       AuthSocialAccountsRepository authSocialAccountsRepository,
-      AuthResultMapper authResultMapper) {
+      AuthResultMapper authResultMapper,
+      ResetPasswordTokenRepository resetPasswordTokenRepository) {
     this.authUserRepository = authUserRepository;
     this.userRoleRepository = userRoleRepository;
     this.passwordEncoder = passwordEncoder;
@@ -57,6 +59,7 @@ public class AuthService {
     this.authOutboxEventRepository = authOutboxEventRepository;
     this.authSocialAccountsRepository = authSocialAccountsRepository;
     this.authResultMapper = authResultMapper;
+    this.resetPasswordTokenRepository = resetPasswordTokenRepository;
   }
 
   private String generateVerificationCode() {
@@ -201,7 +204,7 @@ public class AuthService {
 
     authUser.setPasswordHash(passwordEncoder.encode(changePasswordCommand.newPassword()));
     authUserRepository.save(authUser);
-    revokeActiveTokensByAuthUserId(authUser.getId());
+    revokeRefreshTokensByAuthUserId(authUser.getId());
 
     String refreshToken = tokenService.generateRefreshToken();
     saveRefreshToken(authUser, refreshToken);
@@ -364,18 +367,32 @@ public class AuthService {
 
   @Transactional
   public void forgetPassword(ForgetPasswordCommand command) {
-    AuthUserEntity authUser =
-        authUserRepository
-            .findByEmail(command.email())
-            .orElseThrow(() -> new AuthUserNotFoundByEmailException(command.email()));
-    revokeActiveTokensByAuthUserId(authUser.getId());
-
-    authUser.setStatus(AuthUserStatus.FORGET_PASSWORD);
-    authUserRepository.save(authUser);
-    saveAuthUserForgetPasswordOutboxEvent(authUser);
+    authUserRepository
+        .findByEmail(command.email())
+        .ifPresent((authUser -> createResetPasswordToken(authUser)));
   }
 
-  private void revokeActiveTokensByAuthUserId(UUID authUserId) {
+  private void createResetPasswordToken(AuthUserEntity authUser) {
+    revokeRefreshTokensByAuthUserId(authUser.getId());
+    revokeResetPasswordTokensByAuthUserId(authUser.getId());
+
+    authUser.setStatus(AuthUserStatus.FORGET_PASSWORD);
+
+    var resetPasswordToken = tokenService.generateRefreshToken();
+    var hashResetPasswordToken = tokenService.hashToken(resetPasswordToken);
+
+    ResetPasswordTokenEntity resetPasswordTokenEntity = new ResetPasswordTokenEntity();
+
+    resetPasswordTokenEntity.setAuthUser(authUser);
+    resetPasswordTokenEntity.setTokenHash(hashResetPasswordToken);
+    resetPasswordTokenEntity.setExpiresAt(tokenService.resetPasswordTokenExpiresAt());
+    resetPasswordTokenRepository.save(resetPasswordTokenEntity);
+
+    authUserRepository.save(authUser);
+    saveAuthUserForgetPasswordOutboxEvent(authUser, resetPasswordToken);
+  }
+
+  private void revokeRefreshTokensByAuthUserId(UUID authUserId) {
     List<RefreshTokenEntity> refreshTokenEntityList =
         refreshTokenRepository.findAllByAuthUserId(authUserId);
     LocalDateTime now = LocalDateTime.now();
@@ -386,15 +403,23 @@ public class AuthService {
     refreshTokenRepository.saveAll(refreshTokenEntityList);
   }
 
+  @Transactional
   public ResetPasswordResult resetPassword(ResetPasswordCommand command) {
-    AuthUserEntity authUser =
-        authUserRepository
-            .findById(command.authUserId())
-            .orElseThrow(() -> new AuthUserNotFoundException(command.authUserId()));
 
-    if (authUser.getStatus() != AuthUserStatus.FORGET_PASSWORD) {
-      throw new AuthUserMustBeInForgetPasswordStatusException(authUser.getId());
+    var tokenHash = tokenService.hashToken(command.resetPasswordToken());
+    var resetPasswordTokenEntity =
+        resetPasswordTokenRepository
+            .findByTokenHashForUpdate(tokenHash, LocalDateTime.now())
+            .orElseThrow(InvalidOrExpiredResetPasswordTokenException::new);
+
+    if (!resetPasswordTokenEntity.getTokenHash().equals(tokenHash)) {
+      throw new InvalidOrExpiredResetPasswordTokenException();
     }
+
+    AuthUserEntity authUser = resetPasswordTokenEntity.getAuthUser();
+
+    revokeResetPasswordTokensByAuthUserId(authUser.getId());
+    revokeRefreshTokensByAuthUserId(authUser.getId());
 
     authUser.setPasswordHash(passwordEncoder.encode(command.newPassword()));
     authUser.setStatus(AuthUserStatus.ACTIVE);
@@ -409,6 +434,14 @@ public class AuthService {
     TokenPair tokenPair = issueTokenPair(authUser, userRole.getRole().getName());
 
     return authResultMapper.toResetPasswordResult(tokenPair);
+  }
+
+  private void revokeResetPasswordTokensByAuthUserId(UUID authUserId) {
+    var resetPasswordTokensEntities =
+        resetPasswordTokenRepository.findAllByAuthUserIdForUpdate(authUserId, LocalDateTime.now());
+    resetPasswordTokensEntities.forEach((rpt) -> rpt.setUsedAt(LocalDateTime.now()));
+
+    resetPasswordTokenRepository.saveAllAndFlush(resetPasswordTokensEntities);
   }
 
   private RefreshTokenEntity saveRefreshToken(AuthUserEntity authUser, String refreshToken) {
@@ -433,13 +466,18 @@ public class AuthService {
         jwtProperties.refreshTokenTtlDays());
   }
 
-  private void saveAuthUserForgetPasswordOutboxEvent(AuthUserEntity authUser) {
+  private void saveAuthUserForgetPasswordOutboxEvent(
+      AuthUserEntity authUser, String resetPasswordToken) {
     saveAuthOutboxEvent(
         authUser.getId(),
         AuthEventType.AUTH_USER_FORGET_PASSWORD,
         Map.of(
-            "authUserId", authUser.getId(),
-            "email", authUser.getEmail()));
+            "resetPasswordToken",
+            resetPasswordToken,
+            "email",
+            authUser.getEmail(),
+            "authUserId",
+            authUser.getId()));
   }
 
   private AuthOutboxEventEntity saveAuthOutboxEvent(

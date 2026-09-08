@@ -43,6 +43,6 @@ end-user account reads that include authenticated user identity and role.
 
 ## Contracts
 
-gRPC types come from `com.burov:contracts` version `0.0.27`. Event payloads come from
+gRPC types come from `com.burov:contracts` version `0.0.28-SNAPSHOT`. Event payloads come from
 `com.burov:kafka-contracts`. Shared outbox and processed-event helpers come from
 `com.burov:support` version `0.0.1`.

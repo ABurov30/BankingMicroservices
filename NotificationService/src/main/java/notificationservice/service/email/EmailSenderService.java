@@ -3,6 +3,8 @@ package notificationservice.service.email;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import notificationservice.document.EmailNotificationDocument;
 import notificationservice.exception.EmailSendFailedException;
 import org.slf4j.Logger;
@@ -71,6 +73,8 @@ public class EmailSenderService {
   }
 
   private String buildResetPasswordUrl(EmailNotificationDocument notification) {
-    return siteUrl.replaceAll("/+$", "") + "/reset-password/" + notification.getAuthUserId();
+    return siteUrl.replaceAll("/+$", "")
+        + "/reset-password?token="
+        + URLEncoder.encode(notification.getVerificationCode(), StandardCharsets.UTF_8);
   }
 }

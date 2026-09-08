@@ -31,7 +31,7 @@ PostgreSQL is used for migration-managed relational state such as processed even
 
 ## Email Templates
 
-Templates live under `src/main/resources/templates/email` and include auth lifecycle templates such as user created, blocked, unlocked, verified, and forget-password flows.
+Templates live under `src/main/resources/templates/email` and include auth lifecycle templates such as user created, blocked, unlocked, verified, and forget-password flows. The forget-password template receives a URL in the form `/reset-password?token=...`.
 
 ## Data Integrity Notes
 

@@ -7,7 +7,7 @@ import java.util.UUID;
 import notificationservice.enums.email.EmailNotificationType;
 
 public record CreateEmailNotificationCommand(
-    UUID authUserId,
+    @NotNull UUID authUserId,
     @NotBlank @Email String email,
     @NotNull EmailNotificationType type,
     String verificationCode) {}

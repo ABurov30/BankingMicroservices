@@ -10,7 +10,7 @@
 | `AUTH_USER_BLOCKED` | `AuthService` | Notify blocked users |
 | `AUTH_USER_UNLOCK` | `AuthService` | Notify unlocked users |
 | `AUTH_USER_VERIFIED` | `AuthService` | Notify verified users |
-| `AUTH_USER_FORGET_PASSWORD` | `AuthService` | Create password reset notification |
+| `AUTH_USER_FORGET_PASSWORD` | `AuthService` | Create password reset notification with the reset token in the email URL query parameter |
 | `ACCOUNT_CREATED` | `AccountService` | Notify account creation |
 | `ACCOUNT_FROZEN` | `AccountService` | Notify account freeze |
 | `ACCOUNT_UNFROZEN` | `AccountService` | Notify account unfreeze |

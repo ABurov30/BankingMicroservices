@@ -74,4 +74,8 @@ public class TokenService {
   public LocalDateTime refreshTokenExpiresAt() {
     return LocalDateTime.now().plusDays(jwtProperties.refreshTokenTtlDays());
   }
+
+  public LocalDateTime resetPasswordTokenExpiresAt() {
+    return LocalDateTime.now().plusMinutes(jwtProperties.resetPasswordTokenTtlMinutes());
+  }
 }

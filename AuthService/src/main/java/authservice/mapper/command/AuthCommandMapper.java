@@ -73,8 +73,7 @@ public interface AuthCommandMapper {
   }
 
   default ResetPasswordCommand toResetPasswordCommand(ResetPasswordGrpcRequest request) {
-    return new ResetPasswordCommand(
-        UUID.fromString(request.getAuthUserId()), request.getNewPassword());
+    return new ResetPasswordCommand(request.getResetPasswordToken(), request.getNewPassword());
   }
 
   default SocialLoginCommand toSocialLoginCommand(SocialLoginGrpcRequest request) {

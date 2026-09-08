@@ -101,6 +101,7 @@ public class AuthGatewayController {
   }
 
   @PostMapping("/forget-password")
+  @ResponseStatus(HttpStatus.ACCEPTED)
   public void forgetPassword(@Valid @RequestBody ForgetPasswordRequestDto request) {
     authClient.forgetPassword(request);
   }

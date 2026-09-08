@@ -12,5 +12,6 @@ public record JwtProperties(
     String audience,
     @Positive long accessTokenTtlMinutes,
     @Positive long refreshTokenTtlDays,
+    @Positive long resetPasswordTokenTtlMinutes,
     Resource privateKeyLocation,
     Resource publicKeyLocation) {}

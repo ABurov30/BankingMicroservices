@@ -87,7 +87,7 @@ public interface AuthGrpcMapper {
 
   default ResetPasswordGrpcRequest toResetPasswordGrpcRequest(ResetPasswordRequestDto value) {
     return ResetPasswordGrpcRequest.newBuilder()
-        .setAuthUserId(value.authUserId().toString())
+        .setResetPasswordToken(value.resetPasswordToken())
         .setNewPassword(value.newPassword())
         .build();
   }

@@ -10,6 +10,7 @@ import authservice.exception.AuthUserNotFoundException;
 import authservice.exception.EmailAlreadyExistsException;
 import authservice.exception.InvalidEmailOrPasswordException;
 import authservice.exception.InvalidOldPasswordException;
+import authservice.exception.InvalidOrExpiredResetPasswordTokenException;
 import authservice.exception.InvalidVerificationCodeException;
 import authservice.exception.RefreshTokenAlreadyExpiredException;
 import authservice.exception.RefreshTokenAlreadyRevokedException;
@@ -80,7 +81,8 @@ public class GrpcExceptionInterceptor implements ServerInterceptor {
     }
 
     if (exception instanceof InvalidVerificationCodeException
-        || exception instanceof InvalidOldPasswordException) {
+        || exception instanceof InvalidOldPasswordException
+        || exception instanceof InvalidOrExpiredResetPasswordTokenException) {
       return Status.INVALID_ARGUMENT;
     }
 
