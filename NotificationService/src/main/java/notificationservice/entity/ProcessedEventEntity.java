@@ -13,5 +13,7 @@ import lombok.Setter;
 @Entity
 @Table(name = "processed_events")
 public class ProcessedEventEntity extends processedevent.ProcessedEvent {
-  @Id @GeneratedValue(strategy = GenerationType.UUID) private UUID id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 }
