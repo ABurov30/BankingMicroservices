@@ -47,6 +47,8 @@ public class SecurityConfig {
     "/auth/oauth/google",
     "/auth/logout",
     "/auth/verify-user",
+    "/auth/forget-password",
+    "/auth/reset-password",
     "/oauth2/**",
     "/login/oauth2/**",
     "/ws",
@@ -205,6 +207,8 @@ public class SecurityConfig {
         || path.equals("/auth/refresh")
         || path.equals("/auth/logout")
         || path.equals("/auth/verify-user")
+        || path.equals("/auth/forget-password")
+        || path.equals("/auth/reset-password")
         || path.startsWith("/oauth2/")
         || path.equals("/auth/oauth/google")
         || path.startsWith("/login/oauth2/")
