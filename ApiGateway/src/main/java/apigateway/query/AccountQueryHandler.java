@@ -14,6 +14,7 @@ import apigateway.mapper.command.CardCommandMapper;
 import apigateway.mapper.request.AccountRequestMapper;
 import apigateway.mapper.request.UserRequestMapper;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -32,15 +33,21 @@ public class AccountQueryHandler {
     List<GetAccountResponseDto> accounts =
         accountGrpcClient.getAllAccounts(accountRequestMapper.toGetAllAccountsRequestDto(command));
 
-    return accounts.stream()
-        .map(
-            account ->
-                new GetAccountWithCardsResponseDto(
-                    account,
-                    cardGrpcClient.getCardsByAccountId(
-                        cardCommandMapper.toGetCardsByAccountIdCommandDto(
-                            account.accountId(), command.authUserId(), command.role()))))
-        .toList();
+    var futures =
+        accounts.stream()
+            .map(
+                account ->
+                    cardGrpcClient
+                        .getCardsByAccountIdAsync(
+                            cardCommandMapper.toGetCardsByAccountIdCommandDto(
+                                account.accountId(), command.authUserId(), command.role()))
+                        .thenApply(
+                            (cardList) -> new GetAccountWithCardsResponseDto(account, cardList)))
+            .toList();
+
+    CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
+
+    return futures.stream().map(CompletableFuture::join).toList();
   }
 
   public List<GetAccountWithCardsResponseDto> getAccountsWithCardsByOwnerId(
@@ -49,32 +56,45 @@ public class AccountQueryHandler {
         accountGrpcClient.getAccountsByOwnerId(
             accountRequestMapper.toGetAccountsWithCardsByOwnerIdRequestDto(command));
 
-    return accounts.stream()
-        .map(
-            account ->
-                new GetAccountWithCardsResponseDto(
-                    account,
-                    cardGrpcClient.getCardsByAccountId(
-                        cardCommandMapper.toGetCardsByAccountIdCommandDto(
-                            account.accountId(), command.authUserId(), command.role()))))
-        .toList();
+    var futures =
+        accounts.stream()
+            .map(
+                account ->
+                    cardGrpcClient
+                        .getCardsByAccountIdAsync(
+                            cardCommandMapper.toGetCardsByAccountIdCommandDto(
+                                account.accountId(), command.authUserId(), command.role()))
+                        .thenApply(
+                            (cardList) -> new GetAccountWithCardsResponseDto(account, cardList)))
+            .toList();
+
+    CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
+
+    return futures.stream().map(CompletableFuture::join).toList();
   }
 
   public List<GetAccountWithCardsResponseDto> getAccountsWithCardsByAuthUserId(
       GetAllAccountsWithCardsByAuthUserIdCommandDto command) {
+
     List<GetAccountResponseDto> accounts =
         accountGrpcClient.getAccountsByAuthUserId(
             accountRequestMapper.toGetAccountsByAuthUserIdRequestDto(command));
 
-    return accounts.stream()
-        .map(
-            account ->
-                new GetAccountWithCardsResponseDto(
-                    account,
-                    cardGrpcClient.getCardsByAccountId(
-                        cardCommandMapper.toGetCardsByAccountIdCommandDto(
-                            account.accountId(), command.authUserId(), command.role()))))
-        .toList();
+    var futures =
+        accounts.stream()
+            .map(
+                account ->
+                    cardGrpcClient
+                        .getCardsByAccountIdAsync(
+                            cardCommandMapper.toGetCardsByAccountIdCommandDto(
+                                account.accountId(), command.authUserId(), command.role()))
+                        .thenApply(
+                            cardList -> new GetAccountWithCardsResponseDto(account, cardList)))
+            .toList();
+
+    CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
+
+    return futures.stream().map(CompletableFuture::join).toList();
   }
 
   public CreateAccountResponseDto createAccount(CreateAccountCommandDto commandDto) {

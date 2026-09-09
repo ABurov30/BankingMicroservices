@@ -8,7 +8,9 @@ import apigateway.mapper.grpc.AuthGrpcMapper;
 import apigateway.mapper.result.AuthResultMapper;
 import auth.contract.v1.*;
 import com.google.protobuf.Empty;
+import grpcfutureadapter.GrpcFutureAdapter;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthGrpcClient {
   private final AuthRpcServiceGrpc.AuthRpcServiceBlockingStub stub;
+  private final AuthRpcServiceGrpc.AuthRpcServiceFutureStub futureStub;
   private final AuthGrpcMapper grpcMapper;
   private final AuthResultMapper dtoMapper;
 
@@ -89,6 +92,14 @@ public class AuthGrpcClient {
     GetAuthUserByIdGrpcRequest grpcRequest = grpcMapper.toGetAuthUserByIdGrpcRequest(request);
     return dtoMapper.toGetAuthUserByIdResponseDto(
         stub.withDeadlineAfter(2, TimeUnit.SECONDS).getAuthUserById(grpcRequest));
+  }
+
+  public CompletableFuture<GetAuthUserByIdResponseDto> getAuthUserByIdAsync(
+      GetRoleByAuthUserIdRequestDto request) {
+    GetAuthUserByIdGrpcRequest grpcRequest = grpcMapper.toGetAuthUserByIdGrpcRequest(request);
+    return GrpcFutureAdapter.toCompletableFuture(
+            futureStub.withDeadlineAfter(2, TimeUnit.SECONDS).getAuthUserById(grpcRequest))
+        .thenApply(dtoMapper::toGetAuthUserByIdResponseDto);
   }
 
   public void forgetPassword(ForgetPasswordRequestDto request) {

@@ -11,8 +11,10 @@ import apigateway.mapper.grpc.CardGrpcMapper;
 import apigateway.mapper.result.CardResultMapper;
 import card.contract.v1.*;
 import com.google.protobuf.Empty;
+import grpcfutureadapter.GrpcFutureAdapter;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CardGrpcClient {
   private final CardRpcServiceGrpc.CardRpcServiceBlockingStub stub;
+  private final CardRpcServiceGrpc.CardRpcServiceFutureStub futureStub;
   private final CardGrpcMapper grpcMapper;
   private final CardResultMapper dtoMapper;
 
@@ -55,5 +58,19 @@ public class CardGrpcClient {
     return response.getCardsList().stream()
         .map(dtoMapper::toGetCardByAccountIdResponseDto)
         .toList();
+  }
+
+  public CompletableFuture<List<GetCardByAccountIdResponseDto>> getCardsByAccountIdAsync(
+      GetCardsByAccountIdCommandDto command) {
+
+    GetCardByAccountIdGrpcRequest request = grpcMapper.toGetCardByAccountIdGrpcRequest(command);
+
+    return GrpcFutureAdapter.toCompletableFuture(
+            futureStub.withDeadlineAfter(2, TimeUnit.SECONDS).getCardsByAccountId(request))
+        .thenApply(
+            response ->
+                response.getCardsList().stream()
+                    .map(dtoMapper::toGetCardByAccountIdResponseDto)
+                    .toList());
   }
 }

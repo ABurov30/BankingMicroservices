@@ -27,11 +27,21 @@ public class GrpcClientConfig {
     return AuthRpcServiceGrpc.newBlockingStub(authChannel);
   }
 
+  @Bean
+  AuthRpcServiceGrpc.AuthRpcServiceFutureStub authFutureStub(ManagedChannel authChannel) {
+    return AuthRpcServiceGrpc.newFutureStub(authChannel);
+  }
+
   @Bean(destroyMethod = "shutdown")
   ManagedChannel userChannel(
       @Value("${USER_GRPC_HOST}") String host, @Value("${USER_GRPC_PORT}") int port) {
 
     return ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
+  }
+
+  @Bean
+  UserRpcServiceGrpc.UserRpcServiceFutureStub userFutureStub(ManagedChannel userChannel) {
+    return UserRpcServiceGrpc.newFutureStub(userChannel);
   }
 
   @Bean
@@ -61,6 +71,11 @@ public class GrpcClientConfig {
   @Bean
   CardRpcServiceGrpc.CardRpcServiceBlockingStub cardStub(ManagedChannel cardChannel) {
     return CardRpcServiceGrpc.newBlockingStub(cardChannel);
+  }
+
+  @Bean
+  CardRpcServiceGrpc.CardRpcServiceFutureStub cardFutureStub(ManagedChannel cardChannel) {
+    return CardRpcServiceGrpc.newFutureStub(cardChannel);
   }
 
   @Bean(destroyMethod = "shutdown")

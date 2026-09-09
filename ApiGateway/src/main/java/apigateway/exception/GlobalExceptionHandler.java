@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -43,6 +44,15 @@ public class GlobalExceptionHandler {
             Instant.now(), httpStatus.value(), httpStatus.getReasonPhrase(), messages);
 
     return ResponseEntity.status(httpStatus).body(response);
+  }
+
+  @ExceptionHandler(CompletionException.class)
+  public ResponseEntity<ApiErrorResponse> handleCompletionException(
+      CompletionException exception, HttpServletRequest request) {
+    if (exception.getCause() instanceof StatusRuntimeException grpcException) {
+      return handleGrpcException(grpcException, request);
+    }
+    throw exception;
   }
 
   @ExceptionHandler(MissingAccessTokenException.class)

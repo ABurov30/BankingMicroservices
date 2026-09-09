@@ -10,6 +10,7 @@ import apigateway.dto.response.user.*;
 import apigateway.mapper.grpc.UserGrpcMapper;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,28 +22,40 @@ public class UserInfoQueryHandler {
   private final AccountGrpcClient accountGrpcClient;
   private final UserGrpcMapper userGrpcMapper;
 
-  public GetUserInfoWithAuthInfoResponseDto getUserInfoWithAuthInfo(UUID autUserId) {
-    GetUserInfoResponseDto userInfoResponseDto =
-        userGrpcClient.getUserInfo(new GetUserInfoRequestDto(autUserId));
-    GetAuthUserByIdResponseDto authInfo =
-        authGrpcClient.getAuthUserById(new GetRoleByAuthUserIdRequestDto(autUserId));
+  public GetUserInfoWithAuthInfoResponseDto getUserInfoWithAuthInfo(UUID authUserId) {
+    CompletableFuture<GetUserInfoResponseDto> userInfoFuture =
+        userGrpcClient.getUserInfoAsync(new GetUserInfoRequestDto(authUserId));
 
-    return new GetUserInfoWithAuthInfoResponseDto(
-        userInfoResponseDto, authInfo.role(), authInfo.status(), authInfo.socialAccounts());
+    CompletableFuture<GetAuthUserByIdResponseDto> authUserFuture =
+        authGrpcClient.getAuthUserByIdAsync(new GetRoleByAuthUserIdRequestDto(authUserId));
+
+    return userInfoFuture
+        .thenCombine(
+            authUserFuture,
+            (userInfo, authUser) ->
+                new GetUserInfoWithAuthInfoResponseDto(
+                    userInfo, authUser.role(), authUser.status(), authUser.socialAccounts()))
+        .join();
   }
 
   public List<GetUserInfoWithAuthInfoResponseDto> getAllUserInfoWithAuthInfo() {
-    List<GetUserInfoResponseDto> userInfoResponseDtoList = userGrpcClient.getAllUserInfo();
-    return userInfoResponseDtoList.stream()
-        .map(
-            (userInfo) -> {
-              GetAuthUserByIdResponseDto authInfo =
-                  authGrpcClient.getAuthUserById(
-                      new GetRoleByAuthUserIdRequestDto(userInfo.autUserId()));
-              return new GetUserInfoWithAuthInfoResponseDto(
-                  userInfo, authInfo.role(), authInfo.status(), authInfo.socialAccounts());
-            })
-        .toList();
+    List<GetUserInfoResponseDto> users = userGrpcClient.getAllUserInfo();
+
+    List<CompletableFuture<GetUserInfoWithAuthInfoResponseDto>> futures =
+        users.stream()
+            .map(
+                user ->
+                    authGrpcClient
+                        .getAuthUserByIdAsync(new GetRoleByAuthUserIdRequestDto(user.autUserId()))
+                        .thenApply(
+                            auth ->
+                                new GetUserInfoWithAuthInfoResponseDto(
+                                    user, auth.role(), auth.status(), auth.socialAccounts())))
+            .toList();
+
+    CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
+
+    return futures.stream().map(CompletableFuture::join).toList();
   }
 
   public GetRecipientInfoResponseDto getRecipientInfo(GetRecipientRequestDto request) {
