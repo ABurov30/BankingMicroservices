@@ -1,6 +1,7 @@
 package notificationservice.repository;
 
 import java.time.Instant;
+import java.util.UUID;
 import notificationservice.entity.ProcessedEventEntity;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -14,10 +15,13 @@ public interface ProcessedEventRepository
   @Query(
       value =
           """
-        INSERT INTO processed_events (event_key, processed_at)
-        VALUES (:eventKey, :processedAt)
+        INSERT INTO processed_events (id, event_key, processed_at)
+        VALUES (:id, :eventKey, :processedAt)
         ON CONFLICT (event_key) DO NOTHING
           """,
       nativeQuery = true)
-  int tryClaim(@Param("eventKey") String eventKey, @Param("processedAt") Instant processedAt);
+  int tryClaim(
+      @Param("id") UUID id,
+      @Param("eventKey") String eventKey,
+      @Param("processedAt") Instant processedAt);
 }

@@ -3,6 +3,7 @@ package userservice.service;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Instant;
+import java.util.UUID;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +33,7 @@ public class IdempotencyTransactionService implements IdempotencyHandler {
   public Object process(ProceedingJoinPoint joinPoint) throws Throwable {
     String eventKey = extractEventKey(joinPoint);
 
-    if (repository.tryClaim(eventKey, Instant.now()) == 0) {
+    if (repository.tryClaim(UUID.randomUUID(), eventKey, Instant.now()) == 0) {
       duplicateEventsCounter.increment();
       log.info("Skipping duplicate Kafka event: eventKey={}", eventKey);
       return null;
