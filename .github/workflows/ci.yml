@@ -238,7 +238,7 @@ jobs:
 
           JWT_PRIVATE_KEY_PATH: ${{ github.workspace }}/Infra${{ vars.JWT_PRIVATE_KEY_PATH }}
           JWT_PUBLIC_KEY_PATH: ${{ github.workspace }}/Infra${{ vars.JWT_PUBLIC_KEY_PATH }}
-        run: mvn -s .mvn/settings-docker.xml test
+        run: mvn -s .mvn/settings-docker.xml test -Pintegration-tests
 
       - name: Print test reports
         if: failure()

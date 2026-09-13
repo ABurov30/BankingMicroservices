@@ -77,4 +77,10 @@ For private Maven packages from `BankingProtoContracts`, `BankKafkaContracts`, a
 GITHUB_TOKEN=replace_me ./mvnw -s .mvn/settings-docker.xml spotless:check checkstyle:check test
 ```
 
-CI runs formatting, Checkstyle, and tests for every service.
+`./mvnw clean verify` runs unit tests and generates JaCoCo coverage reports in
+`target/site/jacoco/index.html` when coverage data is available. Tests tagged
+`@Tag("integration")` (including Spring Boot application tests) are excluded by default.
+Run `./mvnw clean verify -Pintegration-tests` to include them, with the service
+environment configured and its infrastructure available.
+
+CI runs formatting, Checkstyle, and both unit and integration tests for every service.
