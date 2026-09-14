@@ -1,8 +1,12 @@
 package apigateway.config;
 
+import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadConfig;
+import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.micrometer.tagged.TaggedBulkheadMetrics;
 import io.github.resilience4j.micrometer.tagged.TaggedCircuitBreakerMetrics;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -47,16 +51,66 @@ public class GrpcResilience {
           "GetNotificationHealth");
   private final Environment environment;
   private final MeterRegistry meters;
+  private final BulkheadRegistry bulkheads = BulkheadRegistry.ofDefaults();
   private final CircuitBreakerRegistry registry = CircuitBreakerRegistry.ofDefaults();
 
   public GrpcResilience(Environment environment, MeterRegistry meters) {
     this.environment = environment;
     this.meters = meters;
     TaggedCircuitBreakerMetrics.ofCircuitBreakerRegistry(registry).bindTo(meters);
+    TaggedBulkheadMetrics.ofBulkheadRegistry(bulkheads).bindTo(meters);
+    bulkheads
+        .getEventPublisher()
+        .onEntryAdded(
+            event -> {
+              Bulkhead bulkhead = event.getAddedEntry();
+              var rejected =
+                  meters.counter("grpc.client.bulkhead.rejected", "name", bulkhead.getName());
+              bulkhead
+                  .getEventPublisher()
+                  .onCallRejected(
+                      rejection -> {
+                        rejected.increment();
+                        log.warn(
+                            "grpc_bulkhead_rejected name={} maxConcurrentCalls={}",
+                            bulkhead.getName(),
+                            bulkhead.getBulkheadConfig().getMaxConcurrentCalls());
+                      });
+            });
   }
 
   public CircuitBreaker breaker(String dependency) {
     return registry.circuitBreaker(dependency, () -> config(dependency));
+  }
+
+  public Bulkhead bulkhead(String dependency, boolean streaming) {
+    String name = dependency + (streaming ? "-grpc-stream" : "-grpc");
+    String prefix = streaming ? "bulkhead.stream." : "bulkhead.";
+    return bulkheads.bulkhead(
+        name,
+        () -> {
+          long wait = value(dependency, prefix + "max-wait-duration-ms", Long.class, 0L);
+          // gRPC start() also runs on async callers: never park their threads in an admission
+          // queue.
+          if (wait != 0) {
+            throw new IllegalArgumentException(
+                "gRPC Bulkhead requires max-wait-duration-ms=0: " + name);
+          }
+          return BulkheadConfig.custom()
+              .maxConcurrentCalls(
+                  value(
+                      dependency,
+                      prefix + "max-concurrent-calls",
+                      Integer.class,
+                      streaming ? 32 : 8))
+              .maxWaitDuration(Duration.ofMillis(wait))
+              .build();
+        });
+  }
+
+  GrpcCircuitBreakerInterceptor interceptor(String dependency) {
+    return new GrpcCircuitBreakerInterceptor(
+        breaker(dependency), bulkhead(dependency, false), bulkhead(dependency, true));
   }
 
   private CircuitBreakerConfig config(String dependency) {
@@ -123,7 +177,7 @@ public class GrpcResilience {
         .disableServiceConfigLookUp()
         .defaultServiceConfig(retryConfig(dependency, service))
         .enableRetry()
-        .intercept(new GrpcCircuitBreakerInterceptor(circuit))
+        .intercept(interceptor(dependency))
         .build();
   }
 

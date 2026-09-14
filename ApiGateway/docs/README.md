@@ -20,3 +20,5 @@
 - OpenAPI JSON: `/v3/api-docs`
 - AsyncAPI UI: `/asyncapi` or `/asyncapi-ui.html`
 - AsyncAPI YAML: `/asyncapi.yaml`
+
+- [gRPC Bulkhead load test and sizing](../../ApiGateway/docs/bulkhead-load.md)

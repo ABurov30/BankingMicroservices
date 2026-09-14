@@ -36,7 +36,10 @@ channels:
       of the STOMP destination and is not included in the protobuf payload.
       The upstream gRPC stream uses the transaction dependency circuit breaker.
       An open circuit rejects new upstream streams immediately; streams are not
-      automatically retried or replayed. No synthetic status update is sent on failure.
+      automatically retried or replayed. Active upstream streams also have a
+      separate per-replica semaphore limit (transaction-grpc-stream, default 32).
+      Saturation rejects stream setup with RESOURCE_EXHAUSTED; the permit is held
+      until close or cancellation. No synthetic status update is sent on failure.
     parameters:
       transactionId:
         description: Transaction UUID used in the subscription destination.

@@ -60,3 +60,7 @@ ApiGateway returns HTTP 503 for UNAVAILABLE, DEADLINE_EXCEEDED, INTERNAL and RES
 using the existing `ApiErrorResponse` shape. Business status mappings remain unchanged.
 There is no successful fallback for reads or writes. Unary read retries are bounded by the
 existing deadline; writes are not automatically replayed. See [configuration](configuration.md#grpc-resilience).
+
+Local gRPC Bulkhead saturation returns RESOURCE_EXHAUSTED (`Downstream bulkhead saturated:
+<dependency>-grpc`), mapped to HTTP 503 at ApiGateway. This differs from the UNAVAILABLE
+returned by an OPEN circuit. Neither local rejection starts or retries a downstream RPC.

@@ -12,3 +12,5 @@
 - [Data and Persistence](data.md)
 - [Events](events.md)
 - [Development](development.md)
+
+- [gRPC Bulkhead load test and sizing](../../ApiGateway/docs/bulkhead-load.md)

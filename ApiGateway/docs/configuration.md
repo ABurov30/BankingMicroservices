@@ -124,9 +124,58 @@ Actuator `/actuator/prometheus` exports `resilience4j_circuitbreaker_state`,
 `resilience4j_circuitbreaker_not_permitted_calls_total`, tagged by instance `name`.
 `grpc_client_circuit_transitions_total` additionally has `dependency` and `transition` labels.
 Logs use `grpc_circuit_transition` and `grpc_circuit_rejected` with dependency/state.
-No local Bulkhead exists in these services; circuit rejections are explicitly distinct from
-Bulkhead saturation and remote RESOURCE_EXHAUSTED. Do not interpret the circuit rejection
-counter as a concurrency saturation counter.
+Local Bulkhead rejection uses `grpc_bulkhead_rejected`, separate from circuit rejection and
+remote RESOURCE_EXHAUSTED. Local saturation bypasses breaker outcome accounting even when
+`record-resource-exhausted=true`.
 
 References: [Resilience4j CircuitBreaker](https://resilience4j.readme.io/docs/circuitbreaker),
 [gRPC retry semantics](https://grpc.io/docs/guides/retry/).
+
+
+## gRPC Bulkhead
+
+The same channel interceptor also acquires a Resilience4j semaphore Bulkhead permit. Each
+replica shares one instance per dependency: `account-grpc`, `card-grpc`, and in ApiGateway
+also `auth-grpc`, `user-grpc`, `transaction-grpc`, `notification-grpc`. All blocking/future unary
+stubs targeting a dependency share its limit. No extra executor or admission queue is created.
+These are per-process limits, not a distributed global downstream limit.
+
+Use the existing `grpc.resilience.defaults` and `grpc.resilience.instances.<dependency>` prefixes:
+
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `bulkhead.max-concurrent-calls` | `8` | Concurrent logical unary RPCs per dependency/replica |
+| `bulkhead.max-wait-duration-ms` | `0` | Strict fail-fast admission; nonzero fails startup validation |
+| `bulkhead.stream.max-concurrent-calls` | `32` | Active streams in a separate `<dependency>-grpc-stream` instance |
+| `bulkhead.stream.max-wait-duration-ms` | `0` | Streams also require immediate admission |
+
+For example, `grpc.resilience.instances.account.bulkhead.max-concurrent-calls=4` overrides
+only Account calls. Permit waiting is deliberately prohibited because `ClientCall.start()`
+also runs on async callers. Increasing concurrency is supported; enabling a waiting queue is not.
+
+Admission order is CircuitBreaker permission → Bulkhead permission → native gRPC call/retry.
+An OPEN circuit consumes no Bulkhead permit. Saturation returns RESOURCE_EXHAUSTED and returns
+any reserved HALF_OPEN permission without recording a breaker outcome. It never reaches the
+native retry layer. At ApiGateway this becomes HTTP 503 with the existing ApiErrorResponse.
+Remote RESOURCE_EXHAUSTED retains the existing optional circuit failure accounting.
+
+A unary permit covers the entire logical RPC, including retry/backoff. It is returned exactly
+once on terminal onClose (success, error, deadline exceeded, or cancellation), and on synchronous
+start failure. The original deadline is passed unchanged; Bulkhead does not extend or replace it.
+A stream permit remains held after the first message until terminal close/cancellation, while
+CircuitBreaker records stream availability on the first message. This prevents long-lived streams
+from consuming unary permits. No fallback or automatic stream replay is introduced.
+
+Prometheus exports, with `name` identifying the Bulkhead instance:
+
+- `resilience4j_bulkhead_available_concurrent_calls`
+- `resilience4j_bulkhead_max_allowed_concurrent_calls`
+- `grpc_client_bulkhead_rejected_total`
+
+For occupied permits, subtract available from max. Rejected counters are initialized to zero on
+instance creation. Use these metrics with latency, caller busy threads and downstream DB/executor
+queues. A local limit does not cap requests originating from other replicas or services.
+
+The default 8 is a provisional development value. The reproducible synthetic load sweep and
+capacity-sizing procedure are in [the load report](../../ApiGateway/docs/bulkhead-load.md).
+Production tuning requires the real downstream workload, replica counts and thread/DB pool sizes.

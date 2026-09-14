@@ -91,7 +91,7 @@ class GrpcResilienceTest {
     var builder =
         InProcessChannelBuilder.forName(serverName)
             .directExecutor()
-            .intercept(new GrpcCircuitBreakerInterceptor(breaker));
+            .intercept(resilience.interceptor("account"));
     if (retry) {
       builder
           .enableRetry()
@@ -300,7 +300,7 @@ class GrpcResilienceTest {
     @SuppressWarnings("unchecked")
     ClientCall<Empty, Empty> delegate = org.mockito.Mockito.mock(ClientCall.class);
     org.mockito.Mockito.when(transport.newCall(method, CallOptions.DEFAULT)).thenReturn(delegate);
-    var interceptor = new GrpcCircuitBreakerInterceptor(breaker);
+    var interceptor = resilience.interceptor("account");
     var call = interceptor.interceptCall(method, CallOptions.DEFAULT, transport);
     call.start(new ClientCall.Listener<>() {}, new Metadata());
     @SuppressWarnings("unchecked")
@@ -353,5 +353,29 @@ class GrpcResilienceTest {
                 .counter()
                 .count())
         .isEqualTo(1);
+  }
+
+  @Test
+  void retryBackoffKeepsBulkheadPermitAndSaturationIsNotRetried() throws Exception {
+    environment
+        .withProperty("grpc.resilience.defaults.bulkhead.max-concurrent-calls", "1")
+        .withProperty("grpc.resilience.defaults.retry.initial-backoff-ms", "500");
+    var method = start("GetAccountHealth", true);
+    response = Status.UNAVAILABLE;
+    recoverOnRetry = true;
+    var result =
+        ClientCalls.futureUnaryCall(
+            channel.newCall(method, CallOptions.DEFAULT.withDeadlineAfter(2, TimeUnit.SECONDS)),
+            Empty.getDefaultInstance());
+    assertThat(requests.get()).isEqualTo(1);
+    assertThat(resilience.bulkhead("account", false).getMetrics().getAvailableConcurrentCalls())
+        .isZero();
+    assertThatThrownBy(() -> invoke(method)).hasMessageContaining("bulkhead saturated");
+    assertThat(requests.get()).isEqualTo(1);
+    result.get(2, TimeUnit.SECONDS);
+    assertThat(requests.get()).isEqualTo(2);
+    assertThat(resilience.bulkhead("account", false).getMetrics().getAvailableConcurrentCalls())
+        .isEqualTo(1);
+    assertThat(breaker.getMetrics().getNumberOfFailedCalls()).isZero();
   }
 }

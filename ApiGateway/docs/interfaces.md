@@ -141,3 +141,11 @@ existing deadline; writes are not automatically replayed. See [configuration](co
 
 For WebSocket transaction subscriptions, circuit rejection terminates upstream stream setup;
 no synthetic transaction status is sent and streams are not automatically retried or replayed.
+
+Local gRPC Bulkhead saturation returns RESOURCE_EXHAUSTED (`Downstream bulkhead saturated:
+<dependency>-grpc`), mapped to HTTP 503 at ApiGateway. This differs from the UNAVAILABLE
+returned by an OPEN circuit. Neither local rejection starts or retries a downstream RPC.
+
+Transaction status subscriptions use a separate `transaction-grpc-stream` semaphore (32 by
+default). Saturation rejects upstream setup; no synthetic status message or automatic retry is
+sent. The stream holds its permit until completion, error or unsubscribe/cancellation.

@@ -1,5 +1,6 @@
 package apigateway.config;
 
+import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.grpc.CallOptions;
 import io.grpc.Channel;
@@ -13,21 +14,30 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-/** Accounts for logical RPC outcomes, including all native retry attempts. */
+/** Bounds logical RPC concurrency and records circuit outcomes, including native retries. */
 public class GrpcCircuitBreakerInterceptor implements ClientInterceptor {
   private final CircuitBreaker breaker;
 
-  public GrpcCircuitBreakerInterceptor(CircuitBreaker breaker) {
+  private final Bulkhead unaryBulkhead;
+  private final Bulkhead streamBulkhead;
+
+  public GrpcCircuitBreakerInterceptor(
+      CircuitBreaker breaker, Bulkhead unaryBulkhead, Bulkhead streamBulkhead) {
     this.breaker = breaker;
+    this.unaryBulkhead = unaryBulkhead;
+    this.streamBulkhead = streamBulkhead;
   }
 
   @Override
   public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(
       MethodDescriptor<ReqT, RespT> method, CallOptions options, Channel next) {
+    Bulkhead bulkhead =
+        method.getType() == MethodDescriptor.MethodType.UNARY ? unaryBulkhead : streamBulkhead;
     return new ClientCall<>() {
       private volatile ClientCall<ReqT, RespT> delegate;
       private final AtomicReference<Status> cancellation = new AtomicReference<>();
       private final AtomicBoolean completed = new AtomicBoolean();
+      private final AtomicBoolean permitHeld = new AtomicBoolean();
       private long started;
 
       @Override
@@ -42,6 +52,16 @@ public class GrpcCircuitBreakerInterceptor implements ClientInterceptor {
               new Metadata());
           return;
         }
+        if (!bulkhead.tryAcquirePermission()) {
+          // A local rejection is neither a failed RPC nor a completed half-open probe.
+          breaker.releasePermission();
+          listener.onClose(
+              Status.RESOURCE_EXHAUSTED.withDescription(
+                  "Downstream bulkhead saturated: " + bulkhead.getName()),
+              new Metadata());
+          return;
+        }
+        permitHeld.set(true);
         started = System.nanoTime();
         try {
           delegate = next.newCall(method, options);
@@ -59,6 +79,7 @@ public class GrpcCircuitBreakerInterceptor implements ClientInterceptor {
 
                 @Override
                 public void onClose(Status status, Metadata trailers) {
+                  releasePermit();
                   complete(status);
                   super.onClose(status, trailers);
                 }
@@ -68,9 +89,16 @@ public class GrpcCircuitBreakerInterceptor implements ClientInterceptor {
           if (cancelled != null) {
             delegate.cancel(cancelled.getDescription(), cancelled.getCause());
           }
-        } catch (RuntimeException exception) {
+        } catch (RuntimeException | Error exception) {
+          releasePermit();
           complete(Status.fromThrowable(exception));
           throw exception;
+        }
+      }
+
+      private void releasePermit() {
+        if (permitHeld.compareAndSet(true, false)) {
+          bulkhead.onComplete();
         }
       }
 
