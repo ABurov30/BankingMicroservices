@@ -20,3 +20,6 @@ Kafka partition ownership, event IDs and rollout: [key strategy](docs/events.md#
 
 Transaction status streams load both accounts through `GetAccountByIdsForTransaction`.
 See [interfaces](docs/interfaces.md) for batch lookup behavior.
+
+Outbound gRPC uses per-dependency CircuitBreaker and bounded read retries within existing deadlines.
+See [resilience configuration](docs/configuration.md#grpc-resilience).

@@ -26,4 +26,19 @@ class GlobalExceptionHandlerTest {
         .extracting(ApiErrorResponse::status, ApiErrorResponse::message)
         .containsExactly(404, java.util.List.of("User not found"));
   }
+
+  @org.junit.jupiter.params.ParameterizedTest
+  @org.junit.jupiter.params.provider.EnumSource(
+      value = Status.Code.class,
+      names = {"UNAVAILABLE", "DEADLINE_EXCEEDED", "INTERNAL", "RESOURCE_EXHAUSTED"})
+  void technicalFailureReturns503ForBothReadAndWrite(Status.Code code) {
+    for (String verb : java.util.List.of("GET", "POST")) {
+      var response =
+          handler.handleGrpcException(
+              Status.fromCode(code).asRuntimeException(),
+              new MockHttpServletRequest(verb, "/account/test"));
+      assertThat(response.getStatusCode().value()).isEqualTo(503);
+      assertThat(response.getBody().status()).isEqualTo(503);
+    }
+  }
 }

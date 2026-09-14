@@ -129,3 +129,15 @@ cards. Empty account lists skip the card RPC. Public HTTP response schemas are u
 distinct auth user IDs. Auth data is matched by ID, preserving profile order, roles,
 auth statuses, and social accounts. Empty profile lists skip the auth RPC; an incomplete
 auth response fails with NOT_FOUND. Public HTTP response schemas are unchanged.
+
+## Dependency Failures
+
+Outbound gRPC circuits reject calls with UNAVAILABLE while OPEN or when HALF_OPEN probes are
+fully occupied. TransactionService preserves downstream gRPC statuses for its callers.
+ApiGateway returns HTTP 503 for UNAVAILABLE, DEADLINE_EXCEEDED, INTERNAL and RESOURCE_EXHAUSTED,
+using the existing `ApiErrorResponse` shape. Business status mappings remain unchanged.
+There is no successful fallback for reads or writes. Unary read retries are bounded by the
+existing deadline; writes are not automatically replayed. See [configuration](configuration.md#grpc-resilience).
+
+For WebSocket transaction subscriptions, circuit rejection terminates upstream stream setup;
+no synthetic transaction status is sent and streams are not automatically retried or replayed.

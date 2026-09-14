@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "4e61f36c-367c-485e-8b96-e8487f6ec25a",
     "name": "buro-bank",
-    "description": "HTTP collection for Buro Bank microservices. Most application endpoints are exposed through ApiGateway and use HttpOnly cookies `at` and `rt` set by login/refresh.",
+    "description": "HTTP collection for Buro Bank microservices. Most application endpoints are exposed through ApiGateway and use HttpOnly cookies `at` and `rt` set by login/refresh. Downstream gRPC UNAVAILABLE, DEADLINE_EXCEEDED, INTERNAL and RESOURCE_EXHAUSTED return HTTP 503 with ApiErrorResponse. Open circuits fail fast. Unary read retries stay within the existing 2-second deadline; write commands are not automatically replayed and have no success fallback.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "29457124"
   },

@@ -137,10 +137,10 @@ public class GlobalExceptionHandler {
       case FAILED_PRECONDITION -> HttpStatus.PRECONDITION_FAILED;
       case UNAUTHENTICATED -> HttpStatus.UNAUTHORIZED;
       case PERMISSION_DENIED -> HttpStatus.FORBIDDEN;
-      case DEADLINE_EXCEEDED -> HttpStatus.GATEWAY_TIMEOUT;
-      case UNAVAILABLE -> HttpStatus.SERVICE_UNAVAILABLE;
+      case DEADLINE_EXCEEDED, UNAVAILABLE, INTERNAL, RESOURCE_EXHAUSTED ->
+          HttpStatus.SERVICE_UNAVAILABLE;
       case CANCELLED -> HttpStatus.BAD_GATEWAY;
-      case INTERNAL, UNKNOWN, DATA_LOSS -> HttpStatus.BAD_GATEWAY;
+      case UNKNOWN, DATA_LOSS -> HttpStatus.BAD_GATEWAY;
       default -> HttpStatus.INTERNAL_SERVER_ERROR;
     };
   }

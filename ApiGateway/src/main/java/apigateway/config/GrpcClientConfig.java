@@ -4,7 +4,6 @@ import account.contract.v1.AccountRpcServiceGrpc;
 import auth.contract.v1.AuthRpcServiceGrpc;
 import card.contract.v1.CardRpcServiceGrpc;
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 import notification.contract.v1.NotificationRpcServiceGrpc;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -15,11 +14,17 @@ import user.contract.v1.UserRpcServiceGrpc;
 @Configuration
 public class GrpcClientConfig {
 
+  private final GrpcResilience resilience;
+
+  public GrpcClientConfig(GrpcResilience resilience) {
+    this.resilience = resilience;
+  }
+
   @Bean(destroyMethod = "shutdown")
   ManagedChannel authChannel(
       @Value("${AUTH_GRPC_HOST}") String host, @Value("${AUTH_GRPC_PORT}") int port) {
 
-    return ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
+    return resilience.channel("auth", host, port, AuthRpcServiceGrpc.getServiceDescriptor());
   }
 
   @Bean
@@ -36,7 +41,7 @@ public class GrpcClientConfig {
   ManagedChannel userChannel(
       @Value("${USER_GRPC_HOST}") String host, @Value("${USER_GRPC_PORT}") int port) {
 
-    return ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
+    return resilience.channel("user", host, port, UserRpcServiceGrpc.getServiceDescriptor());
   }
 
   @Bean
@@ -53,7 +58,7 @@ public class GrpcClientConfig {
   ManagedChannel accountChannel(
       @Value("${ACCOUNT_GRPC_HOST}") String host, @Value("${ACCOUNT_GRPC_PORT}") int port) {
 
-    return ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
+    return resilience.channel("account", host, port, AccountRpcServiceGrpc.getServiceDescriptor());
   }
 
   @Bean
@@ -65,7 +70,7 @@ public class GrpcClientConfig {
   ManagedChannel cardChannel(
       @Value("${CARD_GRPC_HOST}") String host, @Value("${CARD_GRPC_PORT}") int port) {
 
-    return ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
+    return resilience.channel("card", host, port, CardRpcServiceGrpc.getServiceDescriptor());
   }
 
   @Bean
@@ -82,7 +87,8 @@ public class GrpcClientConfig {
   ManagedChannel transactionChannel(
       @Value("${TRANSACTION_GRPC_HOST}") String host, @Value("${TRANSACTION_GRPC_PORT}") int port) {
 
-    return ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
+    return resilience.channel(
+        "transaction", host, port, TransactionRpcServiceGrpc.getServiceDescriptor());
   }
 
   @Bean
@@ -102,7 +108,8 @@ public class GrpcClientConfig {
       @Value("${NOTIFICATION_GRPC_HOST}") String host,
       @Value("${NOTIFICATION_GRPC_PORT}") int port) {
 
-    return ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
+    return resilience.channel(
+        "notification", host, port, NotificationRpcServiceGrpc.getServiceDescriptor());
   }
 
   @Bean

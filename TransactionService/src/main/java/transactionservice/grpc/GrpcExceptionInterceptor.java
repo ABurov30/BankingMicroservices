@@ -6,6 +6,7 @@ import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -42,6 +43,10 @@ public class GrpcExceptionInterceptor implements ServerInterceptor {
   }
 
   private Status mapException(Exception exception) {
+    if (exception instanceof StatusRuntimeException grpcException) {
+      return grpcException.getStatus();
+    }
+
     if (exception instanceof TransactionNotFoundException) {
       return Status.NOT_FOUND;
     }

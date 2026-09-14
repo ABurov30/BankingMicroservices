@@ -51,3 +51,12 @@ Source and target accounts for subscription authorization and each status update
 with one batch RPC and matched by account ID, independent of response order. Duplicate IDs
 are sent once; missing accounts fail with NOT_FOUND. Subscription access still requires the
 caller to own either account. Public response schemas and stream destinations are unchanged.
+
+## Dependency Failures
+
+Outbound gRPC circuits reject calls with UNAVAILABLE while OPEN or when HALF_OPEN probes are
+fully occupied. TransactionService preserves downstream gRPC statuses for its callers.
+ApiGateway returns HTTP 503 for UNAVAILABLE, DEADLINE_EXCEEDED, INTERNAL and RESOURCE_EXHAUSTED,
+using the existing `ApiErrorResponse` shape. Business status mappings remain unchanged.
+There is no successful fallback for reads or writes. Unary read retries are bounded by the
+existing deadline; writes are not automatically replayed. See [configuration](configuration.md#grpc-resilience).
