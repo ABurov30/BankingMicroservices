@@ -66,6 +66,17 @@ public class CardGrpcService extends CardRpcServiceGrpc.CardRpcServiceImplBase {
   }
 
   @Override
+  public void getCardsByAccountIds(
+      GetCardByAccountIdsGrpcRequest request,
+      StreamObserver<GetCardsGrpcResponse> responseObserver) {
+    var command = commandMapper.toGetCardsByAccountIdsCommand(request);
+    var cards =
+        cardService.getCardsByAccountIds(command).stream().map(grpcMapper::toCardResponse).toList();
+    responseObserver.onNext(grpcMapper.toGetCardsGrpcResponse(cards));
+    responseObserver.onCompleted();
+  }
+
+  @Override
   public void reserveLimitsForTransaction(
       ReserveLimitsForTransactionGrpcRequest request,
       StreamObserver<ReserveLimitsForTransactionGrpcResponse> responseObserver) {

@@ -13,4 +13,6 @@ public interface AuthSocialAccountsRepository
       SocialLoginProvider provider, String providerSubject);
 
   List<AuthSocialAccountsEntity> findAllByAuthUserId(UUID authUserId);
+
+  List<AuthSocialAccountsEntity> findAllByAuthUserIdIn(List<UUID> authUserIds);
 }

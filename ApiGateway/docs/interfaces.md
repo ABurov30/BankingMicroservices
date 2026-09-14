@@ -69,7 +69,7 @@ cookie is not replaced by this endpoint.
 | `TransactionGrpcClient` | `TransactionService` |
 | `NotificationGrpcClient` | `NotificationService` |
 
-gRPC DTOs come from `com.burov:contracts` version `0.0.28-SNAPSHOT`. Shared support utilities come from
+gRPC DTOs come from `com.burov:contracts` version `0.0.29-SNAPSHOT`. Shared support utilities come from
 `com.burov:support` version `0.0.2`.
 
 ## DTO Notes
@@ -115,3 +115,17 @@ The transaction list provides the `transactionId` required to build the transact
 destination. For the transaction stream itself, `transactionId` is currently part of the destination
 and is not included in the protobuf payload. Update both this document and `asyncapi.yaml` when the
 public DTO changes.
+
+## Account Card Aggregation
+
+All-account, owner-profile, and current-user account lists call `GetCardsByAccountIds`
+once with distinct account IDs and the caller's identity and role. Cards are grouped by
+`accountId`, preserving account order and returning an empty card list for accounts without
+cards. Empty account lists skip the card RPC. Public HTTP response schemas are unchanged.
+
+## User Auth Aggregation
+
+`getAllUserInfoWithAuthInfo` loads profiles once and calls `GetAuthUserByIds` once with
+distinct auth user IDs. Auth data is matched by ID, preserving profile order, roles,
+auth statuses, and social accounts. Empty profile lists skip the auth RPC; an incomplete
+auth response fails with NOT_FOUND. Public HTTP response schemas are unchanged.

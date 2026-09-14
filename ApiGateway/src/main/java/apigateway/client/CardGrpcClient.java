@@ -1,6 +1,7 @@
 package apigateway.client;
 
 import apigateway.dto.command.card.GetCardsByAccountIdCommandDto;
+import apigateway.dto.command.card.GetCardsByAccountIdsCommandDto;
 import apigateway.dto.request.card.CreateCardRequestDto;
 import apigateway.dto.request.card.UpdateCardRequestDto;
 import apigateway.dto.response.account.GetAccountResponseDto;
@@ -26,6 +27,18 @@ public class CardGrpcClient {
   private final CardRpcServiceGrpc.CardRpcServiceFutureStub futureStub;
   private final CardGrpcMapper grpcMapper;
   private final CardResultMapper dtoMapper;
+
+  public List<GetCardByAccountIdResponseDto> getCardsByAccountIds(
+      GetCardsByAccountIdsCommandDto command) {
+    if (command.accountIds().isEmpty()) {
+      return List.of();
+    }
+    var request = grpcMapper.toGetCardByAccountIdsGrpcRequest(command);
+    var response = stub.withDeadlineAfter(2, TimeUnit.SECONDS).getCardsByAccountIds(request);
+    return response.getCardsList().stream()
+        .map(dtoMapper::toGetCardByAccountIdResponseDto)
+        .toList();
+  }
 
   public String getCardHealth() {
     GetCardHealthGrpcResponse response =

@@ -20,6 +20,7 @@ Service implementation: `AuthGrpcService`.
 | `verifyAuthUserByCode` | Code-based user verification |
 | `changeAuthUserRole` | Admin role assignment flow |
 | `getAuthUserById` | Lookup auth user data, including linked social provider accounts |
+| `getAuthUserByIds` | Batch lookup of auth users, roles, and linked social accounts |
 | `forgetPassword` | Start password reset flow |
 | `resetPassword` | Complete password reset flow |
 
@@ -29,7 +30,7 @@ Auth REST endpoints are exposed through `ApiGateway/AuthGatewayController`, not 
 
 ## Contracts
 
-gRPC request and response types come from `com.burov:contracts` version `0.0.28-SNAPSHOT`. Kafka event
+gRPC request and response types come from `com.burov:contracts` version `0.0.29-SNAPSHOT`. Kafka event
 types come from `com.burov:kafka-contracts`. Shared outbox helpers come from `com.burov:support`
 version `0.0.2`.
 
@@ -38,3 +39,13 @@ version `0.0.2`.
 
 `ChangePasswordGrpcResponse` returns `refreshToken` and `refreshTokenDaysTtl` so the gateway can
 replace the caller's `rt` cookie after all previously active refresh tokens are revoked.
+
+## Batch Auth Reads
+
+`GetAuthUserByIds` accepts repeated `authUserId` and returns repeated `authUsers`, each
+using the existing `GetAuthUserByIdGrpcResponse` shape. Empty input returns an empty list;
+duplicate IDs are collapsed and results follow the first occurrence of each requested ID.
+Users, user roles (with their role entity), and social accounts are loaded with three
+SQL `IN` queries. Role entities are fetched with an entity graph to avoid per-user lookups.
+Missing users or roles fail the complete request with the existing not-found exceptions.
+Users without linked social accounts receive an empty social-account list.

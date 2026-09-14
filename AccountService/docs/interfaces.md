@@ -15,7 +15,7 @@ Service implementation: `AccountGrpcService`.
 | `freezeAccount` | Freeze an account |
 | `unfreezeAccount` | Unfreeze an account |
 | `getAccountById` | Read a single account |
-| `getAccountByIdForTransaction` | Read an account for internal TransactionService flows |
+| `getAccountByIdsForTransaction` | Read a batch of accounts for internal TransactionService flows |
 | `topUpAccount` | Add funds to an account |
 | `withdrawAccount` | Withdraw funds from an account |
 | `reserveFundsForTransaction` | Reserve funds for transaction processing |
@@ -29,8 +29,8 @@ the account nor has the `ADMIN` or `MANAGER` role.
 `getRecipientAccountsByOwnerUserId` returns account ids, account number last-four values, types,
 statuses, and currencies. It does not expose balances, full account numbers, or auth-user ids.
 
-`getAccountByIdForTransaction` is an internal service-to-service operation used by
-`TransactionService` for transaction responses and status streams. It accepts only `accountId`;
+`getAccountByIdsForTransaction` is an internal service-to-service operation used by
+`TransactionService` for transaction responses and status streams. It accepts a list of `accountId`;
 end-user requests must use the ownership-protected `getAccountById` operation.
 
 `topUpAccount` and `withdrawAccount` receive `minorUnits` and apply them directly to account
@@ -57,6 +57,14 @@ Gateway route groups include:
 
 ## Contracts
 
-gRPC types come from `com.burov:contracts` version `0.0.28-SNAPSHOT`. Event payloads come from
+gRPC types come from `com.burov:contracts` version `0.0.29-SNAPSHOT`. Event payloads come from
 `com.burov:kafka-contracts`. Shared outbox, processed-event, and money-unit helpers come from
 `com.burov:support` version `0.0.2`.
+
+## Batch Transaction Account Reads
+
+`GetAccountByIdsForTransaction` accepts repeated `accountId` and returns repeated `account`.
+It is an internal service-to-service operation for TransactionService; public account reads still require ownership checks.
+A single SQL `IN` query loads distinct account IDs. Results follow requested ID order,
+empty input returns an empty list, and a missing account fails the entire request with
+the existing account-not-found exception.

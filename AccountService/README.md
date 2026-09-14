@@ -20,3 +20,6 @@ Kafka partition ownership, event IDs and rollout: [key strategy](docs/events.md#
 
 Daily SAVINGS accruals are idempotent per account and Paris business date.
 See [interest accrual and retry](docs/interest-accrual.md).
+
+Transaction status streams load both accounts through `GetAccountByIdsForTransaction`.
+See [interfaces](docs/interfaces.md) for batch lookup behavior.

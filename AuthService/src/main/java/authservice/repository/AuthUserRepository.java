@@ -1,6 +1,7 @@
 package authservice.repository;
 
 import authservice.entity.AuthUserEntity;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,4 +12,6 @@ public interface AuthUserRepository extends JpaRepository<AuthUserEntity, UUID> 
   boolean existsByEmail(String email);
 
   Optional<AuthUserEntity> findByEmail(String email);
+
+  List<AuthUserEntity> findByIdIn(List<UUID> authUserIds);
 }

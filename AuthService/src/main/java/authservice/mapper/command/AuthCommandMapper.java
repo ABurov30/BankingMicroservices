@@ -10,6 +10,11 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface AuthCommandMapper {
+  default GetAuthUserByIdsCommand toGetAuthUserByIdsCommand(GetAuthUserByIdsGrpcRequest request) {
+    return new GetAuthUserByIdsCommand(
+        request.getAuthUserIdList().stream().map(UUID::fromString).toList());
+  }
+
   default SignupCommand toSignupCommand(SignupAuthGrpcRequest request) {
     return new SignupCommand(
         request.getEmail().trim().toLowerCase(Locale.ROOT),

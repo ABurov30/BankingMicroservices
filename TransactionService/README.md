@@ -17,3 +17,6 @@ Use `@Tag("integration")` to exclude integration tests from the default run.
 Spring context tests activate the `test` profile with `@ActiveProfiles("test")`.
 
 Kafka partition ownership, event IDs and rollout: [key strategy](docs/events.md#kafka-key-strategy).
+
+Transaction status streams load both accounts through `GetAccountByIdsForTransaction`.
+See [interfaces](docs/interfaces.md) for batch lookup behavior.

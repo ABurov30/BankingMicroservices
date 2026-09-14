@@ -1,6 +1,7 @@
 package authservice.repository;
 
 import authservice.entity.UserRoleEntity;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -11,4 +12,7 @@ import org.springframework.stereotype.Repository;
 public interface UserRoleRepository extends JpaRepository<UserRoleEntity, UUID> {
   @EntityGraph(attributePaths = "role")
   Optional<UserRoleEntity> findByAuthUserId(UUID userId);
+
+  @EntityGraph(attributePaths = "role")
+  List<UserRoleEntity> findByAuthUserIdIn(List<UUID> authUserIds);
 }

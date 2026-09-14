@@ -38,11 +38,16 @@ carry the transaction `currency`; downstream services reject the reservation whe
 the source card or source account currency.
 
 Transaction response enrichment and status streaming use the internal AccountService operation
-`getAccountByIdForTransaction`. The ownership-protected `getAccountById` operation is reserved for
+`getAccountByIdsForTransaction`. The ownership-protected `getAccountById` operation is reserved for
 end-user account reads that include authenticated user identity and role.
 
 ## Contracts
 
-gRPC types come from `com.burov:contracts` version `0.0.28-SNAPSHOT`. Event payloads come from
+gRPC types come from `com.burov:contracts` version `0.0.29-SNAPSHOT`. Event payloads come from
 `com.burov:kafka-contracts`. Shared outbox and processed-event helpers come from
 `com.burov:support` version `0.0.2`.
+
+Source and target accounts for subscription authorization and each status update are fetched
+with one batch RPC and matched by account ID, independent of response order. Duplicate IDs
+are sent once; missing accounts fail with NOT_FOUND. Subscription access still requires the
+caller to own either account. Public response schemas and stream destinations are unchanged.

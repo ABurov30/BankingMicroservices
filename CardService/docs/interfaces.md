@@ -12,6 +12,7 @@ Service implementation: `CardGrpcService`.
 | `createCard` | Create a card for an account |
 | `updateCard` | Update card details or limits |
 | `getCardsByAccountId` | Read cards linked to an account |
+| `getCardsByAccountIds` | Read cards for a list of accounts in one request |
 | `reserveLimitsForTransaction` | Reserve daily and monthly card limit spend for a transaction |
 
 `createCard` receives `currency` from ApiGateway or account-created events. The currency is the
@@ -39,6 +40,15 @@ Gateway route groups include:
 
 ## Contracts
 
-gRPC types come from `com.burov:contracts` version `0.0.28-SNAPSHOT`. Account and card event payloads come
+gRPC types come from `com.burov:contracts` version `0.0.29-SNAPSHOT`. Account and card event payloads come
 from `com.burov:kafka-contracts`. Shared outbox and processed-event helpers come from
 `com.burov:support` version `0.0.2`.
+
+## Batch Card Reads
+
+`GetCardsByAccountIds` accepts repeated `accountId`, caller `authUserId`, and `role`.
+Cards and account ownership projections are each loaded with an SQL `IN` query.
+Users must own every requested account; a missing or foreign ownership projection fails
+with the existing cards-not-found error before cards are returned. ADMIN and MANAGER
+retain privileged access. Currency is resolved from the loaded ownership projections.
+Empty input returns no cards. Accounts without cards contribute no entries to the response.

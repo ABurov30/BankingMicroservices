@@ -9,6 +9,13 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface AuthGrpcMapper {
+  default GetAuthUserByIdsGrpcRequest toGetAuthUserByIdsGrpcRequest(
+      GetAuthUserByIdsRequestDto request) {
+    return GetAuthUserByIdsGrpcRequest.newBuilder()
+        .addAllAuthUserId(request.authUserIds().stream().map(UUID::toString).toList())
+        .build();
+  }
+
   default SignupAuthGrpcRequest toSignupAuthGrpcRequest(SignupRequestDto value) {
     return SignupAuthGrpcRequest.newBuilder()
         .setEmail(value.email().trim().toLowerCase(Locale.ROOT))

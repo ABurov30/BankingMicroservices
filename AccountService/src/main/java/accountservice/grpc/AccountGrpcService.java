@@ -117,14 +117,17 @@ public class AccountGrpcService extends AccountRpcServiceGrpc.AccountRpcServiceI
   }
 
   @Override
-  public void getAccountByIdForTransaction(
-      GetAccountByIdForTransactionGrpcRequest request,
-      StreamObserver<GetAccountByIdGrpcResponse> responseObserver) {
-    GetAccountResult result =
-        accountService.getAccountByIdForTransaction(
-            commandMapper.toGetAccountByIdForTransactionCommand(request));
-    AccountResponse response = grpcMapper.toAccountResponse(result);
-    responseObserver.onNext(grpcMapper.toGetAccountByIdGrpcResponse(response));
+  public void getAccountByIdsForTransaction(
+      GetAccountByIdsForTransactionGrpcRequest request,
+      StreamObserver<GetAccountByIdGrpcResponses> responseObserver) {
+    var results =
+        accountService.getAccountByIdsForTransaction(
+            commandMapper.toGetAccountByIdsForTransactionCommand(request));
+    var response =
+        GetAccountByIdGrpcResponses.newBuilder()
+            .addAllAccount(results.stream().map(grpcMapper::toAccountResponse).toList())
+            .build();
+    responseObserver.onNext(response);
     responseObserver.onCompleted();
   }
 

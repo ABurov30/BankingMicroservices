@@ -4,6 +4,7 @@ import account.contract.v1.AccountResponse;
 import enums.transaction.TransactionStatus;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -75,10 +76,11 @@ public class TransactionStatusStreamRegistry {
   }
 
   public void notifyStatusChanged(TransactionEntity transaction) {
-    var sourceAccount =
-        accountGrpcClient.getAccountByIdForTransaction(transaction.getSourceAccountId());
-    var targetAccount =
-        accountGrpcClient.getAccountByIdForTransaction(transaction.getTargetAccountId());
+    var accounts =
+        accountGrpcClient.getAccountByIdsForTransaction(
+            List.of(transaction.getSourceAccountId(), transaction.getTargetAccountId()));
+    var sourceAccount = accounts.get(transaction.getSourceAccountId());
+    var targetAccount = accounts.get(transaction.getTargetAccountId());
     TransactionStatusResponse response =
         transactionGrpcMapper.toTransactionStatusResponse(
             transaction, sourceAccount, targetAccount);
@@ -112,10 +114,12 @@ public class TransactionStatusStreamRegistry {
 
     var transactionEntity = transaction.get();
 
-    var sourceAccount =
-        accountGrpcClient.getAccountByIdForTransaction(transactionEntity.getSourceAccountId());
-    var targetAccount =
-        accountGrpcClient.getAccountByIdForTransaction(transactionEntity.getTargetAccountId());
+    var accounts =
+        accountGrpcClient.getAccountByIdsForTransaction(
+            List.of(
+                transactionEntity.getSourceAccountId(), transactionEntity.getTargetAccountId()));
+    var sourceAccount = accounts.get(transactionEntity.getSourceAccountId());
+    var targetAccount = accounts.get(transactionEntity.getTargetAccountId());
 
     if (sourceAccount != null && sourceAccount.getAuthUserId().equals(authUserId.toString())) {
       return new AllowedTransaction(transactionEntity, sourceAccount, targetAccount);

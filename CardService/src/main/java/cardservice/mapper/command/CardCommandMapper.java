@@ -2,6 +2,7 @@ package cardservice.mapper.command;
 
 import card.contract.v1.CreateCardGrpcRequest;
 import card.contract.v1.GetCardByAccountIdGrpcRequest;
+import card.contract.v1.GetCardByAccountIdsGrpcRequest;
 import card.contract.v1.ReserveLimitsForTransactionGrpcRequest;
 import card.contract.v1.UpdateCardGrpcRequest;
 import cardservice.dto.*;
@@ -18,6 +19,14 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface CardCommandMapper {
+  default GetCardsByAccountIdsCommand toGetCardsByAccountIdsCommand(
+      GetCardByAccountIdsGrpcRequest request) {
+    return new GetCardsByAccountIdsCommand(
+        request.getAccountIdList().stream().map(UUID::fromString).toList(),
+        UUID.fromString(request.getAuthUserId()),
+        Roles.valueOf(request.getRole()));
+  }
+
   default CreatedCardCommand toCreateCardCommand(AccountCreatedEventPayload payload) {
     return new CreatedCardCommand(
         payload.getAccountId(),

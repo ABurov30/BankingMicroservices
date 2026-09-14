@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import kafkacontracts.auth.AuthEventType;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -325,6 +326,39 @@ public class AuthService {
 
   private boolean canVerifyWithoutCode(String role) {
     return Roles.ADMIN.name().equals(role) || Roles.MANAGER.name().equals(role);
+  }
+
+  @Transactional(readOnly = true)
+  public List<GetAuthUserByIdResult> getAuthUserByIds(GetAuthUserByIdsCommand command) {
+    var ids = command.authUserIds().stream().distinct().toList();
+    if (ids.isEmpty()) {
+      return List.of();
+    }
+    var users =
+        authUserRepository.findByIdIn(ids).stream()
+            .collect(Collectors.toMap(AuthUserEntity::getId, value -> value));
+    for (var id : ids) {
+      if (!users.containsKey(id)) {
+        throw new AuthUserNotFoundException(id);
+      }
+    }
+    var roles =
+        userRoleRepository.findByAuthUserIdIn(ids).stream()
+            .collect(Collectors.toMap(value -> value.getAuthUser().getId(), value -> value));
+    for (var id : ids) {
+      if (!roles.containsKey(id)) {
+        throw new RoleNotFoundException(id);
+      }
+    }
+    var socialAccounts =
+        authSocialAccountsRepository.findAllByAuthUserIdIn(ids).stream()
+            .collect(Collectors.groupingBy(value -> value.getAuthUser().getId()));
+    return ids.stream()
+        .map(
+            id ->
+                authResultMapper.toGetAuthUserByIdResult(
+                    users.get(id), roles.get(id), socialAccounts.getOrDefault(id, List.of())))
+        .toList();
   }
 
   public GetAuthUserByIdResult getAuthUserById(GetAuthUserByIdCommand command) {

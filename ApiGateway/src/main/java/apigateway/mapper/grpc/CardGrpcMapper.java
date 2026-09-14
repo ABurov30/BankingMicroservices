@@ -1,17 +1,28 @@
 package apigateway.mapper.grpc;
 
 import apigateway.dto.command.card.GetCardsByAccountIdCommandDto;
+import apigateway.dto.command.card.GetCardsByAccountIdsCommandDto;
 import apigateway.dto.request.card.CreateCardRequestDto;
 import apigateway.dto.request.card.UpdateCardRequestDto;
 import apigateway.dto.response.account.GetAccountResponseDto;
 import card.contract.v1.CreateCardGrpcRequest;
 import card.contract.v1.GetCardByAccountIdGrpcRequest;
+import card.contract.v1.GetCardByAccountIdsGrpcRequest;
 import card.contract.v1.UpdateCardGrpcRequest;
 import java.util.UUID;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface CardGrpcMapper {
+  default GetCardByAccountIdsGrpcRequest toGetCardByAccountIdsGrpcRequest(
+      GetCardsByAccountIdsCommandDto command) {
+    return GetCardByAccountIdsGrpcRequest.newBuilder()
+        .addAllAccountId(command.accountIds().stream().map(UUID::toString).toList())
+        .setAuthUserId(command.authUserId().toString())
+        .setRole(command.role().name())
+        .build();
+  }
+
   default CreateCardGrpcRequest toCreateCardGrpcRequest(
       CreateCardRequestDto request, UUID authUserId, String role, GetAccountResponseDto account) {
     return CreateCardGrpcRequest.newBuilder()

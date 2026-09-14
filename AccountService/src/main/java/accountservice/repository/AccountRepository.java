@@ -14,6 +14,8 @@ import org.springframework.data.repository.query.Param;
 public interface AccountRepository extends JpaRepository<AccountEntity, UUID> {
   boolean existsByAccountNumber(String accountNumber);
 
+  List<AccountEntity> findByIdIn(List<UUID> accountIds);
+
   Optional<List<AccountEntity>> findByOwnerUserId(UUID ownerUserId);
 
   Optional<List<AccountEntity>> findByOwnerAuthUserId(UUID authUserId);

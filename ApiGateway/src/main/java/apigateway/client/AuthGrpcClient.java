@@ -9,6 +9,7 @@ import apigateway.mapper.result.AuthResultMapper;
 import auth.contract.v1.*;
 import com.google.protobuf.Empty;
 import grpcfutureadapter.GrpcFutureAdapter;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -86,6 +87,18 @@ public class AuthGrpcClient {
   public void changeAuthUserRole(ChangeAuthUserRoleRequestDto request) {
     ChangeAuthUserRoleGrpcRequest grpcRequest = grpcMapper.toChangeAuthUserRoleGrpcRequest(request);
     stub.withDeadlineAfter(2, TimeUnit.SECONDS).changeAuthUserRole(grpcRequest);
+  }
+
+  public List<GetAuthUserByIdResponseDto> getAuthUserByIds(GetAuthUserByIdsRequestDto request) {
+    if (request.authUserIds().isEmpty()) {
+      return List.of();
+    }
+    var response =
+        stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+            .getAuthUserByIds(grpcMapper.toGetAuthUserByIdsGrpcRequest(request));
+    return response.getAuthUsersList().stream()
+        .map(dtoMapper::toGetAuthUserByIdResponseDto)
+        .toList();
   }
 
   public GetAuthUserByIdResponseDto getAuthUserById(GetRoleByAuthUserIdRequestDto request) {

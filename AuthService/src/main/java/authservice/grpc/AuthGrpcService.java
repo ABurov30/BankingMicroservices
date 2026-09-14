@@ -147,6 +147,20 @@ public class AuthGrpcService extends AuthRpcServiceGrpc.AuthRpcServiceImplBase {
   }
 
   @Override
+  public void getAuthUserByIds(
+      GetAuthUserByIdsGrpcRequest request,
+      StreamObserver<GetAuthUserByIdsGrpcResponse> responseObserver) {
+    var results = authService.getAuthUserByIds(commandMapper.toGetAuthUserByIdsCommand(request));
+    var response =
+        GetAuthUserByIdsGrpcResponse.newBuilder()
+            .addAllAuthUsers(
+                results.stream().map(grpcMapper::toGetAuthUserByIdGrpcResponse).toList())
+            .build();
+    responseObserver.onNext(response);
+    responseObserver.onCompleted();
+  }
+
+  @Override
   public void forgetPassword(
       ForgetPasswordGrpcRequest request, StreamObserver<Empty> responseObserver) {
     ForgetPasswordCommand forgetPasswordCommand = commandMapper.toForgetPasswordCommand(request);

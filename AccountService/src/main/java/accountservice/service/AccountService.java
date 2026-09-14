@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 import kafkacontracts.account.AccountEventType;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.exception.ConstraintViolationException;
@@ -317,14 +318,26 @@ public class AccountService {
     return resultMapper.toGetAccountResult(account);
   }
 
-  public GetAccountResult getAccountByIdForTransaction(
-      GetAccountByIdForTransactionCommand command) {
-    AccountEntity account =
-        accountRepository
-            .findById(command.accountId())
-            .orElseThrow(() -> new AccountNotFoundException(command.accountId()));
-
-    return resultMapper.toGetAccountResult(account);
+  @org.springframework.transaction.annotation.Transactional(readOnly = true)
+  public List<GetAccountResult> getAccountByIdsForTransaction(
+      GetAccountByIdsForTransactionCommand command) {
+    var ids = command.accountIds().stream().distinct().toList();
+    if (ids.isEmpty()) {
+      return List.of();
+    }
+    var accounts =
+        accountRepository.findByIdIn(ids).stream()
+            .collect(Collectors.toMap(AccountEntity::getId, value -> value));
+    return ids.stream()
+        .map(
+            id -> {
+              var account = accounts.get(id);
+              if (account == null) {
+                throw new AccountNotFoundException(id);
+              }
+              return resultMapper.toGetAccountResult(account);
+            })
+        .toList();
   }
 
   @Transactional

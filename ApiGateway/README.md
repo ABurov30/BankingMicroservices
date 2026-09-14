@@ -15,3 +15,9 @@ Surefire discovers the standard test names and classes ending in `IT`.
 Use `@Tag("integration")` to exclude integration tests from the default run.
 
 Spring context tests activate the `test` profile with `@ActiveProfiles("test")`.
+
+Account card lists use the batch `GetCardsByAccountIds` gRPC operation.
+See [interfaces](docs/interfaces.md) for batching and access rules.
+
+User profile enrichment uses the batch `GetAuthUserByIds` RPC.
+See [interfaces](docs/interfaces.md) for batch lookup behavior.

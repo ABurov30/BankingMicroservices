@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 import kafkacontracts.card.CardEventType;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -291,6 +292,36 @@ public class CardService {
     Currency accountCurrency = getAccountCurrency(command.accountId());
     return cardEntityList.stream()
         .map(card -> resultMapper.toGetCardResult(card, accountCurrency))
+        .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public List<GetCardResult> getCardsByAccountIds(GetCardsByAccountIdsCommand command) {
+    var accountIds = command.accountIds().stream().distinct().toList();
+    if (accountIds.isEmpty()) {
+      return List.of();
+    }
+    var projections =
+        accountOwnershipProjectionRepository.findByAccountIdIn(accountIds).stream()
+            .collect(
+                Collectors.toMap(AccountOwnershipProjectionEntity::getAccountId, value -> value));
+    if (!isPrivileged(command.role().name())) {
+      for (UUID accountId : accountIds) {
+        var projection = projections.get(accountId);
+        if (projection == null || !projection.getOwnerAuthUserId().equals(command.authUserId())) {
+          throw new CardsNotFoundException(accountId);
+        }
+      }
+    }
+    return cardRepository.findByAccountIdIn(accountIds).stream()
+        .map(
+            card -> {
+              var projection = projections.get(card.getAccountId());
+              if (projection == null) {
+                throw new CardsNotFoundException(card.getAccountId());
+              }
+              return resultMapper.toGetCardResult(card, projection.getCurrency());
+            })
         .toList();
   }
 

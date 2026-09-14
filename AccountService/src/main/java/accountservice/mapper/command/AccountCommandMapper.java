@@ -13,6 +13,12 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface AccountCommandMapper {
+  default GetAccountByIdsForTransactionCommand toGetAccountByIdsForTransactionCommand(
+      GetAccountByIdsForTransactionGrpcRequest request) {
+    return new GetAccountByIdsForTransactionCommand(
+        request.getAccountIdList().stream().map(UUID::fromString).toList());
+  }
+
   default CreateAccountCommand toCreateAccountCommand(UserProfileCreatedEventPayload payload) {
     return new CreateAccountCommand(
         payload.getUserId(), payload.getAuthUserId(), AccountType.CHECKING, Currency.USD);
@@ -64,11 +70,6 @@ public interface AccountCommandMapper {
         UUID.fromString(request.getAccountId()),
         UUID.fromString(request.getAuthUserId()),
         Roles.valueOf(request.getRole()));
-  }
-
-  default GetAccountByIdForTransactionCommand toGetAccountByIdForTransactionCommand(
-      GetAccountByIdForTransactionGrpcRequest request) {
-    return new GetAccountByIdForTransactionCommand(UUID.fromString(request.getAccountId()));
   }
 
   default UpdateAccountBalanceCommand toUpdateAccountBalanceCommand(
