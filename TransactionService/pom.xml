@@ -116,7 +116,7 @@
         <dependency>
             <groupId>com.burov</groupId>
             <artifactId>contracts</artifactId>
-            <version>0.0.29-SNAPSHOT</version>
+            <version>0.0.29</version>
         </dependency>
         <dependency>
             <groupId>com.burov</groupId>

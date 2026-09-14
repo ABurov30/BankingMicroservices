@@ -30,7 +30,7 @@ Auth REST endpoints are exposed through `ApiGateway/AuthGatewayController`, not 
 
 ## Contracts
 
-gRPC request and response types come from `com.burov:contracts` version `0.0.29-SNAPSHOT`. Kafka event
+gRPC request and response types come from `com.burov:contracts` version `0.0.29`. Kafka event
 types come from `com.burov:kafka-contracts`. Shared outbox helpers come from `com.burov:support`
 version `0.0.2`.
 

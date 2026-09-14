@@ -69,7 +69,7 @@ cookie is not replaced by this endpoint.
 | `TransactionGrpcClient` | `TransactionService` |
 | `NotificationGrpcClient` | `NotificationService` |
 
-gRPC DTOs come from `com.burov:contracts` version `0.0.29-SNAPSHOT`. Shared support utilities come from
+gRPC DTOs come from `com.burov:contracts` version `0.0.29`. Shared support utilities come from
 `com.burov:support` version `0.0.2`.
 
 ## DTO Notes

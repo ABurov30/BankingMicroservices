@@ -40,7 +40,7 @@ Gateway route groups include:
 
 ## Contracts
 
-gRPC types come from `com.burov:contracts` version `0.0.29-SNAPSHOT`. Account and card event payloads come
+gRPC types come from `com.burov:contracts` version `0.0.29`. Account and card event payloads come
 from `com.burov:kafka-contracts`. Shared outbox and processed-event helpers come from
 `com.burov:support` version `0.0.2`.
 
