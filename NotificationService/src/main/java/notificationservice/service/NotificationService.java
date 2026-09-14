@@ -15,7 +15,6 @@ import notificationservice.document.PushNotificationDocument;
 import notificationservice.dto.CreateEmailNotificationCommand;
 import notificationservice.dto.CreatePushNotificationCommand;
 import notificationservice.dto.GetPushNotificationResult;
-import notificationservice.entity.PushNotificationOutboxEventEntity;
 import notificationservice.enums.push.PushNotificationStatus;
 import notificationservice.repository.EmailNotificationRepository;
 import notificationservice.repository.PushNotificationOutboxEventRepository;
@@ -74,17 +73,10 @@ public class NotificationService {
 
   private void createPushNotificationOutboxEvent(
       PushNotificationDocument pushNotificationDocument) {
-    PushNotificationOutboxEventEntity outboxEventEntity = new PushNotificationOutboxEventEntity();
-    outboxEventEntity.setAggregateType("PUSH_NOTIFICATION");
-    outboxEventEntity.setAggregateId(pushNotificationDocument.getId());
-    outboxEventEntity.setEventType(NotificationEventType.PUSH_NOTIFICATION_CREATED.name());
-    outboxEventEntity.setTopic(NotificationEventType.PUSH_NOTIFICATION_CREATED.getTopic());
-    outboxEventEntity.setEventKey(
-        pushNotificationDocument.getId()
-            + ":"
-            + NotificationEventType.PUSH_NOTIFICATION_CREATED.name());
-    outboxEventEntity.setSchemaVersion(
-        NotificationEventType.PUSH_NOTIFICATION_CREATED.getVersion());
+    var outboxEventEntity =
+        PushNotificationOutboxEventFactory.create(
+            pushNotificationDocument.getAuthUserId(),
+            NotificationEventType.PUSH_NOTIFICATION_CREATED);
 
     outboxEventEntity.setPayload(
         Map.of(

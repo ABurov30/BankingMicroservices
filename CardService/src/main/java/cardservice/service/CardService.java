@@ -4,7 +4,6 @@ import cardservice.dto.*;
 import cardservice.entity.AccountOwnershipProjectionEntity;
 import cardservice.entity.CardEntity;
 import cardservice.entity.CardLimitHoldEntity;
-import cardservice.entity.CardOutboxEventEntity;
 import cardservice.exception.CardBlockedException;
 import cardservice.exception.CardCurrencyMismatchException;
 import cardservice.exception.CardExpiredException;
@@ -327,13 +326,7 @@ public class CardService {
       return;
     }
 
-    CardOutboxEventEntity outboxEvent = new CardOutboxEventEntity();
-    outboxEvent.setAggregateType("CARD");
-    outboxEvent.setAggregateId(card.getId());
-    outboxEvent.setEventType(eventType.name());
-    outboxEvent.setTopic(eventType.getTopic());
-    outboxEvent.setEventKey(card.getId() + ":" + eventType.name());
-    outboxEvent.setSchemaVersion(eventType.getVersion());
+    var outboxEvent = CardOutboxEventFactory.create(card.getId(), eventType);
     outboxEvent.setPayload(
         Map.of(
             "authUserId", authUserId,

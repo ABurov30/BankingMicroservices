@@ -3,3 +3,5 @@ databaseChangeLog:
       file: db/changelog/changes/001-create-transaction-tables.sql
   - include:
       file: db/changelog/changes/002-use-minor-units-for-transactions.sql
+  - include:
+      file: db/changelog/changes/003-drop-outbox-event-key-unique-constraint.sql

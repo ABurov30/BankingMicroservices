@@ -47,3 +47,6 @@ through the `kafka.idempotency.duplicates` metric.
 
 Currency arithmetic should use `moneyunitsconverter.MoneyUnitsConverter` from `com.burov:support`
 when converting between major and minor units.
+
+The `processed_events.event_key` column stores the incoming `eventId` header,
+not the Kafka partition key. Its unique constraint continues to deduplicate event retries.

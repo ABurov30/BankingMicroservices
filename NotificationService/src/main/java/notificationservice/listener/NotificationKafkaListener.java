@@ -11,7 +11,6 @@ import notificationservice.mapper.command.EmailNotificationCommandMapper;
 import notificationservice.mapper.command.PushNotificationCommandMapper;
 import notificationservice.service.NotificationService;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 import processedevent.annotation.EventKey;
@@ -29,8 +28,7 @@ public class NotificationKafkaListener {
   @IdempotentKafkaEvent
   @KafkaListener(topics = "#{T(kafkacontracts.auth.AuthEventType).AUTH_USER_CREATED.getTopic()}")
   public void handleAuthUserCreated(
-      AuthUserCreatedEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      AuthUserCreatedEventPayload payload, @EventKey @Header("eventId") String eventId) {
     notificationService.createEmailNotification(
         emailCommandMapper.toCreateEmailNotificationCommand(payload));
   }
@@ -38,8 +36,7 @@ public class NotificationKafkaListener {
   @IdempotentKafkaEvent
   @KafkaListener(topics = "#{T(kafkacontracts.auth.AuthEventType).AUTH_USER_BLOCKED.getTopic()}")
   public void handleAuthUserBlocked(
-      AuthUserBlockedEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      AuthUserBlockedEventPayload payload, @EventKey @Header("eventId") String eventId) {
     notificationService.createEmailNotification(
         emailCommandMapper.toCreateEmailNotificationCommand(payload));
   }
@@ -47,8 +44,7 @@ public class NotificationKafkaListener {
   @IdempotentKafkaEvent
   @KafkaListener(topics = "#{T(kafkacontracts.auth.AuthEventType).AUTH_USER_UNLOCK.getTopic()}")
   public void handleAuthUserUnlock(
-      AuthUserUnlockEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      AuthUserUnlockEventPayload payload, @EventKey @Header("eventId") String eventId) {
     notificationService.createEmailNotification(
         emailCommandMapper.toCreateEmailNotificationCommand(payload));
   }
@@ -56,8 +52,7 @@ public class NotificationKafkaListener {
   @IdempotentKafkaEvent
   @KafkaListener(topics = "#{T(kafkacontracts.auth.AuthEventType).AUTH_USER_VERIFIED.getTopic()}")
   public void handleAuthUserVerified(
-      AuthUserVerifiedEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      AuthUserVerifiedEventPayload payload, @EventKey @Header("eventId") String eventId) {
     notificationService.createEmailNotification(
         emailCommandMapper.toCreateEmailNotificationCommand(payload));
   }
@@ -66,8 +61,7 @@ public class NotificationKafkaListener {
   @KafkaListener(
       topics = "#{T(kafkacontracts.auth.AuthEventType).AUTH_USER_FORGET_PASSWORD.getTopic()}")
   public void handleAuthUserForgetPassword(
-      AuthUserForgetPasswordEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      AuthUserForgetPasswordEventPayload payload, @EventKey @Header("eventId") String eventId) {
     notificationService.createEmailNotification(
         emailCommandMapper.toCreateEmailNotificationCommand(payload));
   }
@@ -76,8 +70,7 @@ public class NotificationKafkaListener {
   @KafkaListener(
       topics = "#{T(kafkacontracts.account.AccountEventType).ACCOUNT_CREATED.getTopic()}")
   public void handleAccountCreate(
-      AccountCreatedEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      AccountCreatedEventPayload payload, @EventKey @Header("eventId") String eventId) {
     notificationService.createPushNotification(
         pushCommandMapper.toCreatePushNotificationCommand(payload));
   }
@@ -85,8 +78,7 @@ public class NotificationKafkaListener {
   @IdempotentKafkaEvent
   @KafkaListener(topics = "#{T(kafkacontracts.account.AccountEventType).ACCOUNT_FROZEN.getTopic()}")
   public void handleAccountFrozen(
-      AccountFrozenEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      AccountFrozenEventPayload payload, @EventKey @Header("eventId") String eventId) {
     notificationService.createPushNotification(
         pushCommandMapper.toCreatePushNotificationCommand(payload));
   }
@@ -95,8 +87,7 @@ public class NotificationKafkaListener {
   @KafkaListener(
       topics = "#{T(kafkacontracts.account.AccountEventType).ACCOUNT_UNFROZEN.getTopic()}")
   public void handleAccountUnfrozen(
-      AccountUnfrozenEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      AccountUnfrozenEventPayload payload, @EventKey @Header("eventId") String eventId) {
     notificationService.createPushNotification(
         pushCommandMapper.toCreatePushNotificationCommand(payload));
   }
@@ -104,8 +95,7 @@ public class NotificationKafkaListener {
   @IdempotentKafkaEvent
   @KafkaListener(topics = "#{T(kafkacontracts.card.CardEventType).CARD_CREATED.getTopic()}")
   public void handleCardCreated(
-      CardCreatedEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      CardCreatedEventPayload payload, @EventKey @Header("eventId") String eventId) {
     notificationService.createPushNotification(
         pushCommandMapper.toCreatePushNotificationCommand(payload));
   }
@@ -113,8 +103,7 @@ public class NotificationKafkaListener {
   @IdempotentKafkaEvent
   @KafkaListener(topics = "#{T(kafkacontracts.card.CardEventType).CARD_FROZEN.getTopic()}")
   public void handleCardFrozen(
-      CardFrozenEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      CardFrozenEventPayload payload, @EventKey @Header("eventId") String eventId) {
     notificationService.createPushNotification(
         pushCommandMapper.toCreatePushNotificationCommand(payload));
   }
@@ -122,8 +111,7 @@ public class NotificationKafkaListener {
   @IdempotentKafkaEvent
   @KafkaListener(topics = "#{T(kafkacontracts.card.CardEventType).CARD_UNFROZEN.getTopic()}")
   public void handleCardUnfrozen(
-      CardUnfrozenEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      CardUnfrozenEventPayload payload, @EventKey @Header("eventId") String eventId) {
     notificationService.createPushNotification(
         pushCommandMapper.toCreatePushNotificationCommand(payload));
   }
@@ -133,8 +121,7 @@ public class NotificationKafkaListener {
       topics =
           "#{T(kafkacontracts.transaction.TransactionEventType).TRANSACTION_FAILED.getTopic()}")
   public void handleTransactionFailed(
-      TransactionFailedEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      TransactionFailedEventPayload payload, @EventKey @Header("eventId") String eventId) {
     notificationService.createPushNotification(
         pushCommandMapper.toCreatePushNotificationCommand(payload));
   }
@@ -144,7 +131,7 @@ public class NotificationKafkaListener {
       topics = "#{T(kafkacontracts.account.AccountEventType).TRANSACTION_COMPLETED.getTopic()}")
   public void handleTransactionCompleted(
       TransactionCompletedEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey,
+      @EventKey @Header("eventId") String eventId,
       @Header(value = TRANSACTION_NOTIFICATION_DIRECTION_HEADER, required = false)
           String transactionDirection) {
     notificationService.createPushNotification(

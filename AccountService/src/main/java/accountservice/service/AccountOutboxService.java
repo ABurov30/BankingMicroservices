@@ -1,6 +1,5 @@
 package accountservice.service;
 
-import accountservice.entity.AccountOutboxEventEntity;
 import accountservice.repository.AccountOutboxEventRepository;
 import java.util.Map;
 import java.util.UUID;
@@ -15,18 +14,7 @@ public class AccountOutboxService {
 
   public void saveAccountOutboxEvent(
       UUID id, AccountEventType eventType, Map<String, Object> payload) {
-    saveAccountOutboxEvent(id, eventType, id + ":" + eventType.name(), payload);
-  }
-
-  public void saveAccountOutboxEvent(
-      UUID id, AccountEventType eventType, String eventKey, Map<String, Object> payload) {
-    AccountOutboxEventEntity accountOutboxEventEntity = new AccountOutboxEventEntity();
-    accountOutboxEventEntity.setAggregateType("ACCOUNT_TYPE");
-    accountOutboxEventEntity.setAggregateId(id);
-    accountOutboxEventEntity.setEventType(eventType.name());
-    accountOutboxEventEntity.setTopic(eventType.getTopic());
-    accountOutboxEventEntity.setEventKey(eventKey);
-    accountOutboxEventEntity.setSchemaVersion(eventType.getVersion());
+    var accountOutboxEventEntity = AccountOutboxEventFactory.create(id, eventType);
 
     accountOutboxEventEntity.setPayload(payload);
 

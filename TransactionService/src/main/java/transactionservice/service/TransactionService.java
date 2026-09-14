@@ -60,13 +60,8 @@ public class TransactionService {
 
   private TransactionOutboxEventEntity saveTransactionOutboxEvent(
       TransactionEntity transaction, TransactionEventType eventType, Map<String, Object> payload) {
-    var transactionOutboxEvent = new TransactionOutboxEventEntity();
-    transactionOutboxEvent.setAggregateType("TRANSACTION_TYPE");
-    transactionOutboxEvent.setAggregateId(transaction.getId());
-    transactionOutboxEvent.setEventType(eventType.name());
-    transactionOutboxEvent.setTopic(eventType.getTopic());
-    transactionOutboxEvent.setEventKey(transaction.getId() + ":" + eventType.name());
-    transactionOutboxEvent.setSchemaVersion(eventType.getVersion());
+    var transactionOutboxEvent =
+        TransactionOutboxEventFactory.create(transaction.getId(), eventType);
     transactionOutboxEvent.setPayload(payload);
     return transactionOutboxEventRepository.save(transactionOutboxEvent);
   }

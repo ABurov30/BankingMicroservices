@@ -3,3 +3,5 @@ databaseChangeLog:
       file: db/changelog/changes/001-create-notification-tables.sql
   - include:
       file: db/changelog/changes/002-create-processed-event-table.sql
+  - include:
+      file: db/changelog/changes/003-drop-outbox-event-key-unique-constraint.sql

@@ -43,3 +43,12 @@ outbox rows are the source for events delivered to `ApiGateway`.
 
 Transaction notification amounts are converted from minor units to major units with
 `moneyunitsconverter.MoneyUnitsConverter` before being stored in notification payloads.
+
+Push outbox `aggregateId` identifies the recipient auth user (`aggregateType=AUTH_USER`).
+The outbox primary key remains the unique event ID. See [key strategy](events.md#kafka-key-strategy).
+
+Migration `003-drop-outbox-event-key-unique-constraint.sql` removes uniqueness from the outbox routing key;
+multiple events for one aggregate must coexist. The primary key still identifies each event.
+
+The `processed_events.event_key` column stores the incoming `eventId` header,
+not the Kafka partition key. Its unique constraint continues to deduplicate event retries.

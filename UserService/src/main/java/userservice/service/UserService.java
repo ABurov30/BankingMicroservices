@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import userservice.dto.*;
-import userservice.entity.UserOutboxEventEntity;
 import userservice.entity.UserProfileEntity;
 import userservice.exception.UserProfileNotFoundException;
 import userservice.mapper.result.UserResultMapper;
@@ -64,14 +63,9 @@ public class UserService {
   }
 
   private void saveUserProfileCreatedEvent(UserProfileEntity userProfileEntity) {
-    UserOutboxEventEntity userOutboxEventEntity = new UserOutboxEventEntity();
-    userOutboxEventEntity.setAggregateType("USER_PROFILE");
-    userOutboxEventEntity.setAggregateId(userProfileEntity.getId());
-    userOutboxEventEntity.setEventType(UserEventType.USER_PROFILE_CREATED.name());
-    userOutboxEventEntity.setTopic(UserEventType.USER_PROFILE_CREATED.getTopic());
-    userOutboxEventEntity.setEventKey(
-        userProfileEntity.getId() + ":" + UserEventType.USER_PROFILE_CREATED.name());
-    userOutboxEventEntity.setSchemaVersion(UserEventType.USER_PROFILE_CREATED.getVersion());
+    var userOutboxEventEntity =
+        UserOutboxEventFactory.create(
+            userProfileEntity.getId(), UserEventType.USER_PROFILE_CREATED);
 
     userOutboxEventEntity.setPayload(
         Map.of(
@@ -108,14 +102,9 @@ public class UserService {
     userProfileEntity.setStatus(UserProfileStatus.BLOCKED);
     userProfileRepository.save(userProfileEntity);
 
-    UserOutboxEventEntity userOutboxEventEntity = new UserOutboxEventEntity();
-    userOutboxEventEntity.setAggregateType("USER_PROFILE");
-    userOutboxEventEntity.setAggregateId(userProfileEntity.getId());
-    userOutboxEventEntity.setEventType(UserEventType.USER_PROFILE_BLOCKED.name());
-    userOutboxEventEntity.setTopic(UserEventType.USER_PROFILE_BLOCKED.getTopic());
-    userOutboxEventEntity.setEventKey(
-        userProfileEntity.getId() + ":" + UserEventType.USER_PROFILE_BLOCKED.name());
-    userOutboxEventEntity.setSchemaVersion(UserEventType.USER_PROFILE_BLOCKED.getVersion());
+    var userOutboxEventEntity =
+        UserOutboxEventFactory.create(
+            userProfileEntity.getId(), UserEventType.USER_PROFILE_BLOCKED);
 
     userOutboxEventEntity.setPayload(Map.of("userId", userProfileEntity.getId()));
 
@@ -144,14 +133,8 @@ public class UserService {
     userProfileEntity.setStatus(UserProfileStatus.ACTIVE);
     userProfileRepository.save(userProfileEntity);
 
-    UserOutboxEventEntity userOutboxEventEntity = new UserOutboxEventEntity();
-    userOutboxEventEntity.setAggregateType("USER_PROFILE");
-    userOutboxEventEntity.setAggregateId(userProfileEntity.getId());
-    userOutboxEventEntity.setEventType(UserEventType.USER_PROFILE_UNLOCK.name());
-    userOutboxEventEntity.setTopic(UserEventType.USER_PROFILE_UNLOCK.getTopic());
-    userOutboxEventEntity.setEventKey(
-        userProfileEntity.getId() + ":" + UserEventType.USER_PROFILE_UNLOCK.name());
-    userOutboxEventEntity.setSchemaVersion(UserEventType.USER_PROFILE_UNLOCK.getVersion());
+    var userOutboxEventEntity =
+        UserOutboxEventFactory.create(userProfileEntity.getId(), UserEventType.USER_PROFILE_UNLOCK);
 
     userOutboxEventEntity.setPayload(Map.of("userId", userProfileEntity.getId()));
 

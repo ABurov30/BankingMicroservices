@@ -4,7 +4,6 @@ import kafkacontracts.account.TransactionCompensatedEventPayload;
 import kafkacontracts.account.TransactionCompletedEventPayload;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 import processedevent.annotation.EventKey;
@@ -22,8 +21,7 @@ public class TransactionKafkaListener {
   @KafkaListener(
       topics = "#{T(kafkacontracts.account.AccountEventType).TRANSACTION_COMPLETED.getTopic()}")
   public void handleTransactionCompleted(
-      TransactionCompletedEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      TransactionCompletedEventPayload payload, @EventKey @Header("eventId") String eventId) {
     transactionService.markAs(transactionCommandMapper.toMarkAsCommand(payload));
   }
 
@@ -31,8 +29,7 @@ public class TransactionKafkaListener {
   @KafkaListener(
       topics = "#{T(kafkacontracts.account.AccountEventType).TRANSACTION_COMPENSATED.getTopic()}")
   public void handleTransactionCompensated(
-      TransactionCompensatedEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      TransactionCompensatedEventPayload payload, @EventKey @Header("eventId") String eventId) {
     transactionService.markAs(transactionCommandMapper.toMarkAsCommand(payload));
   }
 }

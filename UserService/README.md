@@ -17,3 +17,5 @@ Use `@Tag("integration")` to exclude integration tests from the default run.
 Spring context tests activate the `test` profile with `@ActiveProfiles("test")`.
 Database connection settings are supplied by Testcontainers. The context startup test
 disables Kafka listeners and does not require Kafka or Schema Registry.
+
+Kafka partition ownership, event IDs and rollout: [key strategy](docs/events.md#kafka-key-strategy).

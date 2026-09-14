@@ -30,3 +30,9 @@ Transaction state, card limit reservation state, and account reservation state a
 
 Consumed Kafka events use processed-event tracking through the `processedevent` helpers in
 `com.burov:support`.
+
+Migration `003-drop-outbox-event-key-unique-constraint.sql` removes uniqueness from the outbox routing key;
+multiple events for one aggregate must coexist. The primary key still identifies each event.
+
+The `processed_events.event_key` column stores the incoming `eventId` header,
+not the Kafka partition key. Its unique constraint continues to deduplicate event retries.

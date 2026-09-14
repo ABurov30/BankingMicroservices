@@ -4,7 +4,6 @@ import kafkacontracts.auth.*;
 import kafkacontracts.common.KafkaTopics;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 import processedevent.annotation.EventKey;
@@ -22,40 +21,35 @@ public class UserKafkaListener {
   @IdempotentKafkaEvent
   @KafkaListener(topics = "#{T(kafkacontracts.auth.AuthEventType).AUTH_USER_CREATED.getTopic()}")
   public void handleAuthUserCreated(
-      AuthUserCreatedEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      AuthUserCreatedEventPayload payload, @EventKey @Header("eventId") String eventId) {
     userService.createUser(commandMapper.toCreateUserCommand(payload));
   }
 
   @IdempotentKafkaEvent
   @KafkaListener(topics = "#{T(kafkacontracts.auth.AuthEventType).AUTH_USER_BLOCKED.getTopic()}")
   public void handleAuthUserBlocked(
-      AuthUserBlockedEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      AuthUserBlockedEventPayload payload, @EventKey @Header("eventId") String eventId) {
     userService.blockUser(commandMapper.toBlockedUserCommand(payload));
   }
 
   @IdempotentKafkaEvent
   @KafkaListener(topics = "#{T(kafkacontracts.auth.AuthEventType).AUTH_USER_UNLOCK.getTopic()}")
   public void handleAuthUserUnlock(
-      AuthUserUnlockEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      AuthUserUnlockEventPayload payload, @EventKey @Header("eventId") String eventId) {
     userService.unlockUser(commandMapper.toUnlockUserCommand(payload));
   }
 
   @IdempotentKafkaEvent
   @KafkaListener(topics = "#{T(kafkacontracts.auth.AuthEventType).AUTH_USER_VERIFIED.getTopic()}")
   public void handleAuthUserVerified(
-      AuthUserVerifiedEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      AuthUserVerifiedEventPayload payload, @EventKey @Header("eventId") String eventId) {
     userService.verifyUser(commandMapper.toVerifyUserCommand(payload));
   }
 
   @IdempotentKafkaEvent
   @KafkaListener(topics = KafkaTopics.AUTH_USER_ROLE_CHANGED)
   public void handleAuthUserRoleChanged(
-      AuthUserRoleChangedEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      AuthUserRoleChangedEventPayload payload, @EventKey @Header("eventId") String eventId) {
     userService.changeUserRole(commandMapper.toChangeUserRoleCommand(payload));
   }
 
@@ -66,7 +60,7 @@ public class UserKafkaListener {
               + "AUTH_USER_CREATED.getTopic()}")
   public void handleAuthSocialAccountAuthUserCreated(
       AuthSocialAccountAuthUserCreatedEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      @EventKey @Header("eventId") String eventId) {
     userService.createUserFromSocialAccount(
         commandMapper.toCreateUserFromSocialAccountCommand(payload));
   }

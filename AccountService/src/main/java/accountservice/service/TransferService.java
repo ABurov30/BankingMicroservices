@@ -125,18 +125,10 @@ public class TransferService {
             "transactionDirection",
             TransactionDirection.SENDER);
 
-    var eventKeyPrefix =
-        accountHold.getTransactionId() + ":" + AccountEventType.TRANSACTION_COMPLETED.name();
     accountOutboxService.saveAccountOutboxEvent(
-        accountHold.getTransactionId(),
-        AccountEventType.TRANSACTION_COMPLETED,
-        eventKeyPrefix + ":" + TransactionDirection.RECIPIENT,
-        recipientPayload);
+        accountHold.getTransactionId(), AccountEventType.TRANSACTION_COMPLETED, recipientPayload);
     accountOutboxService.saveAccountOutboxEvent(
-        accountHold.getTransactionId(),
-        AccountEventType.TRANSACTION_COMPLETED,
-        eventKeyPrefix + ":" + TransactionDirection.SENDER,
-        senderPayload);
+        accountHold.getTransactionId(), AccountEventType.TRANSACTION_COMPLETED, senderPayload);
   }
 
   @Transactional

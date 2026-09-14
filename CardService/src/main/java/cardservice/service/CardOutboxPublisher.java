@@ -11,6 +11,8 @@ import org.apache.avro.specific.SpecificRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,7 +40,12 @@ public class CardOutboxPublisher implements KafkaOnSentHandler {
             extractPayload(CardEventType.valueOf(event.getEventType()), event.getPayload());
 
         kafkaTemplate
-            .send(event.getTopic(), event.getEventKey(), payload)
+            .send(
+                MessageBuilder.withPayload(payload)
+                    .setHeader(KafkaHeaders.TOPIC, event.getTopic())
+                    .setHeader(KafkaHeaders.KEY, event.getEventKey())
+                    .setHeader("eventId", event.getId().toString())
+                    .build())
             .whenComplete(
                 (result, ex) -> {
                   if (ex == null) {

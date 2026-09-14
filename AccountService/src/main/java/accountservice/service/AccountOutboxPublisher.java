@@ -44,7 +44,8 @@ public class AccountOutboxPublisher implements KafkaOnSentHandler {
         var messageBuilder =
             MessageBuilder.withPayload(payload)
                 .setHeader(KafkaHeaders.TOPIC, event.getTopic())
-                .setHeader(KafkaHeaders.KEY, event.getEventKey());
+                .setHeader(KafkaHeaders.KEY, event.getEventKey())
+                .setHeader("eventId", event.getId().toString());
 
         if (event.getPayload().containsKey("transactionDirection")) {
           messageBuilder.setHeader(

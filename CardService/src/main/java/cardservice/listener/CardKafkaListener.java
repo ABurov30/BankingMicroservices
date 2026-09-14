@@ -10,7 +10,6 @@ import kafkacontracts.account.TransactionCompensatedEventPayload;
 import kafkacontracts.account.TransactionCompletedEventPayload;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 import processedevent.annotation.EventKey;
@@ -27,8 +26,7 @@ public class CardKafkaListener {
   @KafkaListener(
       topics = "#{T(kafkacontracts.account.AccountEventType).ACCOUNT_CREATED.getTopic()}")
   public void handleAccountCreated(
-      AccountCreatedEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      AccountCreatedEventPayload payload, @EventKey @Header("eventId") String eventId) {
     cardService.createCard(
         commandMapper.toCreateCardCommand(payload), Currency.valueOf(payload.getCurrency()));
   }
@@ -36,8 +34,7 @@ public class CardKafkaListener {
   @IdempotentKafkaEvent
   @KafkaListener(topics = "#{T(kafkacontracts.account.AccountEventType).ACCOUNT_FROZEN.getTopic()}")
   public void handleAccountFrozen(
-      AccountFrozenEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      AccountFrozenEventPayload payload, @EventKey @Header("eventId") String eventId) {
     cardService.freezeCards(commandMapper.toFreezeCardsCommand(payload));
   }
 
@@ -45,8 +42,7 @@ public class CardKafkaListener {
   @KafkaListener(
       topics = "#{T(kafkacontracts.account.AccountEventType).ACCOUNT_UNFROZEN.getTopic()}")
   public void handleAccountUnfrozen(
-      AccountUnfrozenEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      AccountUnfrozenEventPayload payload, @EventKey @Header("eventId") String eventId) {
     cardService.unfreezeCards(commandMapper.toUnfreezeCardsCommand(payload));
   }
 
@@ -54,8 +50,7 @@ public class CardKafkaListener {
   @KafkaListener(
       topics = "#{T(kafkacontracts.account.AccountEventType).TRANSACTION_COMPENSATED.getTopic()}")
   public void handleTransactionCompensated(
-      TransactionCompensatedEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      TransactionCompensatedEventPayload payload, @EventKey @Header("eventId") String eventId) {
     cardService.compensateLimitsForTransaction(
         commandMapper.toCompensateLimitsForTransactionCommand(payload));
   }
@@ -64,8 +59,7 @@ public class CardKafkaListener {
   @KafkaListener(
       topics = "#{T(kafkacontracts.account.AccountEventType).TRANSACTION_COMPLETED.getTopic()}")
   public void handleTransactionCompleted(
-      TransactionCompletedEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      TransactionCompletedEventPayload payload, @EventKey @Header("eventId") String eventId) {
     cardService.markLimitReservationAsReleased(
         commandMapper.toMarkLimitReservationAsReleasedCommand(payload));
   }

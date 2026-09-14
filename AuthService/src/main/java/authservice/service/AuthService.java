@@ -459,13 +459,7 @@ public class AuthService {
 
   private AuthOutboxEventEntity saveAuthOutboxEvent(
       UUID authUserId, AuthEventType eventType, Map<String, Object> payload) {
-    var authOutboxEvent = new AuthOutboxEventEntity();
-    authOutboxEvent.setAggregateType("AUTH_USER");
-    authOutboxEvent.setAggregateId(authUserId);
-    authOutboxEvent.setEventType(eventType.name());
-    authOutboxEvent.setTopic(eventType.getTopic());
-    authOutboxEvent.setEventKey(authUserId + ":" + eventType.name());
-    authOutboxEvent.setSchemaVersion(eventType.getVersion());
+    var authOutboxEvent = AuthOutboxEventFactory.create(authUserId, eventType);
     authOutboxEvent.setPayload(payload);
     return authOutboxEventRepository.save(authOutboxEvent);
   }

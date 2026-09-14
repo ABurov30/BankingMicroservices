@@ -7,7 +7,6 @@ import kafkacontracts.user.UserProfileBlockedEventPayload;
 import kafkacontracts.user.UserProfileCreatedEventPayload;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 import processedevent.annotation.EventKey;
@@ -23,16 +22,14 @@ public class AccountKafkaListener {
   @IdempotentKafkaEvent
   @KafkaListener(topics = "#{T(kafkacontracts.user.UserEventType).USER_PROFILE_CREATED.getTopic()}")
   public void handleUserProfileCreated(
-      UserProfileCreatedEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      UserProfileCreatedEventPayload payload, @EventKey @Header("eventId") String eventId) {
     accountService.createAccount(commandMapper.toCreateAccountCommand(payload));
   }
 
   @IdempotentKafkaEvent
   @KafkaListener(topics = "#{T(kafkacontracts.user.UserEventType).USER_PROFILE_BLOCKED.getTopic()}")
   public void handleUserProfileBlocked(
-      UserProfileBlockedEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      UserProfileBlockedEventPayload payload, @EventKey @Header("eventId") String eventId) {
     accountService.freezeAccountByUserId(commandMapper.toFreezeAccountsByUserIdCommand(payload));
   }
 
@@ -42,8 +39,7 @@ public class AccountKafkaListener {
           "#{T(kafkacontracts.transaction.TransactionEventType)"
               + ".TRANSACTION_FUNDS_REQUESTED.getTopic()}")
   public void handleTransactionFundsRequested(
-      TransactionFundsRequestedEventPayload payload,
-      @EventKey @Header(KafkaHeaders.RECEIVED_KEY) String eventKey) {
+      TransactionFundsRequestedEventPayload payload, @EventKey @Header("eventId") String eventId) {
     accountService.transactionFundsRequest(commandMapper.toTransactionFundsRequestCommand(payload));
   }
 }

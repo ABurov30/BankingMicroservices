@@ -71,6 +71,7 @@ class UserServiceTest {
     assertThat(event.getEventType()).isEqualTo(UserEventType.USER_PROFILE_CREATED.name());
     assertThat(event.getTopic()).isEqualTo(UserEventType.USER_PROFILE_CREATED.getTopic());
     assertThat(event.getAggregateId()).isEqualTo(USER_ID);
+    assertThat(event.getEventKey()).isEqualTo(USER_ID.toString());
     assertThat(event.getPayload()).containsEntry("userId", USER_ID);
     assertThat(event.getPayload()).containsEntry("authUserId", AUTH_USER_ID);
   }
@@ -173,6 +174,7 @@ class UserServiceTest {
     assertThat(event.getPayload()).containsEntry("userId", expectedUserId);
     assertThat(event.getEventType()).isEqualTo(UserEventType.USER_PROFILE_BLOCKED.name());
     assertThat(event.getAggregateId()).isEqualTo(expectedUserId);
+    assertThat(event.getEventKey()).isEqualTo(expectedUserId.toString());
   }
 
   @Test

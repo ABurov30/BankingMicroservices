@@ -53,3 +53,9 @@ Consumed Kafka events atomically claim their unique `event_key` in `processed_ev
 handler runs. The claim and business operation share one database transaction: duplicates are
 skipped, while a handler failure rolls back both changes. The service exports skipped-event counts
 through the `kafka.idempotency.duplicates` metric.
+
+Migration `007-drop-outbox-event-key-unique-constraint.sql` removes uniqueness from the outbox routing key;
+multiple events for one aggregate must coexist. The primary key still identifies each event.
+
+The `processed_events.event_key` column stores the incoming `eventId` header,
+not the Kafka partition key. Its unique constraint continues to deduplicate event retries.
