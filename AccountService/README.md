@@ -17,3 +17,6 @@ Use `@Tag("integration")` to exclude integration tests from the default run.
 Spring context tests activate the `test` profile with `@ActiveProfiles("test")`.
 
 Kafka partition ownership, event IDs and rollout: [key strategy](docs/events.md#kafka-key-strategy).
+
+Daily SAVINGS accruals are idempotent per account and Paris business date.
+See [interest accrual and retry](docs/interest-accrual.md).

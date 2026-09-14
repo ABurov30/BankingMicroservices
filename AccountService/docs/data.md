@@ -11,6 +11,7 @@ Primary storage is PostgreSQL. Schema changes are managed by Liquibase under `sr
 | Entity | Purpose |
 | --- | --- |
 | `AccountEntity` | Bank account state and balance |
+| `AccountInterestAccrualEntity` | Daily savings interest history, unique per account and date |
 | `AccountHoldEntity` | Reserved funds for transaction processing |
 | `CurrencyEntity` | Currency reference data |
 | `AccountOutboxEventEntity` | Outbox rows for account-domain events |
@@ -50,3 +51,8 @@ when converting between major and minor units.
 
 The `processed_events.event_key` column stores the incoming `eventId` header,
 not the Kafka partition key. Its unique constraint continues to deduplicate event retries.
+
+`AccountInterestAccrualRepository` stores interest history introduced by
+`009-create-account-interest-accruals.sql`. Its unique `(account_id, accrual_date)`
+constraint protects against duplicate accruals. History and balance changes share
+one transaction. See [interest accrual](interest-accrual.md) for calculation and retry semantics.

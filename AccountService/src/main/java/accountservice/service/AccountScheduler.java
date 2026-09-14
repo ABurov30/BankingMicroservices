@@ -5,12 +5,15 @@ import accountservice.repository.AccountHoldRepository;
 import accountservice.repository.AccountRepository;
 import enums.account.AccountType;
 import enums.account.ReservationStatus;
-import enums.common.Currency;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
+import io.micrometer.core.instrument.MeterRegistry;
+import java.time.Clock;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
-import moneyunitsconverter.MoneyUnitsConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -21,37 +24,53 @@ import org.springframework.transaction.annotation.Transactional;
 public class AccountScheduler {
   private final AccountRepository accountRepository;
   private final AccountHoldRepository accountHoldRepository;
-  private static final BigDecimal DEBIT_RATE = new BigDecimal("7");
+  private final AccountInterestService interestService;
+  private final MeterRegistry meterRegistry;
+  private final Clock accountClock;
+  private static final Logger log = LoggerFactory.getLogger(AccountScheduler.class);
+  private static final ZoneId BUSINESS_ZONE = ZoneId.of("Europe/Paris");
 
   @Scheduled(cron = "0 0 0 * * *", zone = "Europe/Paris")
-  @Transactional
   public void updateAccountsBalances() {
-    var accounts =
-        accountRepository
-            .findAllByTypeForUpdate(AccountType.SAVINGS)
-            .orElseThrow(() -> new AccountsNotFoundException(AccountType.SAVINGS));
-    BigDecimal dailyMultiplier =
-        BigDecimal.ONE.add(DEBIT_RATE.divide(BigDecimal.valueOf(36_500), 12, RoundingMode.HALF_UP));
-    accounts.stream()
-        .forEach(
-            account -> {
-              Currency accountCurrency = account.getCurrency().getName();
+    updateAccountsBalances(LocalDate.now(accountClock.withZone(BUSINESS_ZONE)));
+  }
 
-              BigDecimal newBalanceDecimal =
-                  MoneyUnitsConverter.toMajor(
-                          account.getAvailableBalanceMinorUnits(), accountCurrency)
-                      .multiply(dailyMultiplier);
-
-              var newBalance =
-                  MoneyUnitsConverter.toMinor(
-                      newBalanceDecimal.setScale(
-                          accountCurrency.getMinorUnit(), RoundingMode.HALF_EVEN),
-                      accountCurrency);
-
-              account.setAvailableBalanceMinorUnits(newBalance);
-            });
-
-    accountRepository.saveAll(accounts);
+  public void updateAccountsBalances(LocalDate businessDate) {
+    Objects.requireNonNull(businessDate, "businessDate");
+    log.info("Starting savings interest accrual: businessDate={}", businessDate);
+    int processed = 0;
+    int skipped = 0;
+    int failed = 0;
+    for (var accountId : accountRepository.findIdsByAccountType(AccountType.SAVINGS)) {
+      try {
+        boolean accrued = interestService.accrueInterest(accountId, businessDate);
+        meterRegistry
+            .counter("account.interest.accruals", "result", accrued ? "processed" : "skipped")
+            .increment();
+        if (accrued) {
+          processed++;
+        } else {
+          skipped++;
+        }
+      } catch (RuntimeException exception) {
+        failed++;
+        meterRegistry.counter("account.interest.accruals", "result", "failed").increment();
+        log.error(
+            "Savings interest accrual failed: businessDate={}, accountId={},"
+                + " idempotencyKey=interest:{}:{}",
+            businessDate,
+            accountId,
+            accountId,
+            businessDate,
+            exception);
+      }
+    }
+    log.info(
+        "Finished savings interest accrual: businessDate={}, processed={}, skipped={}, failed={}",
+        businessDate,
+        processed,
+        skipped,
+        failed);
   }
 
   @Scheduled(fixedDelay = 5000)

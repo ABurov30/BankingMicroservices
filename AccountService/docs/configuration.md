@@ -26,3 +26,10 @@ The service `.env.example` points local database access at `localhost:5434` and 
 ## Secrets
 
 Do not commit real datasource passwords or GitHub package tokens.
+
+## Savings scheduler
+
+Interest accrual runs at midnight in `Europe/Paris`, with a fixed annual rate of 7%.
+The business date is captured once per run using an injected clock.
+`account.interest.accruals{result=processed|skipped|failed}` tracks per-account results.
+See [interest accrual](interest-accrual.md) for retries, rollout and rounding.

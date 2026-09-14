@@ -15,3 +15,5 @@ databaseChangeLog:
       file: db/changelog/changes/007-add-constraint-uq-accounts-owner-user-id-currency-type.sql
   - include:
       file: db/changelog/changes/008-use-minor-units-for-account-balances.sql
+  - include:
+      file: db/changelog/changes/009-create-account-interest-accruals.sql

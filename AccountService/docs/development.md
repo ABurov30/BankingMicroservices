@@ -80,8 +80,7 @@ For private packages, export `GITHUB_TOKEN` and run:
 
 Open `target/site/jacoco/index.html` in a browser. `./mvnw test` collects coverage
 in `target/jacoco.exec`; the report is generated during `verify`.
-No minimum coverage threshold is enforced. This service currently has no unit tests,
-so the default run executes zero tests and may have no coverage report after `clean`.
+No minimum coverage threshold is enforced.
 
 ## Common Change Areas
 
@@ -90,3 +89,5 @@ so the default run executes zero tests and may have no coverage report after `cl
 - Event consumers: verify idempotency through `ProcessedEventEntity` and the `processedevent`
   helpers from `com.burov:support`.
 - Event producers: update outbox payload mappers and downstream consumers.
+
+Savings accrual tests and PostgreSQL failure/retry coverage: [interest accrual](interest-accrual.md#deployment-and-verification).
