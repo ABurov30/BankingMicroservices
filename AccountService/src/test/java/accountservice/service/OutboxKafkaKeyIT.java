@@ -6,8 +6,10 @@ import static org.mockito.Mockito.*;
 import accountservice.entity.AccountOutboxEventEntity;
 import accountservice.mapper.eventpayload.AccountEventPayloadMapper;
 import accountservice.repository.AccountOutboxEventRepository;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import kafkacontracts.account.AccountEventType;
@@ -23,7 +25,12 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
-import outboxsupport.OutboxEventStatus;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.SimpleTransactionStatus;
+import outboxsupport.OutboxAttempt;
+import outboxsupport.OutboxAttemptStore;
+import outboxsupport.OutboxDispatcher;
+import outboxsupport.OutboxProperties;
 
 @Tag("integration")
 class OutboxKafkaKeyIT {
@@ -86,14 +93,35 @@ class OutboxKafkaKeyIT {
                     sequence == 0 ? "RECIPIENT" : "SENDER"));
             events.add(event);
             ids.add(event.getId().toString());
-            when(repository.findById(event.getId())).thenReturn(Optional.of(event));
+            event.setCreatedAt(LocalDateTime.now());
+            event.setLockedBy(UUID.randomUUID().toString());
+            event.setRetryCount(1);
           }
           expectedIds.put(id.toString(), ids);
         }
-        when(repository.findTop50ByOutboxEventStatusOrderByCreatedAtAsc(OutboxEventStatus.PENDING))
-            .thenReturn(events);
+        @SuppressWarnings("unchecked")
+        OutboxAttemptStore<AccountOutboxEventEntity> store = mock(OutboxAttemptStore.class);
+        when(store.claim(50))
+            .thenReturn(
+                events.stream()
+                    .map(e -> new OutboxAttempt<>(e.getId(), e.getLockedBy(), e))
+                    .toList());
+        when(store.complete(any(), any())).thenReturn(true);
+        when(repository.ownsAttempt(any(), any(), anyLong())).thenReturn(true);
+        var manager = mock(PlatformTransactionManager.class);
+        when(manager.getTransaction(any())).thenAnswer(invocation -> new SimpleTransactionStatus());
+        var properties = OutboxProperties.defaults();
+        var meters = new SimpleMeterRegistry();
+        var dispatcher =
+            new OutboxDispatcher<>(store, properties, manager, meters, "account_outbox_events");
         var template = new KafkaTemplate<>(producerFactory);
-        new AccountOutboxPublisher(repository, template, new AccountEventPayloadMapper() {})
+        new AccountOutboxPublisher(
+                dispatcher,
+                template,
+                new AccountEventPayloadMapper() {},
+                repository,
+                properties,
+                meters)
             .publishPendingEvents();
         template.flush();
         var received = new ArrayList<ConsumerRecord<String, String>>();

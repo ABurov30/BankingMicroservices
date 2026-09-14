@@ -23,3 +23,5 @@ See [interest accrual and retry](docs/interest-accrual.md).
 
 Transaction status streams load both accounts through `GetAccountByIdsForTransaction`.
 See [interfaces](docs/interfaces.md) for batch lookup behavior.
+
+Outbox claim/lease, configuration, metrics and rollout: [shared publishing guide](../docs/outbox.md).

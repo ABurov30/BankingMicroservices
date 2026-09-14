@@ -13,3 +13,5 @@
 - [Events](events.md)
 - [Development](development.md)
 - [Savings Interest Accrual](interest-accrual.md)
+
+- [Shared outbox publishing](../../docs/outbox.md)

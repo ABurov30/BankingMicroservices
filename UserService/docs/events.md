@@ -58,3 +58,9 @@ Idempotent listeners require the `eventId` header and store it in the existing
 `processed_events.event_key` column. Missing IDs fail message handling rather than
 silently treating the aggregate key as an event identity. Replaying historical records
 without this header requires an explicit stable event-ID backfill before replay.
+
+## Outbox delivery
+
+Publishing uses `support:0.0.4` claim/lease and guarded acknowledgements. Retries preserve
+eventId and the stored Kafka key. Delivery is at least once; consumers must retain deduplication.
+See [shared outbox publishing](../../docs/outbox.md) for settings, guarantees, metrics and rollout.

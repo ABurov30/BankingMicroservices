@@ -3,66 +3,68 @@ package authservice.service;
 import authservice.entity.AuthOutboxEventEntity;
 import authservice.mapper.eventpayload.AuthEventPayloadMapper;
 import authservice.repository.AuthOutboxEventRepository;
-import java.util.List;
+import io.micrometer.core.instrument.MeterRegistry;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.concurrent.CompletionStage;
 import kafkacontracts.auth.AuthEventType;
 import lombok.RequiredArgsConstructor;
 import org.apache.avro.specific.SpecificRecord;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import outboxsupport.KafkaOnSentHandler;
-import outboxsupport.OutboxEventStatus;
+import outboxsupport.OutboxDispatcher;
+import outboxsupport.OutboxProperties;
 
 @Service
 @RequiredArgsConstructor
-public class AuthOutboxPublisher implements KafkaOnSentHandler {
-  private static final Logger log = LoggerFactory.getLogger(AuthOutboxPublisher.class);
-  private final AuthOutboxEventRepository authOutboxEventRepository;
+public class AuthOutboxPublisher {
+  private final OutboxDispatcher<AuthOutboxEventEntity> dispatcher;
   private final KafkaTemplate<String, SpecificRecord> kafkaTemplate;
   private final AuthEventPayloadMapper eventPayloadMapper;
+  private final AuthOutboxEventRepository repository;
+  private final OutboxProperties properties;
+  private final MeterRegistry meters;
 
-  @Scheduled(fixedDelay = 5000)
-  @Transactional
+  @Scheduled(
+      fixedDelayString = "#{@outboxProperties.polling().toMillis()}",
+      initialDelayString = "#{@outboxProperties.initialDelay().toMillis()}")
   public void publishPendingEvents() {
-    List<AuthOutboxEventEntity> eventEntityList =
-        authOutboxEventRepository.findTop50ByOutboxEventStatusOrderByCreatedAtAsc(
-            OutboxEventStatus.PENDING);
+    dispatcher.dispatch(this::send);
+  }
 
-    for (AuthOutboxEventEntity event : eventEntityList) {
-      try {
-        SpecificRecord payload =
-            extractPayload(AuthEventType.valueOf(event.getEventType()), event.getPayload());
-
-        kafkaTemplate
-            .send(
-                MessageBuilder.withPayload(payload)
-                    .setHeader(KafkaHeaders.TOPIC, event.getTopic())
-                    .setHeader(KafkaHeaders.KEY, event.getEventKey())
-                    .setHeader("eventId", event.getId().toString())
-                    .build())
-            .whenComplete(
-                (result, ex) -> {
-                  if (ex == null) {
-                    onPublish(event.getId(), authOutboxEventRepository);
-                  } else {
-                    onFailed(event.getId(), ex, authOutboxEventRepository);
-                  }
-                });
-      } catch (Exception e) {
-        log.error(
-            "Unable to publish auth outbox event: eventId={}, eventType={}",
-            event.getId(),
-            event.getEventType(),
-            e);
-        onFailed(event.getId(), e, authOutboxEventRepository);
-      }
+  private CompletionStage<?> send(AuthOutboxEventEntity event) {
+    SpecificRecord payload =
+        extractPayload(AuthEventType.valueOf(event.getEventType()), event.getPayload());
+    var message =
+        MessageBuilder.withPayload(payload)
+            .setHeader(KafkaHeaders.TOPIC, event.getTopic())
+            .setHeader(KafkaHeaders.KEY, event.getEventKey())
+            .setHeader("eventId", event.getId().toString());
+    // Recheck after payload mapping, before entering the Kafka producer.
+    if (!repository.ownsAttempt(
+        event.getId(), event.getLockedBy(), properties.lease().toMillis())) {
+      throw new IllegalStateException("Outbox attempt no longer owns its lease: " + event.getId());
     }
+    if (event.getRetryCount() > 1) {
+      meters.counter("outbox.retry", "outbox", "auth_outbox_events").increment();
+    }
+    return kafkaTemplate
+        .send(message.build())
+        .whenComplete(
+            (result, failure) -> {
+              if (failure == null) {
+                Duration latency = Duration.between(event.getCreatedAt(), LocalDateTime.now());
+                if (!latency.isNegative()) {
+                  meters
+                      .timer("outbox.publication.latency", "outbox", "auth_outbox_events")
+                      .record(latency);
+                }
+              }
+            });
   }
 
   private SpecificRecord extractPayload(AuthEventType eventType, Map<String, Object> payload) {

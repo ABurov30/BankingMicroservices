@@ -31,3 +31,9 @@ Schema Registry addresses; it does not verify messaging connectivity.
 ## Secrets
 
 Do not commit real datasource passwords or GitHub package tokens.
+
+## Outbox settings
+
+The publisher uses the validated `banking.outbox.*` settings, including configurable polling,
+initial delay, batch size, in-flight, lease and retry. Local/dev polling defaults to 500 ms.
+See [shared outbox publishing](../../docs/outbox.md) for settings, guarantees, metrics and rollout.

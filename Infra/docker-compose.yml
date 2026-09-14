@@ -1,3 +1,15 @@
+x-outbox-environment: &outbox-environment
+  BANKING_OUTBOX_POLL_INTERVAL_MS: ${BANKING_OUTBOX_POLL_INTERVAL_MS:-500}
+  BANKING_OUTBOX_INITIAL_DELAY_MS: ${BANKING_OUTBOX_INITIAL_DELAY_MS:-5000}
+  BANKING_OUTBOX_BATCH_SIZE: ${BANKING_OUTBOX_BATCH_SIZE:-50}
+  BANKING_OUTBOX_MAX_IN_FLIGHT: ${BANKING_OUTBOX_MAX_IN_FLIGHT:-50}
+  BANKING_OUTBOX_LEASE_TIMEOUT_MS: ${BANKING_OUTBOX_LEASE_TIMEOUT_MS:-360000}
+  BANKING_OUTBOX_RETRY_DELAY_MS: ${BANKING_OUTBOX_RETRY_DELAY_MS:-5000}
+  BANKING_OUTBOX_MAX_ATTEMPTS: ${BANKING_OUTBOX_MAX_ATTEMPTS:-5}
+  KAFKA_PRODUCER_MAX_BLOCK_MS: ${KAFKA_PRODUCER_MAX_BLOCK_MS:-5000}
+  KAFKA_PRODUCER_DELIVERY_TIMEOUT_MS: ${KAFKA_PRODUCER_DELIVERY_TIMEOUT_MS:-30000}
+  KAFKA_PRODUCER_REQUEST_TIMEOUT_MS: ${KAFKA_PRODUCER_REQUEST_TIMEOUT_MS:-10000}
+
 services:
   # Shared infrastructure
   kafka:
@@ -82,6 +94,7 @@ services:
       - schema-registry
       - jaeger
     environment:
+      <<: *outbox-environment
       AUTH_NAME: ${AUTH_NAME}
       AUTH_PORT: ${AUTH_PORT}
       AUTH_GRPC_PORT: ${AUTH_GRPC_PORT}
@@ -129,6 +142,7 @@ services:
       - schema-registry
       - jaeger
     environment:
+      <<: *outbox-environment
       USER_NAME: ${USER_NAME}
       USER_PORT: ${USER_PORT}
       USER_GRPC_PORT: ${USER_GRPC_PORT}
@@ -171,6 +185,7 @@ services:
       - schema-registry
       - jaeger
     environment:
+      <<: *outbox-environment
       ACCOUNT_NAME: ${ACCOUNT_NAME}
       ACCOUNT_PORT: ${ACCOUNT_PORT}
       ACCOUNT_GRPC_PORT: ${ACCOUNT_GRPC_PORT}
@@ -213,6 +228,7 @@ services:
       - schema-registry
       - jaeger
     environment:
+      <<: *outbox-environment
       CARD_NAME: ${CARD_NAME}
       CARD_PORT: ${CARD_PORT}
       CARD_GRPC_PORT: ${CARD_GRPC_PORT}
@@ -255,6 +271,7 @@ services:
       - schema-registry
       - jaeger
     environment:
+      <<: *outbox-environment
       TRANSACTION_NAME: ${TRANSACTION_NAME}
       TRANSACTION_PORT: ${TRANSACTION_PORT}
       TRANSACTION_GRPC_PORT: ${TRANSACTION_GRPC_PORT}
@@ -314,6 +331,7 @@ services:
       - schema-registry
       - jaeger
     environment:
+      <<: *outbox-environment
       NOTIFICATION_NAME: ${NOTIFICATION_NAME}
       NOTIFICATION_PORT: ${NOTIFICATION_PORT}
       NOTIFICATION_GRPC_PORT: ${NOTIFICATION_GRPC_PORT}

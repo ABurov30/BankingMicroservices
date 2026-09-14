@@ -136,3 +136,9 @@ queues. A local limit does not cap requests originating from other replicas or s
 The default 8 is a provisional development value. The reproducible synthetic load sweep and
 capacity-sizing procedure are in [the load report](../../ApiGateway/docs/bulkhead-load.md).
 Production tuning requires the real downstream workload, replica counts and thread/DB pool sizes.
+
+## Outbox settings
+
+The publisher uses the validated `banking.outbox.*` settings, including configurable polling,
+initial delay, batch size, in-flight, lease and retry. Local/dev polling defaults to 500 ms.
+See [shared outbox publishing](../../docs/outbox.md) for settings, guarantees, metrics and rollout.

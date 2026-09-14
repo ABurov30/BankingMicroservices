@@ -14,3 +14,5 @@
 - [Development](development.md)
 
 - [gRPC Bulkhead load test and sizing](../../ApiGateway/docs/bulkhead-load.md)
+
+- [Shared outbox publishing](../../docs/outbox.md)

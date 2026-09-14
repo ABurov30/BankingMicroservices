@@ -12,3 +12,5 @@
 - [Data and Persistence](data.md)
 - [Events](events.md)
 - [Development](development.md)
+
+- [Shared outbox publishing](../../docs/outbox.md)

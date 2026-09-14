@@ -34,3 +34,9 @@ The application sets:
 ## Local Secrets
 
 Do not commit real keys or tokens. For local Docker Compose, JWT keys normally live under `Infra/secrets`.
+
+## Outbox settings
+
+The publisher uses the validated `banking.outbox.*` settings, including configurable polling,
+initial delay, batch size, in-flight, lease and retry. Local/dev polling defaults to 500 ms.
+See [shared outbox publishing](../../docs/outbox.md) for settings, guarantees, metrics and rollout.

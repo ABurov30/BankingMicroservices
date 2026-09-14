@@ -48,4 +48,6 @@ GITHUB_TOKEN=replace_me ./mvnw -s .mvn/settings-docker.xml spotless:check checks
 - Keep `docs` and local `README.md` files in sync with interface, DTO, config, event, persistence, and workflow changes.
 - Keep [bank-microservices.postman_collection.json](bank-microservices.postman_collection.json) in sync with public REST and WebSocket entrypoints.
 - For ApiGateway WebSocket/STOMP contract changes, update `ApiGateway/docs/asyncapi.yaml` and `ApiGateway/docs/interfaces.md` in the same change. Keep destinations, authentication, payload schemas, and examples synchronized with the implementation.
+- When adding or changing configuration, update the affected service `application.properties`, `.env.example`, `Infra/.env.example`, `Infra/docker-compose.yml`, and `.github/workflows/ci.yml` together. Shared outbox settings use the `BANKING_OUTBOX_*` and `KAFKA_PRODUCER_*` variables and must be passed to every CI test and Compose service that publishes outbox events.
+- CI defaults must remain valid for startup validation: `BANKING_OUTBOX_LEASE_TIMEOUT_MS` must exceed the configured Kafka delivery and producer blocking budget. Keep local/dev polling at 500 ms and document any production override with its metric-based rationale.
 - After formatting, verify `spotless:check` and `checkstyle:check` in every touched service.

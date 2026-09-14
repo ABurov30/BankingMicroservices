@@ -24,3 +24,5 @@ See [interfaces](docs/interfaces.md) for batch lookup behavior.
 Outbound gRPC uses per-dependency semaphore Bulkhead, CircuitBreaker and bounded read retries
 within existing deadlines. Saturation fails fast; streams have a separate concurrency limit.
 See [resilience configuration](docs/configuration.md#grpc-resilience).
+
+Outbox claim/lease, configuration, metrics and rollout: [shared publishing guide](../docs/outbox.md).

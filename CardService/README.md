@@ -20,3 +20,5 @@ Kafka partition ownership, event IDs and rollout: [key strategy](docs/events.md#
 
 Account card lists use the batch `GetCardsByAccountIds` gRPC operation.
 See [interfaces](docs/interfaces.md) for batching and access rules.
+
+Outbox claim/lease, configuration, metrics and rollout: [shared publishing guide](../docs/outbox.md).

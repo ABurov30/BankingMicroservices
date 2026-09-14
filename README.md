@@ -84,3 +84,5 @@ Run `./mvnw clean verify -Pintegration-tests` to include them, with the service
 environment configured and its infrastructure available.
 
 CI runs formatting, Checkstyle, and both unit and integration tests for every service.
+
+Outbox concurrency, configuration and deployment: [publishing guide](docs/outbox.md).

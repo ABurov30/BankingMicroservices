@@ -13,3 +13,5 @@ databaseChangeLog:
       file: db/changelog/changes/006-use-minor-units-for-card-limits.sql
   - include:
       file: db/changelog/changes/007-drop-outbox-event-key-unique-constraint.sql
+  - include:
+      file: db/changelog/changes/008-outbox-processing.sql

@@ -36,3 +36,10 @@ multiple events for one aggregate must coexist. The primary key still identifies
 
 The `processed_events.event_key` column stores the incoming `eventId` header,
 not the Kafka partition key. Its unique constraint continues to deduplicate event retries.
+
+## Outbox attempts
+
+The outbox status constraint now permits PROCESSING. The `*-outbox-processing.sql` migration
+adds partial pending and lease indexes. `locked_by` is a unique attempt token;
+`retry_count` increments on claim. Claims and callbacks use separate transactions.
+See [shared outbox publishing](../../docs/outbox.md) for settings, guarantees, metrics and rollout.

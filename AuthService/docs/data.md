@@ -46,3 +46,10 @@ Auth outbox rows use shared outbox helpers from `com.burov:support`.
 
 Social account rows are unique by provider and provider user id. A single auth user may have
 multiple linked social provider accounts.
+
+## Outbox attempts
+
+The outbox status constraint now permits PROCESSING. The `*-outbox-processing.sql` migration
+adds partial pending and lease indexes. `locked_by` is a unique attempt token;
+`retry_count` increments on claim. Claims and callbacks use separate transactions.
+See [shared outbox publishing](../../docs/outbox.md) for settings, guarantees, metrics and rollout.

@@ -32,3 +32,9 @@ The service `.env.example` points local MongoDB access at `localhost:27017` and 
 ## Secrets
 
 Do not commit real datasource passwords, MongoDB passwords, SMTP credentials, or GitHub package tokens.
+
+## Outbox settings
+
+The publisher uses the validated `banking.outbox.*` settings, including configurable polling,
+initial delay, batch size, in-flight, lease and retry. Local/dev polling defaults to 500 ms.
+See [shared outbox publishing](../../docs/outbox.md) for settings, guarantees, metrics and rollout.

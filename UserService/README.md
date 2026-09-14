@@ -19,3 +19,5 @@ Database connection settings are supplied by Testcontainers. The context startup
 disables Kafka listeners and does not require Kafka or Schema Registry.
 
 Kafka partition ownership, event IDs and rollout: [key strategy](docs/events.md#kafka-key-strategy).
+
+Outbox claim/lease, configuration, metrics and rollout: [shared publishing guide](../docs/outbox.md).

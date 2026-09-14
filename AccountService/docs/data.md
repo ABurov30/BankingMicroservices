@@ -56,3 +56,10 @@ not the Kafka partition key. Its unique constraint continues to deduplicate even
 `009-create-account-interest-accruals.sql`. Its unique `(account_id, accrual_date)`
 constraint protects against duplicate accruals. History and balance changes share
 one transaction. See [interest accrual](interest-accrual.md) for calculation and retry semantics.
+
+## Outbox attempts
+
+The outbox status constraint now permits PROCESSING. The `*-outbox-processing.sql` migration
+adds partial pending and lease indexes. `locked_by` is a unique attempt token;
+`retry_count` increments on claim. Claims and callbacks use separate transactions.
+See [shared outbox publishing](../../docs/outbox.md) for settings, guarantees, metrics and rollout.

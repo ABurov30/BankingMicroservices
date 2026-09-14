@@ -33,3 +33,9 @@ Interest accrual runs at midnight in `Europe/Paris`, with a fixed annual rate of
 The business date is captured once per run using an injected clock.
 `account.interest.accruals{result=processed|skipped|failed}` tracks per-account results.
 See [interest accrual](interest-accrual.md) for retries, rollout and rounding.
+
+## Outbox settings
+
+The publisher uses the validated `banking.outbox.*` settings, including configurable polling,
+initial delay, batch size, in-flight, lease and retry. Local/dev polling defaults to 500 ms.
+See [shared outbox publishing](../../docs/outbox.md) for settings, guarantees, metrics and rollout.
