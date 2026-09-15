@@ -14,6 +14,8 @@ public interface AuthEventPayloadMapper {
         .setFirstName(value.get("firstName").toString())
         .setLastName(value.get("lastName").toString())
         .setVerificationCode(value.get("verificationCode").toString())
+        .setStatus(value.get("status").toString())
+        .setRole(value.get("role").toString())
         .build();
   }
 

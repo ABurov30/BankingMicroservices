@@ -71,5 +71,7 @@ Publishing uses `support:0.0.4` claim/lease and guarded acknowledgements. Retrie
 eventId and the stored Kafka key. Delivery is at least once; consumers must retain deduplication.
 See [shared outbox publishing](../../docs/outbox.md) for settings, guarantees, metrics and rollout.
 
-The optional bootstrap administrator is an auth-only operational account and emits no lifecycle
-events or customer profile creation events; see [configuration](configuration.md#first-administrator).
+The optional bootstrap administrator emits `AUTH_USER_CREATED` through the outbox so `UserService`
+can create its profile. The event carries `Admin` for both name fields and an empty verification
+code; `NotificationService` skips it because the administrator is already email-verified. See
+[configuration](configuration.md#first-administrator).

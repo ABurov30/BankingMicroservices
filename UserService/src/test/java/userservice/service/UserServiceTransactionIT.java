@@ -61,7 +61,14 @@ public class UserServiceTransactionIT {
 
   @Test
   void shouldRollbackProfileWhenOutboxSaveFails() {
-    var command = new CreateUserCommand(AUTH_USER_ID, EMAIL, FIRST_NAME, LAST_NAME);
+    var command =
+        new CreateUserCommand(
+            AUTH_USER_ID,
+            EMAIL,
+            FIRST_NAME,
+            LAST_NAME,
+            UserProfileStatus.PENDING,
+            Roles.USER.name());
 
     doThrow(new IllegalStateException("Outbox unavailable"))
         .when(outboxEventRepository)
@@ -77,7 +84,14 @@ public class UserServiceTransactionIT {
 
   @Test
   void shouldSaveProfileAndOutboxEventTogether() {
-    var command = new CreateUserCommand(AUTH_USER_ID, EMAIL, FIRST_NAME, LAST_NAME);
+    var command =
+        new CreateUserCommand(
+            AUTH_USER_ID,
+            EMAIL,
+            FIRST_NAME,
+            LAST_NAME,
+            UserProfileStatus.PENDING,
+            Roles.USER.name());
     userService.createUser(command);
     var result = repository.findByAuthUserId(AUTH_USER_ID);
     assertThat(result).isPresent();
@@ -97,7 +111,14 @@ public class UserServiceTransactionIT {
 
   @Test
   void shouldNotCreateDuplicateProfileOrEventWhenUserAlreadyExists() {
-    var command = new CreateUserCommand(AUTH_USER_ID, EMAIL, FIRST_NAME, LAST_NAME);
+    var command =
+        new CreateUserCommand(
+            AUTH_USER_ID,
+            EMAIL,
+            FIRST_NAME,
+            LAST_NAME,
+            UserProfileStatus.PENDING,
+            Roles.USER.name());
     userService.createUser(command);
     userService.createUser(command);
     var result = repository.findByAuthUserId(AUTH_USER_ID);

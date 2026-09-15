@@ -51,11 +51,13 @@ public class UserService {
     }
 
     UserProfileEntity userProfileEntity = new UserProfileEntity();
+
     userProfileEntity.setAuthUserId(createUserCommand.authUserId());
     userProfileEntity.setEmail(createUserCommand.email());
     userProfileEntity.setFirstName(createUserCommand.firstName());
     userProfileEntity.setLastName(createUserCommand.lastName());
-    userProfileEntity.setRole("USER");
+    userProfileEntity.setStatus(createUserCommand.status());
+    userProfileEntity.setRole(createUserCommand.role());
 
     userProfileRepository.save(userProfileEntity);
 

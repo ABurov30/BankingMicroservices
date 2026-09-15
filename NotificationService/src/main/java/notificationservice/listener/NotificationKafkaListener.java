@@ -29,6 +29,9 @@ public class NotificationKafkaListener {
   @KafkaListener(topics = "#{T(kafkacontracts.auth.AuthEventType).AUTH_USER_CREATED.getTopic()}")
   public void handleAuthUserCreated(
       AuthUserCreatedEventPayload payload, @EventKey @Header("eventId") String eventId) {
+    if (payload.getVerificationCode().isBlank()) {
+      return;
+    }
     notificationService.createEmailNotification(
         emailCommandMapper.toCreateEmailNotificationCommand(payload));
   }

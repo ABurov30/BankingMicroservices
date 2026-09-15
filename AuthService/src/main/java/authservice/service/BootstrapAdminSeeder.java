@@ -3,12 +3,15 @@ package authservice.service;
 import authservice.config.BootstrapAdminProperties;
 import authservice.entity.AuthUserEntity;
 import authservice.entity.UserRoleEntity;
+import authservice.repository.AuthOutboxEventRepository;
 import authservice.repository.AuthUserRepository;
 import authservice.repository.RoleRepository;
 import authservice.repository.UserRoleRepository;
 import enums.auth.AuthUserStatus;
 import enums.auth.Roles;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import kafkacontracts.auth.AuthEventType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -25,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class BootstrapAdminSeeder implements ApplicationRunner {
   private final BootstrapAdminProperties properties;
   private final AuthUserRepository users;
+  private final AuthOutboxEventRepository outboxEvents;
   private final RoleRepository roles;
   private final UserRoleRepository userRoles;
   private final PasswordEncoder passwordEncoder;
@@ -58,5 +62,17 @@ public class BootstrapAdminSeeder implements ApplicationRunner {
     userRole.setAuthUser(user);
     userRole.setRole(adminRole);
     userRoles.save(userRole);
+
+    var outboxEvent = AuthOutboxEventFactory.create(user.getId(), AuthEventType.AUTH_USER_CREATED);
+    outboxEvent.setPayload(
+        Map.of(
+            "authUserId", user.getId(),
+            "email", user.getEmail(),
+            "firstName", "Admin",
+            "lastName", "Admin",
+            "verificationCode", "",
+            "status", user.getStatus().name(),
+            "role", adminRole.getName().name()));
+    outboxEvents.save(outboxEvent);
   }
 }

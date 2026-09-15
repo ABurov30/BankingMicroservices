@@ -85,7 +85,9 @@ public class AuthService {
             "email", signupCommand.email(),
             "firstName", signupCommand.firstName(),
             "lastName", signupCommand.lastName(),
-            "verificationCode", verificationCode));
+            "verificationCode", verificationCode,
+            "status", savedUser.getStatus().name(),
+            "role", savedUserRole.getRole().getName().name()));
 
     return authResultMapper.toVerifyAuthUserByCodeResult(tokenPair);
   }

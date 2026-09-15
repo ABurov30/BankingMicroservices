@@ -1,5 +1,6 @@
 package userservice.mapper.command;
 
+import enums.user.UserProfileStatus;
 import java.util.UUID;
 import kafkacontracts.auth.AuthSocialAccountAuthUserCreatedEventPayload;
 import kafkacontracts.auth.AuthUserBlockedEventPayload;
@@ -20,7 +21,12 @@ public interface UserCommandMapper {
 
   default CreateUserCommand toCreateUserCommand(AuthUserCreatedEventPayload payload) {
     return new CreateUserCommand(
-        payload.getAuthUserId(), payload.getEmail(), payload.getFirstName(), payload.getLastName());
+        payload.getAuthUserId(),
+        payload.getEmail(),
+        payload.getFirstName(),
+        payload.getLastName(),
+        UserProfileStatus.valueOf(payload.getStatus()),
+        payload.getRole());
   }
 
   default CreatUserFromSocialAccountCommand toCreateUserFromSocialAccountCommand(

@@ -7,12 +7,14 @@ import authservice.config.BootstrapAdminProperties;
 import authservice.entity.AuthUserEntity;
 import authservice.entity.RoleEntity;
 import authservice.entity.UserRoleEntity;
+import authservice.repository.AuthOutboxEventRepository;
 import authservice.repository.AuthUserRepository;
 import authservice.repository.RoleRepository;
 import authservice.repository.UserRoleRepository;
 import enums.auth.AuthUserStatus;
 import enums.auth.Roles;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +26,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @ExtendWith(MockitoExtension.class)
 class BootstrapAdminSeederTest {
   @Mock private AuthUserRepository users;
+  @Mock private AuthOutboxEventRepository outboxEvents;
   @Mock private RoleRepository roles;
   @Mock private UserRoleRepository userRoles;
   private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
@@ -37,11 +40,18 @@ class BootstrapAdminSeederTest {
     adminRole = new RoleEntity();
     adminRole.setName(Roles.ADMIN);
     when(roles.findByNameForUpdate(Roles.ADMIN)).thenReturn(Optional.of(adminRole));
-    seeder = new BootstrapAdminSeeder(properties, users, roles, userRoles, encoder);
+    seeder = new BootstrapAdminSeeder(properties, users, outboxEvents, roles, userRoles, encoder);
   }
 
   @Test
   void createsVerifiedActiveAdminWithHashedPassword() {
+    when(users.saveAndFlush(any()))
+        .thenAnswer(
+            invocation -> {
+              var user = invocation.getArgument(0, AuthUserEntity.class);
+              user.setId(UUID.randomUUID());
+              return user;
+            });
     seeder.run(null);
     var userCaptor = ArgumentCaptor.forClass(AuthUserEntity.class);
     verify(users).saveAndFlush(userCaptor.capture());
@@ -55,6 +65,15 @@ class BootstrapAdminSeederTest {
     verify(userRoles).save(roleCaptor.capture());
     assertThat(roleCaptor.getValue().getAuthUser()).isSameAs(user);
     assertThat(roleCaptor.getValue().getRole()).isSameAs(adminRole);
+    var outboxCaptor = ArgumentCaptor.forClass(authservice.entity.AuthOutboxEventEntity.class);
+    verify(outboxEvents).save(outboxCaptor.capture());
+    assertThat(outboxCaptor.getValue().getEventType()).isEqualTo("AUTH_USER_CREATED");
+    assertThat(outboxCaptor.getValue().getPayload())
+        .containsEntry("authUserId", user.getId())
+        .containsEntry("email", user.getEmail())
+        .containsEntry("firstName", "Admin")
+        .containsEntry("lastName", "Admin")
+        .containsEntry("verificationCode", "");
   }
 
   @Test
@@ -79,6 +98,7 @@ class BootstrapAdminSeederTest {
         new BootstrapAdminSeeder(
             new BootstrapAdminProperties("admin@example.com", "я".repeat(40)),
             users,
+            outboxEvents,
             roles,
             userRoles,
             encoder);

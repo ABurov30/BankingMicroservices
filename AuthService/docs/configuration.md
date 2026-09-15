@@ -60,6 +60,6 @@ or unblock users. A configured email already owned by a non-admin fails startup 
 Concurrent bootstrap instances lock the ADMIN role row before checking and creating the account.
 Disable bootstrap after initial creation; changing env credentials does not change an existing account.
 
-This is an operational auth account without a UserService customer profile, bank accounts, or cards.
-The seed emits no signup/verification emails or Kafka lifecycle events. Customer-profile endpoints
-are not applicable to this account; use it for role management and administrative operations.
+The seed creates a matching UserService profile through the `AUTH_USER_CREATED` Kafka event. It
+does not emit a signup/verification email because this account is already email-verified. It has no
+bank accounts or cards; use it for role management and administrative operations.

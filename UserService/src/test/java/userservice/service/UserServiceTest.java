@@ -60,7 +60,6 @@ class UserServiceTest {
     assertThat(entity.getEmail()).isEqualTo(EMAIL);
     assertThat(entity.getFirstName()).isEqualTo(FIRST_NAME);
     assertThat(entity.getLastName()).isEqualTo(LAST_NAME);
-    assertThat(entity.getRole()).isEqualTo(Roles.USER.name());
     assertThat(entity.getStatus()).isEqualTo(UserProfileStatus.ACTIVE);
 
     ArgumentCaptor<UserOutboxEventEntity> eventOutboxCaptor =
@@ -97,7 +96,6 @@ class UserServiceTest {
     profile.setEmail(EMAIL);
     profile.setFirstName(FIRST_NAME);
     profile.setLastName(LAST_NAME);
-    profile.setRole(Roles.USER.name());
     return profile;
   }
 
