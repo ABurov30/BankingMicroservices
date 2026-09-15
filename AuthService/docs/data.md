@@ -53,3 +53,7 @@ The outbox status constraint now permits PROCESSING. The `*-outbox-processing.sq
 adds partial pending and lease indexes. `locked_by` is a unique attempt token;
 `retry_count` increments on claim. Claims and callbacks use separate transactions.
 See [shared outbox publishing](../../docs/outbox.md) for settings, guarantees, metrics and rollout.
+
+The optional startup administrator seed writes `auth_users` and `user_roles` atomically,
+using the existing ADMIN role as a database lock. It does not alter existing users or issue tokens.
+See [first administrator](configuration.md#first-administrator).

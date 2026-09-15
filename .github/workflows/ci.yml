@@ -175,6 +175,9 @@ jobs:
           SITE_URL: ${{ vars.SITE_URL }}
 
           AUTH_NAME: ${{ vars.AUTH_NAME }}
+          AUTH_BOOTSTRAP_ADMIN_ENABLED: "false"
+          AUTH_BOOTSTRAP_ADMIN_EMAIL: ""
+          AUTH_BOOTSTRAP_ADMIN_PASSWORD: ""
           AUTH_PORT: ${{ vars.AUTH_PORT }}
           AUTH_GRPC_HOST: ${{ vars.AUTH_GRPC_HOST }}
           AUTH_GRPC_PORT: ${{ vars.AUTH_GRPC_PORT }}
@@ -305,6 +308,9 @@ jobs:
           SITE_URL: ${{ vars.SITE_URL }}
 
           AUTH_NAME: ${{ vars.AUTH_NAME }}
+          AUTH_BOOTSTRAP_ADMIN_ENABLED: "false"
+          AUTH_BOOTSTRAP_ADMIN_EMAIL: ""
+          AUTH_BOOTSTRAP_ADMIN_PASSWORD: ""
           AUTH_PORT: ${{ vars.AUTH_PORT }}
           AUTH_GRPC_HOST: ${{ vars.AUTH_GRPC_HOST }}
           AUTH_GRPC_PORT: ${{ vars.AUTH_GRPC_PORT }}
@@ -425,6 +431,9 @@ jobs:
           SITE_URL: ${{ vars.SITE_URL }}
 
           AUTH_NAME: ${{ vars.AUTH_NAME }}
+          AUTH_BOOTSTRAP_ADMIN_ENABLED: "false"
+          AUTH_BOOTSTRAP_ADMIN_EMAIL: ""
+          AUTH_BOOTSTRAP_ADMIN_PASSWORD: ""
           AUTH_PORT: ${{ vars.AUTH_PORT }}
           AUTH_GRPC_HOST: ${{ vars.AUTH_GRPC_HOST }}
           AUTH_GRPC_PORT: ${{ vars.AUTH_GRPC_PORT }}
@@ -531,6 +540,9 @@ jobs:
           SITE_URL: ${{ vars.SITE_URL }}
 
           AUTH_NAME: ${{ vars.AUTH_NAME }}
+          AUTH_BOOTSTRAP_ADMIN_ENABLED: "false"
+          AUTH_BOOTSTRAP_ADMIN_EMAIL: ""
+          AUTH_BOOTSTRAP_ADMIN_PASSWORD: ""
           AUTH_PORT: ${{ vars.AUTH_PORT }}
           AUTH_GRPC_HOST: ${{ vars.AUTH_GRPC_HOST }}
           AUTH_GRPC_PORT: ${{ vars.AUTH_GRPC_PORT }}

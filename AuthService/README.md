@@ -22,3 +22,5 @@ User profile enrichment uses the batch `GetAuthUserByIds` RPC.
 See [interfaces](docs/interfaces.md) for batch lookup behavior.
 
 Outbox claim/lease, configuration, metrics and rollout: [shared publishing guide](../docs/outbox.md).
+
+First administrator: configure `AUTH_BOOTSTRAP_ADMIN_*` in env; see [bootstrap instructions](docs/configuration.md#first-administrator).
