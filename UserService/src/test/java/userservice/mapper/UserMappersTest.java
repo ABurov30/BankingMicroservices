@@ -12,11 +12,11 @@ import user.contract.v1.GetAllUserInfoGrpcResponse;
 import user.contract.v1.GetRecipientByEmailRequest;
 import user.contract.v1.UserResponse;
 import userservice.dto.GetUserInfoResult;
+import userservice.entity.UserProfileEntity;
 import userservice.mapper.command.UserCommandMapperImpl;
 import userservice.mapper.eventpayload.UserEventPayloadMapperImpl;
 import userservice.mapper.grpc.UserGrpcMapperImpl;
 import userservice.mapper.result.UserResultMapperImpl;
-import userservice.entity.UserProfileEntity;
 
 class UserMappersTest {
   private final UUID userId = UUID.randomUUID();
@@ -68,6 +68,7 @@ class UserMappersTest {
     entity.setFirstName("First");
     entity.setLastName("Last");
     entity.setStatus(UserProfileStatus.ACTIVE);
-    assertThat(new UserResultMapperImpl().toGetUserInfoResult(entity).authUserId()).isEqualTo(userId);
+    assertThat(new UserResultMapperImpl().toGetUserInfoResult(entity).authUserId())
+        .isEqualTo(userId);
   }
 }
