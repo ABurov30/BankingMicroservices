@@ -153,7 +153,7 @@ class GrpcBulkheadLoadTest {
                         ClientCalls.blockingUnaryCall(
                             account,
                             method,
-                            CallOptions.DEFAULT.withDeadlineAfter(2, TimeUnit.SECONDS),
+                            CallOptions.DEFAULT.withDeadlineAfter(5, TimeUnit.SECONDS),
                             Empty.getDefaultInstance());
                         successes.add(System.nanoTime() - began);
                       } catch (StatusRuntimeException failure) {
@@ -177,7 +177,7 @@ class GrpcBulkheadLoadTest {
                     ClientCalls.blockingUnaryCall(
                         card,
                         method,
-                        CallOptions.DEFAULT.withDeadlineAfter(2, TimeUnit.SECONDS),
+                        CallOptions.DEFAULT.withDeadlineAfter(5, TimeUnit.SECONDS),
                         Empty.getDefaultInstance()))
             .get(2, TimeUnit.SECONDS);
         healthyMax = Math.max(healthyMax, System.nanoTime() - began);

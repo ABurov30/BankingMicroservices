@@ -21,7 +21,7 @@ public class AccountGrpcClient {
   public ReserveFudsForTransactionResponseDto reserveFundsForTransaction(
       ReserveFundsForTransactionGrpcRequest grpcRequest) {
     return dtoMapper.toReserveFudsForTransactionResponseDto(
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS).reserveFundsForTransaction(grpcRequest));
+        stub.withDeadlineAfter(5, TimeUnit.SECONDS).reserveFundsForTransaction(grpcRequest));
   }
 
   public Map<UUID, AccountResponse> getAccountByIdsForTransaction(List<UUID> accountIds) {
@@ -34,7 +34,7 @@ public class AccountGrpcClient {
             .addAllAccountId(ids.stream().map(UUID::toString).toList())
             .build();
     var response =
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS).getAccountByIdsForTransaction(request);
+        stub.withDeadlineAfter(5, TimeUnit.SECONDS).getAccountByIdsForTransaction(request);
     var accounts =
         response.getAccountList().stream()
             .collect(

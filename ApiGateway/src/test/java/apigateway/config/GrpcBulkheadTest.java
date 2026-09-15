@@ -110,7 +110,7 @@ class GrpcBulkheadTest {
                 ClientCalls.blockingUnaryCall(
                     channel,
                     UNARY,
-                    CallOptions.DEFAULT.withDeadlineAfter(2, TimeUnit.SECONDS),
+                    CallOptions.DEFAULT.withDeadlineAfter(5, TimeUnit.SECONDS),
                     Empty.getDefaultInstance()))
         .isInstanceOfSatisfying(
             StatusRuntimeException.class,

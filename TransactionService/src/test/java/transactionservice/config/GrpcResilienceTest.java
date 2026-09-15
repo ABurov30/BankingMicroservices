@@ -108,7 +108,7 @@ class GrpcResilienceTest {
     ClientCalls.blockingUnaryCall(
         channel,
         method,
-        CallOptions.DEFAULT.withDeadlineAfter(2, TimeUnit.SECONDS),
+        CallOptions.DEFAULT.withDeadlineAfter(5, TimeUnit.SECONDS),
         Empty.getDefaultInstance());
   }
 
@@ -365,7 +365,7 @@ class GrpcResilienceTest {
     recoverOnRetry = true;
     var result =
         ClientCalls.futureUnaryCall(
-            channel.newCall(method, CallOptions.DEFAULT.withDeadlineAfter(2, TimeUnit.SECONDS)),
+            channel.newCall(method, CallOptions.DEFAULT.withDeadlineAfter(5, TimeUnit.SECONDS)),
             Empty.getDefaultInstance());
     assertThat(requests.get()).isEqualTo(1);
     assertThat(resilience.bulkhead("account", false).getMetrics().getAvailableConcurrentCalls())

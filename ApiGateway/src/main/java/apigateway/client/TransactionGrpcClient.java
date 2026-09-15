@@ -23,7 +23,7 @@ public class TransactionGrpcClient {
 
   public String getTransactionHealth() {
     GetTransactionHealthGrpcResponse response =
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+        stub.withDeadlineAfter(5, TimeUnit.SECONDS)
             .getTransactionHealth(Empty.getDefaultInstance());
     return response.getMessage();
   }
@@ -31,7 +31,7 @@ public class TransactionGrpcClient {
   public CreateTransactionResponseDto createTransaction(
       CreateTransactionRequestDto request, UUID sourceAuthUserId) {
     CreateTransactionGrpcResponse response =
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+        stub.withDeadlineAfter(5, TimeUnit.SECONDS)
             .createTransaction(
                 grpcMapper.toCreateTransactionGrpcRequest(request, sourceAuthUserId));
     return dtoMapper.toCreateTransactionResponseDto(response);
@@ -39,7 +39,7 @@ public class TransactionGrpcClient {
 
   public List<TransactionResponseDto> getTransactionsByAccounts(List<AccountResponse> accounts) {
     GetTransactionsByAccountsGrpcResponse response =
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+        stub.withDeadlineAfter(5, TimeUnit.SECONDS)
             .getTransactionsByAccounts(grpcMapper.toGetTransactionsByAccountsGrpcRequest(accounts));
     return grpcMapper.toTransactionResponseDtos(response);
   }

@@ -23,7 +23,7 @@ public class AccountGrpcClient {
 
   public String getAccountHealth() {
     GetAccountHealthGrpcResponse response =
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS).getAccountHealth(Empty.getDefaultInstance());
+        stub.withDeadlineAfter(5, TimeUnit.SECONDS).getAccountHealth(Empty.getDefaultInstance());
     return response.getMessage();
   }
 
@@ -32,7 +32,7 @@ public class AccountGrpcClient {
     CreateAccountGrpcRequest grpcRequest =
         grpcMapper.toCreateAccountGrpcRequest(request, authUserId, ownerUserId);
     return dtoMapper.toCreateAccountResponseDto(
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS).createAccount(grpcRequest));
+        stub.withDeadlineAfter(5, TimeUnit.SECONDS).createAccount(grpcRequest));
   }
 
   public List<GetAccountResponseDto> getAccountsByOwnerId(
@@ -40,7 +40,7 @@ public class AccountGrpcClient {
     GetAccountByOwnerUserIdGrpcRequest request =
         grpcMapper.toGetAccountByOwnerUserIdGrpcRequest(requestDto);
     GetAccountsGrpcResponse response =
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS).getAccountsByOwnerUserId(request);
+        stub.withDeadlineAfter(5, TimeUnit.SECONDS).getAccountsByOwnerUserId(request);
 
     return dtoMapper.toListGetAccountResponseDto(response);
   }
@@ -51,14 +51,14 @@ public class AccountGrpcClient {
     GetAccountByAuthUserIdGrpcRequest request =
         grpcMapper.toGetAccountByAuthUserIdGrpcRequest(requestDto);
     GetAccountsGrpcResponse response =
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS).getAccountsByAuthUserId(request);
+        stub.withDeadlineAfter(5, TimeUnit.SECONDS).getAccountsByAuthUserId(request);
 
     return dtoMapper.toListGetAccountResponseDto(response);
   }
 
   public List<AccountResponseWithoutSensitiveInfo> getRecipientAccounts(UUID ownerUserId) {
     GetRecipientAccountsByOwnerUserIdGrpcResponse response =
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+        stub.withDeadlineAfter(5, TimeUnit.SECONDS)
             .getRecipientAccountsByOwnerUserId(
                 grpcMapper.toGetRecipientAccountsByOwnerUserIdGrpcRequest(ownerUserId));
     return dtoMapper.toRecipientAccounts(response);
@@ -66,7 +66,7 @@ public class AccountGrpcClient {
 
   public List<GetAccountResponseDto> getAllAccounts(GetAllAccountsRequestDto request) {
     GetAccountsGrpcResponse response =
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+        stub.withDeadlineAfter(5, TimeUnit.SECONDS)
             .getAllAccounts(grpcMapper.toGetAllAccountsGrpRequest(request));
     return dtoMapper.toListGetAccountResponseDto(response);
   }
@@ -74,32 +74,32 @@ public class AccountGrpcClient {
   public void freezeAccount(UUID accountId, UUID authUserId, String role) {
     FreezeAccountGrpcRequest request =
         grpcMapper.toFreezeAccountGrpcRequest(accountId, authUserId, role);
-    stub.withDeadlineAfter(2, TimeUnit.SECONDS).freezeAccount(request);
+    stub.withDeadlineAfter(5, TimeUnit.SECONDS).freezeAccount(request);
   }
 
   public void unfreezeAccount(UUID accountId, UUID authUserId, String role) {
     UnfreezeAccountGrpcRequest request =
         grpcMapper.toUnfreezeAccountGrpcRequest(accountId, authUserId, role);
-    stub.withDeadlineAfter(2, TimeUnit.SECONDS).unfreezeAccount(request);
+    stub.withDeadlineAfter(5, TimeUnit.SECONDS).unfreezeAccount(request);
   }
 
   public GetAccountResponseDto getAccountById(GetAccountByIdRequestDto request) {
     return dtoMapper.toGetAccountByIdResponseDto(
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+        stub.withDeadlineAfter(5, TimeUnit.SECONDS)
             .getAccountById(grpcMapper.toGetAccountByIdGrpcRequest(request)));
   }
 
   public GetAccountResponseDto topUpAccount(
       UpdateAccountBalanceRequestDto request, UUID authUserId) {
     return dtoMapper.toGetAccountResponseDto(
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+        stub.withDeadlineAfter(5, TimeUnit.SECONDS)
             .topUpAccount(grpcMapper.toUpdateAccountBalanceGrpcRequest(request, authUserId)));
   }
 
   public GetAccountResponseDto withdrawAccount(
       UpdateAccountBalanceRequestDto request, UUID authUserId) {
     return dtoMapper.toGetAccountResponseDto(
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+        stub.withDeadlineAfter(5, TimeUnit.SECONDS)
             .withdrawAccount(grpcMapper.toUpdateAccountBalanceGrpcRequest(request, authUserId)));
   }
 }

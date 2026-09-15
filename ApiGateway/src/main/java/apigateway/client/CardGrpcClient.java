@@ -34,7 +34,7 @@ public class CardGrpcClient {
       return List.of();
     }
     var request = grpcMapper.toGetCardByAccountIdsGrpcRequest(command);
-    var response = stub.withDeadlineAfter(2, TimeUnit.SECONDS).getCardsByAccountIds(request);
+    var response = stub.withDeadlineAfter(5, TimeUnit.SECONDS).getCardsByAccountIds(request);
     return response.getCardsList().stream()
         .map(dtoMapper::toGetCardByAccountIdResponseDto)
         .toList();
@@ -42,7 +42,7 @@ public class CardGrpcClient {
 
   public String getCardHealth() {
     GetCardHealthGrpcResponse response =
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS).getCardHealth(Empty.getDefaultInstance());
+        stub.withDeadlineAfter(5, TimeUnit.SECONDS).getCardHealth(Empty.getDefaultInstance());
     return response.getMessage();
   }
 
@@ -51,7 +51,7 @@ public class CardGrpcClient {
     CreateCardGrpcRequest grpcRequest =
         grpcMapper.toCreateCardGrpcRequest(request, authUserId, role, account);
     return dtoMapper.toCreateCardResponseDto(
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS).createCard(grpcRequest));
+        stub.withDeadlineAfter(5, TimeUnit.SECONDS).createCard(grpcRequest));
   }
 
   public UpdateCardResponseDto updateCard(
@@ -59,14 +59,14 @@ public class CardGrpcClient {
     UpdateCardGrpcRequest grpcRequest =
         grpcMapper.toUpdateCardGrpcRequest(request, authUserId, role);
     return dtoMapper.toUpdateCardResponseDto(
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS).updateCard(grpcRequest));
+        stub.withDeadlineAfter(5, TimeUnit.SECONDS).updateCard(grpcRequest));
   }
 
   public List<GetCardByAccountIdResponseDto> getCardsByAccountId(
       GetCardsByAccountIdCommandDto command) {
     GetCardByAccountIdGrpcRequest request = grpcMapper.toGetCardByAccountIdGrpcRequest(command);
     GetCardsGrpcResponse response =
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS).getCardsByAccountId(request);
+        stub.withDeadlineAfter(5, TimeUnit.SECONDS).getCardsByAccountId(request);
 
     return response.getCardsList().stream()
         .map(dtoMapper::toGetCardByAccountIdResponseDto)
@@ -79,7 +79,7 @@ public class CardGrpcClient {
     GetCardByAccountIdGrpcRequest request = grpcMapper.toGetCardByAccountIdGrpcRequest(command);
 
     return GrpcFutureAdapter.toCompletableFuture(
-            futureStub.withDeadlineAfter(2, TimeUnit.SECONDS).getCardsByAccountId(request))
+            futureStub.withDeadlineAfter(5, TimeUnit.SECONDS).getCardsByAccountId(request))
         .thenApply(
             response ->
                 response.getCardsList().stream()

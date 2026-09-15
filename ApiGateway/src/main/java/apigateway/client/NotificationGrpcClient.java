@@ -30,7 +30,7 @@ public class NotificationGrpcClient {
 
   public String getNotificationHealth() {
     GetNotificationHealthGrpcResponse response =
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+        stub.withDeadlineAfter(5, TimeUnit.SECONDS)
             .getNotificationHealth(Empty.getDefaultInstance());
     return response.getMessage();
   }

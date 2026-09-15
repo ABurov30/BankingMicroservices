@@ -27,7 +27,7 @@ public class UserGrpcClient {
     GetUserInfoGrpcRequest getUserInfoGrpcRequest =
         grpcMapper.toGetUserInfoGrpcRequest(getUserInfoRequest);
     return dtoMapper.toGetInfoResponseDto(
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS).getUserInfo(getUserInfoGrpcRequest));
+        stub.withDeadlineAfter(5, TimeUnit.SECONDS).getUserInfo(getUserInfoGrpcRequest));
   }
 
   public CompletableFuture<GetUserInfoResponseDto> getUserInfoAsync(
@@ -35,24 +35,24 @@ public class UserGrpcClient {
     GetUserInfoGrpcRequest getUserInfoGrpcRequest =
         grpcMapper.toGetUserInfoGrpcRequest(getUserInfoRequest);
     return GrpcFutureAdapter.toCompletableFuture(
-            futureStub.withDeadlineAfter(2, TimeUnit.SECONDS).getUserInfo(getUserInfoGrpcRequest))
+            futureStub.withDeadlineAfter(5, TimeUnit.SECONDS).getUserInfo(getUserInfoGrpcRequest))
         .thenApply(dtoMapper::toGetInfoResponseDto);
   }
 
   public List<GetUserInfoResponseDto> getAllUserInfo() {
     return dtoMapper.toGetInfoResponseDtoList(
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS).getAllUserInfo(Empty.getDefaultInstance()));
+        stub.withDeadlineAfter(5, TimeUnit.SECONDS).getAllUserInfo(Empty.getDefaultInstance()));
   }
 
   public GetRecipientResultDto getRecipientByEmail(GetRecipientRequestDto request) {
     return dtoMapper.toGetRecipientResultDto(
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS)
+        stub.withDeadlineAfter(5, TimeUnit.SECONDS)
             .getRecipientByEmail(grpcMapper.toGetRecipientByEmailRequest(request)));
   }
 
   public String getUserHealth() {
     GetUserHealthGrpcResponse response =
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS).getUserHealth(Empty.getDefaultInstance());
+        stub.withDeadlineAfter(5, TimeUnit.SECONDS).getUserHealth(Empty.getDefaultInstance());
     return response.getMessage();
   }
 }

@@ -16,6 +16,6 @@ public class CardGrpcClient {
   public ReservationResponseDto reserveLimitsForTransaction(
       ReserveLimitsForTransactionGrpcRequest grpcRequest) {
     return dtoMapper.toReservationResponseDto(
-        stub.withDeadlineAfter(2, TimeUnit.SECONDS).reserveLimitsForTransaction(grpcRequest));
+        stub.withDeadlineAfter(5, TimeUnit.SECONDS).reserveLimitsForTransaction(grpcRequest));
   }
 }

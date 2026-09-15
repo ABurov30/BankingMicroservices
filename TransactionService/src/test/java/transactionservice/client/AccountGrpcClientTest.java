@@ -37,7 +37,7 @@ class AccountGrpcClientTest {
                 .build());
     var result = client.getAccountByIdsForTransaction(List.of(first, second, first));
     assertThat(result).containsEntry(first, firstAccount).containsEntry(second, secondAccount);
-    verify(stub).withDeadlineAfter(2, TimeUnit.SECONDS);
+    verify(stub).withDeadlineAfter(5, TimeUnit.SECONDS);
     verify(stub).getAccountByIdsForTransaction(request);
     verifyNoMoreInteractions(stub);
   }
