@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.UUID;
 import kafkacontracts.card.CardCreatedEventPayload;
 import kafkacontracts.card.CardFrozenEventPayload;
+import kafkacontracts.card.CardLimitHoldReleasedByTimeEventPayload;
 import kafkacontracts.card.CardUnfrozenEventPayload;
 import org.mapstruct.Mapper;
 
@@ -40,6 +41,13 @@ public interface CardEventPayloadMapper {
         .setAccountNumber(payload.get("accountNumber").toString())
         .setCardId(uuid(payload.get("cardId")))
         .setCardNumber(payload.get("cardNumber").toString())
+        .build();
+  }
+
+  default CardLimitHoldReleasedByTimeEventPayload toCardLimitHoldReleasedByTimeEventPayload(
+      Map<String, Object> payload) {
+    return CardLimitHoldReleasedByTimeEventPayload.newBuilder()
+        .setTransactionId(uuid(payload.get("transactionId")))
         .build();
   }
 }

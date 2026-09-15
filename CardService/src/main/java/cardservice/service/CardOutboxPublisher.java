@@ -72,6 +72,8 @@ public class CardOutboxPublisher {
       case CARD_CREATED -> eventPayloadMapper.toCardCreatedEventPayload(payload);
       case CARD_FROZEN -> eventPayloadMapper.toCardFrozenEventPayload(payload);
       case CARD_UNFROZEN -> eventPayloadMapper.toCardUnfrozenEventPayload(payload);
+      case CARD_LIMIT_HOLD_RELEASED_BY_TIME ->
+          eventPayloadMapper.toCardLimitHoldReleasedByTimeEventPayload(payload);
     };
   }
 }

@@ -3,9 +3,12 @@ package accountservice.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
+import accountservice.entity.AccountEntity;
+import accountservice.entity.AccountHoldEntity;
 import accountservice.repository.AccountHoldRepository;
 import accountservice.repository.AccountRepository;
 import enums.account.AccountType;
+import enums.account.ReservationStatus;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Clock;
 import java.time.Instant;
@@ -19,12 +22,13 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 class AccountSchedulerTest {
   private final AccountRepository accounts = mock(AccountRepository.class);
+  private final AccountOutboxService outbox = mock(AccountOutboxService.class);
+  private final AccountHoldRepository holds = mock(AccountHoldRepository.class);
   private final AccountInterestService interest = mock(AccountInterestService.class);
   private final SimpleMeterRegistry metrics = new SimpleMeterRegistry();
 
   private AccountScheduler scheduler(Clock clock) {
-    return new AccountScheduler(
-        accounts, mock(AccountHoldRepository.class), interest, metrics, clock);
+    return new AccountScheduler(accounts, holds, interest, metrics, outbox, clock);
   }
 
   @ParameterizedTest
@@ -62,5 +66,32 @@ class AccountSchedulerTest {
       assertThat(metrics.get("account.interest.accruals").tag("result", result).counter().count())
           .isEqualTo(1);
     }
+  }
+
+  @Test
+  void releasesExpiredHoldAndWritesOutboxEvent() {
+    var accountId = UUID.randomUUID();
+    var transactionId = UUID.randomUUID();
+    var account = new AccountEntity();
+    account.setReservedBalanceMinorUnits(100L);
+    var hold = new AccountHoldEntity();
+    hold.setAccountId(accountId);
+    hold.setTransactionId(transactionId);
+    hold.setMinorUnits(40L);
+    hold.setStatus(ReservationStatus.RESERVED);
+    when(holds.findForUpdateTop50ByReservationStatusAndExpiresAtLessThanEqualOrderByCreatedAtAsc(
+            eq(ReservationStatus.RESERVED), any(), any()))
+        .thenReturn(List.of(hold));
+    when(accounts.findByIdForUpdate(accountId)).thenReturn(java.util.Optional.of(account));
+
+    scheduler(Clock.systemUTC()).releaseFundsForTransactionByTime();
+
+    assertThat(account.getReservedBalanceMinorUnits()).isEqualTo(60L);
+    assertThat(hold.getStatus()).isEqualTo(ReservationStatus.RELEASED_BY_TIME);
+    verify(outbox)
+        .saveAccountOutboxEvent(
+            eq(transactionId),
+            eq(kafkacontracts.account.AccountEventType.ACCOUNT_HOLD_RELEASED_BY_TIME),
+            any());
   }
 }

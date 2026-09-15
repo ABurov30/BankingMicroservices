@@ -10,7 +10,9 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Map;
 import java.util.Objects;
+import kafkacontracts.account.AccountEventType;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +28,7 @@ public class AccountScheduler {
   private final AccountHoldRepository accountHoldRepository;
   private final AccountInterestService interestService;
   private final MeterRegistry meterRegistry;
+  private final AccountOutboxService accountOutboxService;
   private final Clock accountClock;
   private static final Logger log = LoggerFactory.getLogger(AccountScheduler.class);
   private static final ZoneId BUSINESS_ZONE = ZoneId.of("Europe/Paris");
@@ -95,6 +98,10 @@ public class AccountScheduler {
               accountRepository.save(account);
               accountHold.setStatus(ReservationStatus.RELEASED_BY_TIME);
               accountHold.setReleasedAt(LocalDateTime.now());
+              accountOutboxService.saveAccountOutboxEvent(
+                  accountHold.getTransactionId(),
+                  AccountEventType.ACCOUNT_HOLD_RELEASED_BY_TIME,
+                  Map.of("transactionId", accountHold.getTransactionId()));
             });
 
     accountHoldRepository.saveAll(accountHolds);

@@ -79,7 +79,13 @@ class AccountInterestAccrualIT {
   }
 
   private AccountScheduler scheduler() {
-    return new AccountScheduler(accounts, holds, interest, metrics, Clock.systemUTC());
+    return new AccountScheduler(
+        accounts,
+        holds,
+        interest,
+        metrics,
+        org.mockito.Mockito.mock(AccountOutboxService.class),
+        Clock.systemUTC());
   }
 
   private long balance() {

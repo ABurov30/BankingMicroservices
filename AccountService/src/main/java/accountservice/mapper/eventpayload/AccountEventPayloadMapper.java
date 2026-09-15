@@ -3,6 +3,7 @@ package accountservice.mapper.eventpayload;
 import java.util.Map;
 import java.util.UUID;
 import kafkacontracts.account.*;
+import kafkacontracts.card.AccountHoldReleasedByTimeEventPayload;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
@@ -46,6 +47,13 @@ public interface AccountEventPayloadMapper {
   default TransactionCompensatedEventPayload toTransactionCompensatedEventPayload(
       Map<String, Object> payload) {
     return TransactionCompensatedEventPayload.newBuilder()
+        .setTransactionId(UUID.fromString(payload.get("transactionId").toString()))
+        .build();
+  }
+
+  default AccountHoldReleasedByTimeEventPayload toAccountHoldReleasedByTimeEventPayload(
+      Map<String, Object> payload) {
+    return AccountHoldReleasedByTimeEventPayload.newBuilder()
         .setTransactionId(UUID.fromString(payload.get("transactionId").toString()))
         .build();
   }

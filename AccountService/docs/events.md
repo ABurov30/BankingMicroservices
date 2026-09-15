@@ -24,6 +24,7 @@ Known produced event categories include:
 - account unfrozen
 - transaction completed
 - transaction compensated
+- account hold released by time (contains `transactionId`; emitted transactionally by the expiry scheduler)
 
 ## Consumers
 

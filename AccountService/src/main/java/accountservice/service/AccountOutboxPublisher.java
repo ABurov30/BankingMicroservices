@@ -82,6 +82,8 @@ public class AccountOutboxPublisher {
       case TRANSACTION_COMPENSATED ->
           eventPayloadMapper.toTransactionCompensatedEventPayload(payload);
       case TRANSACTION_COMPLETED -> eventPayloadMapper.toTransactionCompletedEventPayload(payload);
+      case ACCOUNT_HOLD_RELEASED_BY_TIME ->
+          eventPayloadMapper.toAccountHoldReleasedByTimeEventPayload(payload);
     };
   }
 }

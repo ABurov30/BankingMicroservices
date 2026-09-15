@@ -6,6 +6,8 @@ import cardservice.repository.CardRepository;
 import enums.account.ReservationStatus;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.util.Map;
+import kafkacontracts.card.CardEventType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 public class CardScheduler {
   private final CardRepository cardRepository;
   private final CardLimitHoldRepository cardLimitHoldRepository;
+  private final CardOutboxService cardOutboxService;
 
   @Scheduled(fixedDelay = 5000)
   @Transactional
@@ -40,6 +43,10 @@ public class CardScheduler {
               cardRepository.save(card);
               limitsHold.setStatus(ReservationStatus.RELEASED_BY_TIME);
               limitsHold.setReleasedAt(LocalDateTime.now());
+              cardOutboxService.saveCardOutboxEvent(
+                  limitsHold.getTransactionId(),
+                  CardEventType.CARD_LIMIT_HOLD_RELEASED_BY_TIME,
+                  Map.of("transactionId", limitsHold.getTransactionId()));
             });
 
     cardLimitHoldRepository.saveAll(limitsHolds);

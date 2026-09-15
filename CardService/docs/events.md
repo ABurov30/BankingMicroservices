@@ -21,6 +21,7 @@ Known produced event categories include:
 - card created
 - card frozen
 - card unfrozen
+- card limit hold released by time (contains `transactionId`; emitted transactionally by the expiry scheduler)
 
 ## Consumers
 

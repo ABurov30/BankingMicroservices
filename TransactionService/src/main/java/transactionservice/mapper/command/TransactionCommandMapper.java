@@ -5,6 +5,8 @@ import enums.transaction.TransactionStatus;
 import java.util.UUID;
 import kafkacontracts.account.TransactionCompensatedEventPayload;
 import kafkacontracts.account.TransactionCompletedEventPayload;
+import kafkacontracts.card.AccountHoldReleasedByTimeEventPayload;
+import kafkacontracts.card.CardLimitHoldReleasedByTimeEventPayload;
 import org.mapstruct.Mapper;
 import transaction.contract.v1.CreateTransactionGrpcRequest;
 import transactionservice.dto.CreateTransactionCommand;
@@ -31,5 +33,13 @@ public interface TransactionCommandMapper {
 
   default MarkAsCommand toMarkAsCommand(TransactionCompletedEventPayload payload) {
     return new MarkAsCommand(payload.getTransactionId(), TransactionStatus.COMPLETED);
+  }
+
+  default MarkAsCommand toMarkAsCommand(AccountHoldReleasedByTimeEventPayload payload) {
+    return new MarkAsCommand(payload.getTransactionId(), TransactionStatus.FAILED);
+  }
+
+  default MarkAsCommand toMarkAsCommand(CardLimitHoldReleasedByTimeEventPayload payload) {
+    return new MarkAsCommand(payload.getTransactionId(), TransactionStatus.FAILED);
   }
 }

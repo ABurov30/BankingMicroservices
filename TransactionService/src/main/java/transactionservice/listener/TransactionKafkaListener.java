@@ -2,6 +2,8 @@ package transactionservice.listener;
 
 import kafkacontracts.account.TransactionCompensatedEventPayload;
 import kafkacontracts.account.TransactionCompletedEventPayload;
+import kafkacontracts.card.AccountHoldReleasedByTimeEventPayload;
+import kafkacontracts.card.CardLimitHoldReleasedByTimeEventPayload;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Header;
@@ -30,6 +32,25 @@ public class TransactionKafkaListener {
       topics = "#{T(kafkacontracts.account.AccountEventType).TRANSACTION_COMPENSATED.getTopic()}")
   public void handleTransactionCompensated(
       TransactionCompensatedEventPayload payload, @EventKey @Header("eventId") String eventId) {
+    transactionService.markAs(transactionCommandMapper.toMarkAsCommand(payload));
+  }
+
+  @IdempotentKafkaEvent
+  @KafkaListener(
+      topics =
+          "#{T(kafkacontracts.account.AccountEventType).ACCOUNT_HOLD_RELEASED_BY_TIME.getTopic()}")
+  public void handleAccountHoldReleasedByTime(
+      AccountHoldReleasedByTimeEventPayload payload, @EventKey @Header("eventId") String eventId) {
+    transactionService.markAs(transactionCommandMapper.toMarkAsCommand(payload));
+  }
+
+  @IdempotentKafkaEvent
+  @KafkaListener(
+      topics =
+          "#{T(kafkacontracts.card.CardEventType).CARD_LIMIT_HOLD_RELEASED_BY_TIME.getTopic()}")
+  public void handleCardLimitHoldReleasedByTime(
+      CardLimitHoldReleasedByTimeEventPayload payload,
+      @EventKey @Header("eventId") String eventId) {
     transactionService.markAs(transactionCommandMapper.toMarkAsCommand(payload));
   }
 }
