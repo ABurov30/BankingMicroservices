@@ -28,6 +28,12 @@ projection that `sourceCardId` belongs to `sourceAuthUserId`. The requested curr
 source card currency. CardService applies the requested minor units directly to card limit checks,
 holds, and spend counters.
 
+Reservation locks the source card before checking available limits and atomically commits the
+hold and both spend counters. Insufficient limits, duplicate transaction IDs, and database
+failures (including commit failures) return reservation status `FAILED`; failed database
+transactions leave neither a new hold nor increased counters. The transaction boundary is in
+`CardLimitReservationService`, called by the non-transactional `CardService` wrapper.
+
 ## REST Exposure
 
 Card REST endpoints are exposed through `ApiGateway/CardGatewayController`.

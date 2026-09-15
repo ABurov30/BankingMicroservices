@@ -26,6 +26,7 @@ class CardBatchReadTest {
           projections,
           mock(CardOutboxEventRepository.class),
           mock(CardLimitHoldRepository.class),
+          mock(CardLimitReservationService.class),
           mapper);
 
   @Test

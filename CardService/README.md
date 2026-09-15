@@ -11,6 +11,10 @@ See [development instructions](docs/development.md#test-coverage) for private pa
 Run unit and integration tests with `./mvnw clean verify -Pintegration-tests`
 after configuring the service environment and starting its dependencies.
 
+Card limit reservations lock the card and commit the hold and spend counters atomically.
+See [data integrity](docs/data.md) and the PostgreSQL concurrency/rollback tests in
+[development instructions](docs/development.md#card-limit-reservation-tests).
+
 Surefire discovers the standard test names and classes ending in `IT`.
 Use `@Tag("integration")` to exclude integration tests from the default run.
 

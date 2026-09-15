@@ -5,16 +5,11 @@ import cardservice.entity.AccountOwnershipProjectionEntity;
 import cardservice.entity.CardEntity;
 import cardservice.entity.CardLimitHoldEntity;
 import cardservice.exception.CardBlockedException;
-import cardservice.exception.CardCurrencyMismatchException;
 import cardservice.exception.CardExpiredException;
 import cardservice.exception.CardGenerationFailedException;
-import cardservice.exception.CardLimitHoldAlreadyExistsException;
 import cardservice.exception.CardNotFoundException;
 import cardservice.exception.CardsNotFoundException;
-import cardservice.exception.InsufficientDailyCardLimitException;
-import cardservice.exception.InsufficientMonthlyCardLimitException;
 import cardservice.exception.InvalidCardLimitException;
-import cardservice.exception.InvalidTransactionAmountException;
 import cardservice.mapper.result.CardResultMapper;
 import cardservice.repository.AccountOwnershipProjectionRepository;
 import cardservice.repository.CardLimitHoldRepository;
@@ -44,12 +39,12 @@ public class CardService {
   private final AccountOwnershipProjectionRepository accountOwnershipProjectionRepository;
   private final CardOutboxEventRepository cardOutboxEventRepository;
   private final CardLimitHoldRepository cardLimitHoldRepository;
+  private final CardLimitReservationService cardLimitReservationService;
   private final CardResultMapper resultMapper;
   private static final int CARD_EXPIRATION_YEARS = 5;
   private static final String CARD_BIN = "400000";
   private static final int PAN_LENGTH = 16;
   private static final int ATTEMPTS_TO_GENERATE_PAN = 10;
-  private static final long HOLD_TTL_MINUTES = 5;
   private static final Logger log = LoggerFactory.getLogger(CardService.class);
 
   private String generateUniquePan() {
@@ -372,83 +367,11 @@ public class CardService {
   public ReserveLimitsForTransactionResult reserveLimitsForTransaction(
       ReserveLimitsForTransactionCommand command) {
     try {
-      if (cardLimitHoldRepository.existsByTransactionId(command.transactionId())) {
-        throw new CardLimitHoldAlreadyExistsException(command.transactionId());
-      }
-
-      var isAmountNegative = command.minorUnits().compareTo(Long.valueOf(0)) < 0;
-
-      if (isAmountNegative) {
-        throw new InvalidTransactionAmountException(command.transactionId());
-      }
-
-      var card =
-          cardRepository
-              .findById(command.sourceCardId())
-              .orElseThrow(() -> new CardNotFoundException(command.sourceCardId()));
-
-      if (!isAccountOwnedBy(card.getAccountId(), command.sourceAuthUserId())) {
-        throw new CardNotFoundException(command.sourceCardId());
-      }
-
-      if (card.getCurrency() != command.currency()) {
-        throw new CardCurrencyMismatchException(
-            command.transactionId(), card.getCurrency(), command.currency());
-      }
-
-      validateLimitsForTransaction(command, card);
-
-      createCardLimitHold(command, card);
-
-      reserveLimitOnCard(command, card);
-
-      return new ReserveLimitsForTransactionResult(
-          ReservationStatus.RESERVED, "Limits reserved for transaction " + command.transactionId());
+      return cardLimitReservationService.reserve(command);
     } catch (Exception e) {
       log.error("Failed to reserve limits: transactionId={}", command.transactionId(), e);
       return new ReserveLimitsForTransactionResult(ReservationStatus.FAILED, e.getMessage());
     }
-  }
-
-  private void validateLimitsForTransaction(
-      ReserveLimitsForTransactionCommand command, CardEntity card) {
-    Long availableDailyLimits =
-        card.getDailyLimitMinorUnits() - card.getSpendDailyLimitMinorUnits();
-    Long availableMonthlyLimits =
-        card.getMonthlyLimitMinorUnits() - card.getSpendMonthlyLimitMinorUnits();
-
-    if (availableDailyLimits.compareTo(command.minorUnits()) < 0) {
-      throw new InsufficientDailyCardLimitException(command.transactionId());
-    }
-
-    if (availableMonthlyLimits.compareTo(command.minorUnits()) < 0) {
-      throw new InsufficientMonthlyCardLimitException(command.transactionId());
-    }
-  }
-
-  private void createCardLimitHold(ReserveLimitsForTransactionCommand command, CardEntity card) {
-    var carLimitHold = new CardLimitHoldEntity();
-    carLimitHold.setCardId(card.getId());
-    carLimitHold.setMinorUnits(command.minorUnits());
-    carLimitHold.setTransactionId(command.transactionId());
-    carLimitHold.setStatus(ReservationStatus.RESERVED);
-    carLimitHold.setExpiresAt(LocalDateTime.now().plusMinutes(HOLD_TTL_MINUTES));
-    cardLimitHoldRepository.save(carLimitHold);
-  }
-
-  private void reserveLimitOnCard(ReserveLimitsForTransactionCommand command, CardEntity card) {
-    card.setSpendDailyLimitMinorUnits(card.getSpendDailyLimitMinorUnits() + command.minorUnits());
-    card.setSpendMonthlyLimitMinorUnits(
-        card.getSpendMonthlyLimitMinorUnits() + command.minorUnits());
-    cardRepository.save(card);
-  }
-
-  private boolean isAccountOwnedBy(UUID accountId, UUID authUserId) {
-    return authUserId != null
-        && accountOwnershipProjectionRepository
-            .findById(accountId)
-            .map(projection -> projection.getOwnerAuthUserId().equals(authUserId))
-            .orElse(false);
   }
 
   @Transactional

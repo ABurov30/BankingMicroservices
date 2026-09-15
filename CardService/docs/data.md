@@ -49,6 +49,18 @@ card/account currency.
 
 `card_limit_holds.transaction_id` is unique and provides idempotency for card limit reservations.
 
+`CardLimitReservationService.reserve` runs in one Spring transaction. It acquires a
+`PESSIMISTIC_WRITE` lock through `CardRepository.findByIdForUpdate` before checking available
+daily and monthly limits. The hold insert and both spend counter updates commit together;
+the card lock remains held until the transaction ends. Concurrent reservations for the same
+card therefore check counters that include the preceding committed reservation.
+
+The unique transaction ID constraint also protects concurrent duplicate requests: the initial
+existence check alone cannot prevent that race. A duplicate insert or another database failure
+rolls back the hold and counter changes. The non-transactional `CardService` wrapper catches
+exceptions outside the reservation bean's transaction boundary, including commit failures,
+and returns `FAILED`. A duplicate request returns `FAILED`, rather than replaying `RESERVED`.
+
 Consumed Kafka events atomically claim their unique `event_key` in `processed_events` before the
 handler runs. The claim and business operation share one database transaction: duplicates are
 skipped, while a handler failure rolls back both changes. The service exports skipped-event counts

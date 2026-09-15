@@ -80,8 +80,25 @@ For private packages, export `GITHUB_TOKEN` and run:
 
 Open `target/site/jacoco/index.html` in a browser. `./mvnw test` collects coverage
 in `target/jacoco.exec`; the report is generated during `verify`.
-No minimum coverage threshold is enforced. This service currently has no unit tests,
-so the default run executes zero tests and may have no coverage report after `clean`.
+No minimum coverage threshold is enforced. The default run executes unit tests; integration
+tests require the `integration-tests` Maven profile.
+
+## Card Limit Reservation Tests
+
+`CardLimitReservationIT` uses a disposable PostgreSQL 16 Testcontainers database and the real
+Liquibase migrations. Docker must be running; Kafka and the service's shared database are not
+needed for this JPA slice test. Run only these integration tests with:
+
+```bash
+./mvnw -s .mvn/settings-docker.xml -Pintegration-tests -Dtest=CardLimitReservationIT test
+```
+
+The tests call the Spring-managed `CardService` and `CardLimitReservationService` beans with
+independent transactions. A barrier after the hold existence query forces concurrent requests
+to overlap before the card lock is acquired. They verify daily and monthly limit contention,
+concurrent duplicate transaction IDs, and the persisted hold and both counters. A deferred
+PostgreSQL trigger injects a failure at commit to verify rollback of both writes and the
+`FAILED` response from the outer service. The trigger exists only in the disposable test database.
 
 ## Common Change Areas
 
