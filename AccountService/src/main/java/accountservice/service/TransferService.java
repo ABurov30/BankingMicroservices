@@ -16,6 +16,7 @@ import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import kafkacontracts.account.AccountEventType;
 import lombok.RequiredArgsConstructor;
@@ -66,14 +67,21 @@ public class TransferService {
       return;
     }
 
-    var targetAccount =
-        accountRepository
-            .findByIdForUpdate(command.targetAccountId())
-            .orElseThrow(() -> new AccountNotFoundException(command.targetAccountId()));
+    var accounts =
+        accountRepository.findByIdInForUpdate(
+            List.of(accountHold.getAccountId(), command.targetAccountId()));
+
     var sourceAccount =
-        accountRepository
-            .findByIdForUpdate(accountHold.getAccountId())
+        accounts.stream()
+            .filter((a) -> a.getId().equals(accountHold.getAccountId()))
+            .findFirst()
             .orElseThrow(() -> new AccountNotFoundException(accountHold.getAccountId()));
+
+    var targetAccount =
+        accounts.stream()
+            .filter((a) -> a.getId().equals(command.targetAccountId()))
+            .findFirst()
+            .orElseThrow(() -> new AccountNotFoundException(command.targetAccountId()));
 
     var sourceCurrency = sourceAccount.getCurrency().getName();
     var targetCurrency = targetAccount.getCurrency().getName();
@@ -135,10 +143,22 @@ public class TransferService {
   public ReserveFundsForTransactionResult reserveFundsForTransactional(
       ReserveFundsForTransactionCommand command) {
     try {
+
+      var accounts =
+          accountRepository.findByIdInForUpdate(
+              List.of(command.sourceAccountId(), command.targetAccountId()));
+
       var sourceAccount =
-          accountRepository
-              .findByIdForUpdate(command.sourceAccountId())
+          accounts.stream()
+              .filter((a) -> a.getId().equals(command.sourceAccountId()))
+              .findFirst()
               .orElseThrow(() -> new AccountNotFoundException(command.sourceAccountId()));
+
+      var targetAccount =
+          accounts.stream()
+              .filter((a) -> a.getId().equals(command.targetAccountId()))
+              .findFirst()
+              .orElseThrow(() -> new AccountNotFoundException(command.targetAccountId()));
 
       if (sourceAccount.getCurrency().getName() != command.currency()) {
         throw new AccountCurrencyMismatchException(
@@ -147,11 +167,6 @@ public class TransferService {
             sourceAccount.getCurrency().getName(),
             command.currency());
       }
-
-      var targetAccount =
-          accountRepository
-              .findById(command.targetAccountId())
-              .orElseThrow(() -> new AccountNotFoundException(command.targetAccountId()));
 
       if (!sourceAccount.getOwnerAuthUserId().equals(command.sourceAuthUserId())) {
         throw new AccountOwnershipException();

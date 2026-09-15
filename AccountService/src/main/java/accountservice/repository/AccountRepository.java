@@ -25,6 +25,10 @@ public interface AccountRepository extends JpaRepository<AccountEntity, UUID> {
   Optional<AccountEntity> findByIdForUpdate(@Param("accountId") UUID accountId);
 
   @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @Query("SELECT a FROM AccountEntity a WHERE a.id IN (:accountIds) ORDER BY a.id")
+  List<AccountEntity> findByIdInForUpdate(@Param("accountIds") List<UUID> accountIds);
+
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
   @Query("SELECT a from AccountEntity a WHERE a.ownerUserId = :ownerUserId")
   Optional<List<AccountEntity>> findAllByOwnerUserIdForUpdate(
       @Param("ownerUserId") UUID ownerUserId);

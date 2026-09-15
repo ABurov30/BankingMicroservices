@@ -180,4 +180,74 @@ public class TransferServiceConcurrencyIT {
       pool.shutdownNow();
     }
   }
+
+  @Test
+  void shouldReserveOppositeTransfersWithoutDeadlock() {
+    topUpAccount(10000L, SOURCE_ACCOUNT_ID);
+    topUpAccount(10000L, TARGET_ACCOUNT_ID);
+
+    int threads = 2;
+
+    ExecutorService pool = Executors.newFixedThreadPool(threads);
+    CountDownLatch start = new CountDownLatch(1);
+    CountDownLatch ready = new CountDownLatch(threads);
+    List<Future<ReserveFundsForTransactionResult>> futures = new ArrayList<>();
+
+    try {
+      futures.add(
+          pool.submit(
+              () -> {
+                ready.countDown();
+                start.await();
+                return transferService.reserveFundsForTransactional(
+                    new ReserveFundsForTransactionCommand(
+                        SOURCE_ACCOUNT_ID,
+                        TARGET_ACCOUNT_ID,
+                        7000L,
+                        UUID.randomUUID(),
+                        OWNER_AUTH_USER_ID,
+                        Currency.USD));
+              }));
+      futures.add(
+          pool.submit(
+              () -> {
+                ready.countDown();
+                start.await();
+                return transferService.reserveFundsForTransactional(
+                    new ReserveFundsForTransactionCommand(
+                        TARGET_ACCOUNT_ID,
+                        SOURCE_ACCOUNT_ID,
+                        7000L,
+                        UUID.randomUUID(),
+                        OWNER_AUTH_USER_ID,
+                        Currency.USD));
+              }));
+
+      assertThat(ready.await(5, TimeUnit.SECONDS)).as("Оба потока готовы к старту").isTrue();
+      start.countDown();
+
+      assertThat(futures.get(0).get(10, TimeUnit.SECONDS).status())
+          .isEqualTo(ReservationStatus.RESERVED);
+      assertThat(futures.get(1).get(10, TimeUnit.SECONDS).status())
+          .isEqualTo(ReservationStatus.RESERVED);
+
+      assertThat(
+              accountRepository
+                  .findById(SOURCE_ACCOUNT_ID)
+                  .orElseThrow()
+                  .getReservedBalanceMinorUnits())
+          .isEqualTo(7000L);
+      assertThat(
+              accountRepository
+                  .findById(TARGET_ACCOUNT_ID)
+                  .orElseThrow()
+                  .getReservedBalanceMinorUnits())
+          .isEqualTo(7000L);
+      assertThat(accountHoldRepository.count()).isEqualTo(2);
+    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      throw new RuntimeException(e);
+    } finally {
+      pool.shutdownNow();
+    }
+  }
 }
