@@ -37,6 +37,10 @@ The default local file is `.env.local`. Set `ENV_FILE` to use a different file.
 | `AUTH_COOKIE_DOMAIN` | empty | Optional `Domain` attribute for auth cookies |
 | `AUTH_COOKIE_SAME_SITE` | `Strict` | `SameSite` attribute for JWT auth cookies |
 | `AUTH_COOKIE_SECURE` | `true` | `Secure` attribute for auth cookies |
+| `ACCOUNT_OVERVIEW_CACHE_ENABLED` | `true` | Enables the account-overview cache |
+| `ACCOUNT_OVERVIEW_CACHE_L1_TTL` | `2s` | L1 cache entry lifetime |
+| `ACCOUNT_OVERVIEW_CACHE_L2_TTL` | `5s` | L2 cache entry lifetime |
+| `ACCOUNT_OVERVIEW_CACHE_L1_MAX_SIZE` | `10000` | Maximum number of entries retained in L1 |
 
 ## Cookie Scope
 
