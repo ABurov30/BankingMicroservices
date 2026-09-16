@@ -16,7 +16,13 @@ import org.springframework.test.context.ActiveProfiles;
 
 @Tag("integration")
 @ActiveProfiles("test")
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    webEnvironment = WebEnvironment.RANDOM_PORT,
+    properties = {
+      "spring.kafka.listener.auto-startup=false",
+      "KAFKA_BOOTSTRAP_SERVERS=localhost:9092",
+      "SCHEMA_REGISTRY_URL=http://localhost:8081"
+    })
 class ApiGatewayApplicationTests {
 
   @LocalServerPort private int port;

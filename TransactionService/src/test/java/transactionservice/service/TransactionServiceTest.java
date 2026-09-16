@@ -4,44 +4,37 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import enums.account.ReservationStatus;
 import enums.common.Currency;
 import enums.transaction.TransactionStatus;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
-import transactionservice.client.AccountGrpcClient;
-import transactionservice.client.CardGrpcClient;
 import transactionservice.dto.CreateTransactionCommand;
 import transactionservice.dto.MarkAsCommand;
-import transactionservice.dto.ReservationResponseDto;
-import transactionservice.dto.ReserveFudsForTransactionResponseDto;
 import transactionservice.entity.TransactionEntity;
 import transactionservice.grpc.TransactionStatusStreamRegistry;
 import transactionservice.mapper.grpc.TransactionGrpcMapper;
 import transactionservice.mapper.result.TransactionResultMapper;
-import transactionservice.repository.TransactionOutboxEventRepository;
 import transactionservice.repository.TransactionRepository;
 
 class TransactionServiceTest {
   private final TransactionRepository transactions = mock(TransactionRepository.class);
   private final TransactionStatusStreamRegistry streams =
       mock(TransactionStatusStreamRegistry.class);
-  private final AccountGrpcClient accountGrpcClient = mock(AccountGrpcClient.class);
-  private final CardGrpcClient cardGrpcClient = mock(CardGrpcClient.class);
   private final TransactionResultMapper transactionResultMapper =
       mock(TransactionResultMapper.class);
+  private final ReservationService reservations = mock(ReservationService.class);
+  private final RequestFundsService requestFunds = mock(RequestFundsService.class);
   private final TransactionService service =
       new TransactionService(
-          accountGrpcClient,
-          mock(TransactionOutboxEventRepository.class),
           transactions,
           mock(TransactionGrpcMapper.class),
-          cardGrpcClient,
           streams,
           transactionResultMapper,
-          mock(TransactionIdempotencyService.class));
+          mock(TransactionIdempotencyService.class),
+          reservations,
+          requestFunds);
   private final UUID transactionId = UUID.randomUUID();
 
   @Test
@@ -85,7 +78,7 @@ class TransactionServiceTest {
   }
 
   @Test
-  void createsTransactionAfterBothReservationsSucceed() {
+  void delegatesSuccessfulCreationToReservationAndFundsRequestSteps() {
     UUID source = UUID.randomUUID();
     UUID target = UUID.randomUUID();
     var command =
@@ -105,16 +98,13 @@ class TransactionServiceTest {
     entity.setCurrency(Currency.USD);
     when(transactions.findByIdempotencyKey(command.idempotencyKey())).thenReturn(Optional.empty());
     when(transactions.saveAndFlush(any(TransactionEntity.class))).thenReturn(entity);
-    when(cardGrpcClient.reserveLimitsForTransaction(any()))
-        .thenReturn(new ReservationResponseDto(ReservationStatus.RESERVED, "ok"));
-    when(accountGrpcClient.reserveFundsForTransaction(any()))
-        .thenReturn(
-            new ReserveFudsForTransactionResponseDto(
-                null, null, new ReservationResponseDto(ReservationStatus.RESERVED, "ok")));
     when(transactionResultMapper.toCreateTransactionResult(entity)).thenReturn(null);
+
     assertThat(service.createTransaction(command)).isNull();
-    assertThat(entity.getStatus()).isEqualTo(TransactionStatus.FUNDS_REQUESTED);
-    verify(transactions).save(entity);
-    verify(streams).notifyStatusChanged(entity);
+
+    var order = inOrder(reservations, requestFunds, streams);
+    order.verify(reservations).reserve(command, entity);
+    order.verify(requestFunds).requestFunds(command, entity);
+    order.verify(streams).notifyStatusChanged(entity);
   }
 }

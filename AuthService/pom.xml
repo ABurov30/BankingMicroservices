@@ -88,12 +88,12 @@
         <dependency>
             <groupId>com.burov</groupId>
             <artifactId>kafka-contracts</artifactId>
-            <version>0.0.16</version>
+            <version>0.0.18</version>
         </dependency>
         <dependency>
             <groupId>com.burov</groupId>
             <artifactId>support</artifactId>
-            <version>0.0.4</version>
+            <version>0.0.5</version>
         </dependency>
         <dependency>
             <groupId>io.confluent</groupId>

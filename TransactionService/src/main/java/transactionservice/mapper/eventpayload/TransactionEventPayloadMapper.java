@@ -2,6 +2,7 @@ package transactionservice.mapper.eventpayload;
 
 import java.util.Map;
 import java.util.UUID;
+import kafkacontracts.account.TransactionCardLimitHoldCompensationEventPayload;
 import kafkacontracts.account.TransactionFailedEventPayload;
 import kafkacontracts.account.TransactionFundsRequestedEventPayload;
 import org.mapstruct.Mapper;
@@ -24,6 +25,13 @@ public interface TransactionEventPayloadMapper {
         .setTransactionId(UUID.fromString(payload.get("transactionId").toString()))
         .setAuthUserId(UUID.fromString(payload.get("authUserId").toString()))
         .setTargetAccountId(UUID.fromString(payload.get("targetAccountId").toString()))
+        .build();
+  }
+
+  default TransactionCardLimitHoldCompensationEventPayload
+      toTransactionCardLimitHoldCompensationEventPayload(Map<String, Object> payload) {
+    return TransactionCardLimitHoldCompensationEventPayload.newBuilder()
+        .setTransactionId(UUID.fromString(payload.get("transactionId").toString()))
         .build();
   }
 

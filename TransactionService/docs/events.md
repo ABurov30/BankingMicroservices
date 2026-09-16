@@ -15,12 +15,19 @@ Transaction state changes are published through `TransactionOutboxPublisher`.
 
 Known produced event categories include:
 
-- transaction created or started
-- transaction failed
+- `TRANSACTION_FUNDS_REQUESTED` after both holds have been reserved
+- `TRANSACTION_FAILED` after reservation failure
+- `TRANSACTION_CARD_LIMIT_HOLD_COMPENSATION` to CardService after a failed reservation
 
 `TRANSACTION_FAILED` uses `TransactionFailedEventPayload` from `kafka-contracts`; payload contains
 `authUserId`, `amountMinorUnits`, and `currency`. Currency mismatch during card-limit or
 account-funds reservation fails the transaction and emits this event.
+
+`TRANSACTION_CARD_LIMIT_HOLD_COMPENSATION` uses
+`TransactionCardLimitHoldCompensationEventPayload` and contains `transactionId`. CardService
+handles it idempotently: a reserved hold is released and marked `COMPENSATED`; an absent or already
+released hold is a no-op. For an explicit AccountService reservation rejection, only the card hold
+is compensated because no account hold was created.
 
 ## Consumers
 
@@ -36,7 +43,7 @@ If transaction statuses or event payloads change, update AccountService compensa
 
 | Topics | Order owner / outbox aggregateId |
 | --- | --- |
-| transaction.funds.requested, transaction.failed | `transactionId` |
+| transaction.funds.requested, transaction.failed, transaction.card-limit-hold-compensation | `transactionId` |
 
 The service outbox factory sets `eventKey = aggregateId.toString()`. Event type,
 direction and event ID never participate in the key. Publishers send the stored key

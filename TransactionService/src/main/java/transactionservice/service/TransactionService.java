@@ -2,49 +2,39 @@ package transactionservice.service;
 
 import account.contract.v1.AccountResponse;
 import account.contract.v1.RecipientAccount;
-import enums.account.ReservationStatus;
 import enums.transaction.TransactionStatus;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
-import kafkacontracts.transaction.TransactionEventType;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import transaction.contract.v1.TransactionResponse;
-import transactionservice.client.AccountGrpcClient;
-import transactionservice.client.CardGrpcClient;
 import transactionservice.dto.CreateTransactionCommand;
 import transactionservice.dto.CreateTransactionResult;
 import transactionservice.dto.MarkAsCommand;
-import transactionservice.dto.ReservationResponseDto;
 import transactionservice.entity.TransactionEntity;
-import transactionservice.entity.TransactionOutboxEventEntity;
-import transactionservice.exception.FundsReservationFailedException;
 import transactionservice.exception.IdempotencyPayloadMismatchException;
 import transactionservice.grpc.TransactionStatusStreamRegistry;
 import transactionservice.mapper.grpc.TransactionGrpcMapper;
 import transactionservice.mapper.result.TransactionResultMapper;
-import transactionservice.repository.TransactionOutboxEventRepository;
 import transactionservice.repository.TransactionRepository;
 
 @Service
 @RequiredArgsConstructor
 public class TransactionService {
-  private final AccountGrpcClient accountGrpcClient;
-  private final TransactionOutboxEventRepository transactionOutboxEventRepository;
   private final TransactionRepository transactionRepository;
   private final TransactionGrpcMapper grpcMapper;
-  private final CardGrpcClient cardGrpcClient;
   private final TransactionStatusStreamRegistry transactionStatusStreamRegistry;
   private final TransactionResultMapper transactionResultMapper;
   private final TransactionIdempotencyService transactionIdempotencyService;
+  private final ReservationService reservationService;
+  private final RequestFundsService requestFundsService;
   private static final Logger log = LoggerFactory.getLogger(TransactionService.class);
 
   private TransactionEntity saveTransaction(CreateTransactionCommand command) {
@@ -54,43 +44,10 @@ public class TransactionService {
     transaction.setIdempotencyKey(command.idempotencyKey());
     transaction.setMinorUnits(command.minorUnits());
     transaction.setCurrency(command.currency());
-    transaction.setStatus(TransactionStatus.FUNDS_RESERVED);
+    transaction.setStatus(TransactionStatus.CREATED);
     return transactionRepository.saveAndFlush(transaction);
   }
 
-  private TransactionOutboxEventEntity saveTransactionOutboxEvent(
-      TransactionEntity transaction, TransactionEventType eventType, Map<String, Object> payload) {
-    var transactionOutboxEvent =
-        TransactionOutboxEventFactory.create(transaction.getId(), eventType);
-    transactionOutboxEvent.setPayload(payload);
-    return transactionOutboxEventRepository.save(transactionOutboxEvent);
-  }
-
-  private void onReservationFailed(
-      TransactionEntity transaction,
-      ReservationResponseDto reservationResponse,
-      CreateTransactionCommand command,
-      String exceptionMessage) {
-    transaction.setErrorMessage(reservationResponse.message());
-    transaction.setStatus(TransactionStatus.FAILED);
-    transaction.setCompletedAt(LocalDateTime.now());
-    transactionRepository.save(transaction);
-    transactionStatusStreamRegistry.notifyStatusChanged(transaction);
-
-    saveTransactionOutboxEvent(
-        transaction,
-        TransactionEventType.TRANSACTION_FAILED,
-        Map.of(
-            "amountMinorUnits",
-            transaction.getMinorUnits(),
-            "currency",
-            transaction.getCurrency().name(),
-            "authUserId",
-            command.sourceAuthUserId()));
-    throw new FundsReservationFailedException(exceptionMessage + " " + transaction.getId());
-  }
-
-  @Transactional(dontRollbackOn = FundsReservationFailedException.class)
   public CreateTransactionResult createTransaction(CreateTransactionCommand command) {
 
     var optionalTransaction = transactionRepository.findByIdempotencyKey(command.idempotencyKey());
@@ -114,38 +71,15 @@ public class TransactionService {
       return transactionIdempotencyService.getExistingTransactionResult(command);
     }
 
-    var reservationLimitsResponse =
-        cardGrpcClient.reserveLimitsForTransaction(
-            grpcMapper.toReserveLimitsForTransactionGrpcRequest(transaction, command));
-
-    if (reservationLimitsResponse.status() == ReservationStatus.FAILED) {
-      onReservationFailed(
-          transaction, reservationLimitsResponse, command, "Reservation limits failed");
-    }
-
-    var reservationFundsResponse =
-        accountGrpcClient.reserveFundsForTransaction(
-            grpcMapper.toReserveFundsForTransactionGrpcRequest(
-                transaction, command.sourceAuthUserId()));
-
-    if (reservationFundsResponse.reservationResponse().status() == ReservationStatus.FAILED) {
-      onReservationFailed(
-          transaction,
-          reservationFundsResponse.reservationResponse(),
-          command,
-          "Reservation funds failed");
-    }
-
-    transaction.setStatus(TransactionStatus.FUNDS_REQUESTED);
-    transactionRepository.save(transaction);
     transactionStatusStreamRegistry.notifyStatusChanged(transaction);
-    saveTransactionOutboxEvent(
-        transaction,
-        TransactionEventType.TRANSACTION_FUNDS_REQUESTED,
-        Map.of(
-            "transactionId", transaction.getId(),
-            "targetAccountId", transaction.getTargetAccountId(),
-            "authUserId", command.sourceAuthUserId()));
+
+    reservationService.reserve(command, transaction);
+
+    transactionStatusStreamRegistry.notifyStatusChanged(transaction);
+
+    requestFundsService.requestFunds(command, transaction);
+
+    transactionStatusStreamRegistry.notifyStatusChanged(transaction);
 
     return transactionResultMapper.toCreateTransactionResult(transaction);
   }

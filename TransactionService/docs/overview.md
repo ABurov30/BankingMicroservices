@@ -4,7 +4,9 @@
 
 ## Responsibility
 
-`TransactionService` owns transaction records and transaction state transitions. It uses `CardService` over gRPC to reserve card limits and `AccountService` over gRPC to reserve funds before committing transaction state.
+`TransactionService` owns transaction records and coordinates the reservation Saga. It uses
+`CardService` over gRPC to reserve card limits, persists the successful card reservation locally,
+then calls `AccountService` to reserve funds.
 
 ## Runtime Role
 
@@ -29,3 +31,15 @@
 ## Integration Boundaries
 
 `TransactionService` should not mutate account balances or card spend counters directly. Funds movements are delegated to `AccountService`; card limit reservations are delegated to `CardService`.
+
+## Reservation Saga
+
+`CREATED` is persisted before any remote call. After CardService succeeds,
+`CARD_LIMIT_RESERVED` is committed in its own local transaction before the AccountService gRPC
+call. A successful account reservation advances the transaction to `FUNDS_RESERVED`, followed by
+`FUNDS_REQUESTED` when the transfer request is added to the outbox.
+
+If a reservation fails, TransactionService atomically stores `FAILED`, the error message,
+`TRANSACTION_FAILED`, and `TRANSACTION_CARD_LIMIT_HOLD_COMPENSATION` in one local transaction.
+The compensation event releases the idempotent card hold. Database transactions never span gRPC
+calls.

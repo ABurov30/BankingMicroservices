@@ -44,7 +44,7 @@ public class TransactionOutboxPublisher {
             .setHeader(KafkaHeaders.TOPIC, event.getTopic())
             .setHeader(KafkaHeaders.KEY, event.getEventKey())
             .setHeader("eventId", event.getId().toString());
-    // Recheck after payload mapping, before entering the Kafka producer.
+
     if (!repository.ownsAttempt(
         event.getId(), event.getLockedBy(), properties.lease().toMillis())) {
       throw new IllegalStateException("Outbox attempt no longer owns its lease: " + event.getId());
@@ -73,6 +73,8 @@ public class TransactionOutboxPublisher {
       case TRANSACTION_FAILED -> eventPayloadMapper.toTransactionFailedEventPayload(payload);
       case TRANSACTION_FUNDS_REQUESTED ->
           eventPayloadMapper.toTransactionFundsRequestedEventPayload(payload);
+      case TRANSACTION_CARD_LIMIT_HOLD_COMPENSATION ->
+          eventPayloadMapper.toTransactionCardLimitHoldCompensationEventPayload(payload);
     };
   }
 }

@@ -3,11 +3,7 @@ package cardservice.listener;
 import cardservice.mapper.command.CardCommandMapper;
 import cardservice.service.CardService;
 import enums.common.Currency;
-import kafkacontracts.account.AccountCreatedEventPayload;
-import kafkacontracts.account.AccountFrozenEventPayload;
-import kafkacontracts.account.AccountUnfrozenEventPayload;
-import kafkacontracts.account.TransactionCompensatedEventPayload;
-import kafkacontracts.account.TransactionCompletedEventPayload;
+import kafkacontracts.account.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Header;
@@ -62,5 +58,17 @@ public class CardKafkaListener {
       TransactionCompletedEventPayload payload, @EventKey @Header("eventId") String eventId) {
     cardService.markLimitReservationAsReleased(
         commandMapper.toMarkLimitReservationAsReleasedCommand(payload));
+  }
+
+  @IdempotentKafkaEvent
+  @KafkaListener(
+      topics =
+          "#{T(kafkacontracts.transaction.TransactionEventType)"
+              + ".TRANSACTION_CARD_LIMIT_HOLD_COMPENSATION.getTopic()}")
+  public void handleTransactionCardLimitHoldCompensation(
+      TransactionCardLimitHoldCompensationEventPayload payload,
+      @EventKey @Header("eventId") String eventId) {
+    cardService.compensateLimitsForTransaction(
+        commandMapper.toCompensateLimitsForTransactionCommand(payload));
   }
 }

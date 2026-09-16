@@ -96,5 +96,10 @@ so the default run executes zero tests and may have no coverage report after `cl
 ## Common Change Areas
 
 - Transaction creation: verify CardService limit reservation and AccountService funds reservation flows.
+- Reservation failures: test CardService success followed by an AccountService rejection. Verify the
+  persisted `FAILED` status and reason, the card-compensation and failure outbox records, and
+  idempotent card-hold release in an integration environment. `ReservationServiceIT` covers the
+  TransactionService database and outbox portion with PostgreSQL Testcontainers; CardService owns
+  verification of hold release.
 - Transaction query behavior: update DTO and gRPC mappers.
 - State transitions: update event payloads, listeners, and tests.

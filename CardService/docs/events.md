@@ -11,6 +11,12 @@
 | `ACCOUNT_UNFROZEN` | `AccountService` | Restore related card availability |
 | `TRANSACTION_COMPLETED` | `AccountService` | Mark card limit reservation as released after a completed transaction |
 | `TRANSACTION_COMPENSATED` | `AccountService` | Release reserved card limits for a compensated transaction |
+| `TRANSACTION_CARD_LIMIT_HOLD_COMPENSATION` | `TransactionService` | Compensate a card limit hold when AccountService rejects funds reservation |
+
+`TRANSACTION_CARD_LIMIT_HOLD_COMPENSATION` carries `transactionId`. CardService handles the event
+idempotently: a `RESERVED` hold releases its daily and monthly limits and becomes `COMPENSATED`;
+an absent or non-reserved hold is a no-op. The event is published by TransactionService from its
+outbox after it records the failed reservation.
 
 ## Produced Events
 
@@ -37,6 +43,10 @@ If account event semantics change, update both the projection listener and any c
 `cards.currency` and `account_ownership_projection.currency`.
 
 If transaction completion or compensation semantics change, update card limit hold release behavior and the scheduler assumptions together.
+
+`CardLimitReservationIT.compensationEventReleasesReservedHoldAndCardLimits` verifies the
+PostgreSQL-backed compensation operation: a real reserved hold is compensated and both card spend
+counters are restored. The Kafka listener is covered separately as a unit-level delegation.
 
 ## Kafka key strategy
 

@@ -14,6 +14,9 @@ after configuring the service environment and starting its dependencies.
 Card limit reservations lock the card and commit the hold and spend counters atomically.
 See [data integrity](docs/data.md) and the PostgreSQL concurrency/rollback tests in
 [development instructions](docs/development.md#card-limit-reservation-tests).
+When AccountService rejects a transaction reservation, TransactionService sends an idempotent
+card-hold compensation event; CardService restores the reserved limits and marks the hold
+`COMPENSATED`. See [event semantics](docs/events.md#consumed-events).
 
 Surefire discovers the standard test names and classes ending in `IT`.
 Use `@Tag("integration")` to exclude integration tests from the default run.

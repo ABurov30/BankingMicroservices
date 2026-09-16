@@ -10,11 +10,7 @@ import enums.auth.Roles;
 import enums.card.CardStatus;
 import enums.common.Currency;
 import java.util.UUID;
-import kafkacontracts.account.AccountCreatedEventPayload;
-import kafkacontracts.account.AccountFrozenEventPayload;
-import kafkacontracts.account.AccountUnfrozenEventPayload;
-import kafkacontracts.account.TransactionCompensatedEventPayload;
-import kafkacontracts.account.TransactionCompletedEventPayload;
+import kafkacontracts.account.*;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
@@ -85,6 +81,11 @@ public interface CardCommandMapper {
 
   default CompensateLimitsForTransactionCommand toCompensateLimitsForTransactionCommand(
       TransactionCompensatedEventPayload payload) {
+    return new CompensateLimitsForTransactionCommand(payload.getTransactionId());
+  }
+
+  default CompensateLimitsForTransactionCommand toCompensateLimitsForTransactionCommand(
+      TransactionCardLimitHoldCompensationEventPayload payload) {
     return new CompensateLimitsForTransactionCommand(payload.getTransactionId());
   }
 

@@ -23,10 +23,16 @@ Primary storage is PostgreSQL. Schema changes are managed by Liquibase under `sr
 ## Migration Files
 
 - `001-create-transaction-tables.sql`
+- `005-add-transaction-saga-statuses.sql`
 
 ## Data Integrity Notes
 
 Transaction state, card limit reservation state, and account reservation state are coupled through events and gRPC calls. Avoid changing one side of the flow without checking failure and compensation behavior.
+
+Transaction states progress through `CREATED`, `CARD_LIMIT_RESERVED`, `FUNDS_RESERVED`, and
+`FUNDS_REQUESTED`. `FAILED`, `COMPENSATED`, and `COMPLETED` are terminal states. Migration `005`
+adds the two reservation-in-progress states and permits the card-hold compensation event in the
+transaction outbox constraint.
 
 Consumed Kafka events use processed-event tracking through the `processedevent` helpers in
 `com.burov:support`.

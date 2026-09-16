@@ -2,6 +2,7 @@ package cardservice.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import cardservice.dto.CompensateLimitsForTransactionCommand;
 import cardservice.dto.ReserveLimitsForTransactionCommand;
 import cardservice.dto.ReserveLimitsForTransactionResult;
 import cardservice.entity.AccountOwnershipProjectionEntity;
@@ -155,6 +156,26 @@ class CardLimitReservationIT {
     var card = cards.findById(cardId).orElseThrow();
     assertThat(card.getSpendDailyLimitMinorUnits()).isZero();
     assertThat(card.getSpendMonthlyLimitMinorUnits()).isZero();
+  }
+
+  @Test
+  void compensationEventReleasesReservedHoldAndCardLimits() {
+    var transactionId = UUID.randomUUID();
+    assertThat(service.reserveLimitsForTransaction(command(transactionId)).status())
+        .isEqualTo(ReservationStatus.RESERVED);
+    service.compensateLimitsForTransaction(
+        new CompensateLimitsForTransactionCommand(transactionId));
+
+    var card = cards.findById(cardId).orElseThrow();
+    assertThat(card.getSpendDailyLimitMinorUnits()).isZero();
+    assertThat(card.getSpendMonthlyLimitMinorUnits()).isZero();
+    assertThat(holds.findByTransactionId(transactionId))
+        .get()
+        .satisfies(
+            hold -> {
+              assertThat(hold.getStatus()).isEqualTo(ReservationStatus.COMPENSATED);
+              assertThat(hold.getReleasedAt()).isNotNull();
+            });
   }
 
   private ReserveLimitsForTransactionCommand command(UUID transactionId) {
