@@ -14,8 +14,8 @@ Service implementation: `AuthGrpcService`.
 | `logout` | Revoke refresh token |
 | `refresh` | Exchange refresh token for a new token pair |
 | `changePassword` | Change password for an authenticated user, revoke active refresh tokens, and return a replacement refresh token |
-| `blockAuthUser` | Manager/admin user blocking |
-| `unlockAuthUser` | Manager/admin user unlocking |
+| `blockAuthUser` | Manager/admin user blocking; emits `AUTH_USER_STATUS_CHANGED` with `BLOCKED` |
+| `unlockAuthUser` | Manager/admin user unlocking; emits `AUTH_USER_STATUS_CHANGED` with `ACTIVE` |
 | `verifyAuthUserByPrivilegeRole` | Manager/admin verification |
 | `verifyAuthUserByCode` | Code-based user verification |
 | `changeAuthUserRole` | Admin role assignment flow |

@@ -7,6 +7,8 @@ import apigateway.mapper.request.SocialLoginRequestMapper;
 import apigateway.ratelimit.RateLimitFilter;
 import apigateway.ratelimit.RateLimitProperties;
 import apigateway.ratelimit.RedisRateLimitService;
+import apigateway.security.AccessStateRedisService;
+import apigateway.security.CurrentAccessStateFilter;
 import enums.auth.AuthUserStatus;
 import enums.auth.Roles;
 import java.net.URI;
@@ -23,9 +25,8 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -67,6 +68,7 @@ public class SecurityConfig {
   private final CookieConfig cookieConfig;
   private final AuthGrpcClient authClient;
   private final SocialLoginRequestMapper socialLoginRequestMapper;
+  private final CurrentAccessStateFilter currentAccessStateFilter;
 
   @Bean
   FilterRegistrationBean<RateLimitFilter> rateLimitFilterRegistration(RateLimitFilter filter) {
@@ -95,12 +97,18 @@ public class SecurityConfig {
   }
 
   @Bean
-  AuthenticationSuccessHandler oauth2SuccessHandler(@Value("${site.url}") String siteUrl) {
+  AuthenticationSuccessHandler oauth2SuccessHandler(
+      @Value("${site.url}") String siteUrl,
+      JwtDecoder jwtDecoder,
+      AccessStateRedisService accessStateRedisService) {
     return (request, response, authentication) -> {
       OidcUser user = (OidcUser) authentication.getPrincipal();
       SocialLoginRequestDto socialLoginRequest =
           socialLoginRequestMapper.toSocialLoginRequestDto(user);
       LoginResponseDto loginResponse = authClient.socialLogin(socialLoginRequest);
+      var accessToken = jwtDecoder.decode(loginResponse.accessToken());
+      accessStateRedisService.update(
+          java.util.UUID.fromString(accessToken.getSubject()), AuthUserStatus.ACTIVE);
 
       cookieConfig.setCookieTokens(
           response,
@@ -131,9 +139,7 @@ public class SecurityConfig {
                 auth.requestMatchers("/auth/admin/**")
                     .access(
                         (authentication, context) ->
-                            new AuthorizationDecision(
-                                hasRole(authentication.get(), Roles.ADMIN)
-                                    && isActive(authentication.get())))
+                            new AuthorizationDecision(hasRole(authentication.get(), Roles.ADMIN)))
                     .requestMatchers(PUBLIC_ENDPOINTS)
                     .permitAll()
                     .requestMatchers(
@@ -145,14 +151,11 @@ public class SecurityConfig {
                         (authentication, context) ->
                             new AuthorizationDecision(
                                 hasRole(authentication.get(), Roles.ADMIN)
-                                    || (hasRole(authentication.get(), Roles.MANAGER)
-                                        && isActive(authentication.get()))))
+                                    || hasRole(authentication.get(), Roles.MANAGER)))
                     .anyRequest()
                     .access(
                         (authentication, context) -> {
-                          return new AuthorizationDecision(
-                              isActive(authentication.get())
-                                  || hasRole(authentication.get(), Roles.ADMIN));
+                          return new AuthorizationDecision(authentication.get().isAuthenticated());
                         }))
         .oauth2ResourceServer(
             oauth ->
@@ -166,6 +169,7 @@ public class SecurityConfig {
                           return cookieConfig.getCookieByKey(request, "at");
                         })
                     .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
+        .addFilterAfter(currentAccessStateFilter, BearerTokenAuthenticationFilter.class)
         .addFilterAfter(rateLimitFilter, BearerTokenAuthenticationFilter.class)
         .build();
   }
@@ -180,17 +184,6 @@ public class SecurityConfig {
     jwtConverter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
 
     return jwtConverter;
-  }
-
-  private boolean isActive(Authentication authentication) {
-    if (!(authentication instanceof JwtAuthenticationToken jwtAuthenticationToken)) {
-      return false;
-    }
-
-    Jwt jwt = jwtAuthenticationToken.getToken();
-    String status = jwt.getClaimAsString("status");
-
-    return AuthUserStatus.ACTIVE.name().equals(status);
   }
 
   private boolean hasRole(Authentication authentication, Roles role) {

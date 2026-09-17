@@ -25,6 +25,13 @@ public class AuthUserEntity {
   @Column(name = "status", nullable = false)
   private AuthUserStatus status = AuthUserStatus.PENDING;
 
+  @Column(name = "access_state_version", nullable = false)
+  private long accessStateVersion;
+
+  @Version
+  @Column(name = "version", nullable = false)
+  private long version;
+
   @Column(name = "email", nullable = false, unique = true)
   private String email;
 

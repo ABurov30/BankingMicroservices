@@ -27,8 +27,12 @@ class NotificationKafkaListenerTest {
     verifyNoInteractions(email, service);
     when(created.getVerificationCode()).thenReturn("123");
     listener.handleAuthUserCreated(created, "id");
-    listener.handleAuthUserBlocked(mock(AuthUserBlockedEventPayload.class), "id");
-    listener.handleAuthUserUnlock(mock(AuthUserUnlockEventPayload.class), "id");
+    var blocked = mock(AuthUserStatusChangedEventPayload.class);
+    when(blocked.getStatus()).thenReturn("BLOCKED");
+    listener.handleAuthUserStatusChanged(blocked, "id");
+    var unlocked = mock(AuthUserStatusChangedEventPayload.class);
+    when(unlocked.getStatus()).thenReturn("ACTIVE");
+    listener.handleAuthUserStatusChanged(unlocked, "id");
     listener.handleAuthUserVerified(mock(AuthUserVerifiedEventPayload.class), "id");
     listener.handleAuthUserForgetPassword(mock(AuthUserForgetPasswordEventPayload.class), "id");
     verify(service, times(5)).createEmailNotification(any());

@@ -16,8 +16,12 @@ class UserKafkaListenerTest {
   @Test
   void forwardsAllAuthEventsToProfileService() {
     listener.handleAuthUserCreated(mock(AuthUserCreatedEventPayload.class), "id");
-    listener.handleAuthUserBlocked(mock(AuthUserBlockedEventPayload.class), "id");
-    listener.handleAuthUserUnlock(mock(AuthUserUnlockEventPayload.class), "id");
+    var blocked = mock(AuthUserStatusChangedEventPayload.class);
+    when(blocked.getStatus()).thenReturn("BLOCKED");
+    listener.handleAuthUserStatusChanged(blocked, "id");
+    var unlocked = mock(AuthUserStatusChangedEventPayload.class);
+    when(unlocked.getStatus()).thenReturn("ACTIVE");
+    listener.handleAuthUserStatusChanged(unlocked, "id");
     listener.handleAuthUserVerified(mock(AuthUserVerifiedEventPayload.class), "id");
     listener.handleAuthUserRoleChanged(mock(AuthUserRoleChangedEventPayload.class), "id");
     listener.handleAuthSocialAccountAuthUserCreated(

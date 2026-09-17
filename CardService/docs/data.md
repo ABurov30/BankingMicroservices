@@ -36,6 +36,7 @@ Primary storage is PostgreSQL. Schema changes are managed by Liquibase under `sr
 ## Data Integrity Notes
 
 Account ownership projection is derived data. Do not mutate it from request paths unless the change corresponds to an upstream account event.
+The card outbox also permits `CACHE_INVALIDATION`, used when card changes invalidate account overview caches.
 
 Card limits, card spend counters, and card limit holds are stored as minor-unit amounts. `spendDailyLimitMinorUnits` and `spendMonthlyLimitMinorUnits` are persisted counters on `cards`. They are increased when card limits are reserved for a transaction, released by compensation or timeout, and reset by scheduled daily and monthly jobs.
 

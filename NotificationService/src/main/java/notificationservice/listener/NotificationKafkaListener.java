@@ -1,5 +1,6 @@
 package notificationservice.listener;
 
+import enums.auth.AuthUserStatus;
 import enums.transaction.TransactionDirection;
 import kafkacontracts.account.*;
 import kafkacontracts.auth.*;
@@ -37,17 +38,14 @@ public class NotificationKafkaListener {
   }
 
   @IdempotentKafkaEvent
-  @KafkaListener(topics = "#{T(kafkacontracts.auth.AuthEventType).AUTH_USER_BLOCKED.getTopic()}")
-  public void handleAuthUserBlocked(
-      AuthUserBlockedEventPayload payload, @EventKey @Header("eventId") String eventId) {
-    notificationService.createEmailNotification(
-        emailCommandMapper.toCreateEmailNotificationCommand(payload));
-  }
-
-  @IdempotentKafkaEvent
-  @KafkaListener(topics = "#{T(kafkacontracts.auth.AuthEventType).AUTH_USER_UNLOCK.getTopic()}")
-  public void handleAuthUserUnlock(
-      AuthUserUnlockEventPayload payload, @EventKey @Header("eventId") String eventId) {
+  @KafkaListener(
+      topics = "#{T(kafkacontracts.auth.AuthEventType).AUTH_USER_STATUS_CHANGED.getTopic()}")
+  public void handleAuthUserStatusChanged(
+      AuthUserStatusChangedEventPayload payload, @EventKey @Header("eventId") String eventId) {
+    if (!AuthUserStatus.BLOCKED.name().equals(payload.getStatus())
+        && !AuthUserStatus.ACTIVE.name().equals(payload.getStatus())) {
+      return;
+    }
     notificationService.createEmailNotification(
         emailCommandMapper.toCreateEmailNotificationCommand(payload));
   }

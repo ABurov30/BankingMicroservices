@@ -7,8 +7,7 @@
 | Event | Source | Purpose |
 | --- | --- | --- |
 | `AUTH_USER_CREATED` | `AuthService` | Create signup notifications |
-| `AUTH_USER_BLOCKED` | `AuthService` | Notify blocked users |
-| `AUTH_USER_UNLOCK` | `AuthService` | Notify unlocked users |
+| `AUTH_USER_STATUS_CHANGED` | `AuthService` | Notify users about a block or unlock according to payload `status` |
 | `AUTH_USER_VERIFIED` | `AuthService` | Notify verified users |
 | `AUTH_USER_FORGET_PASSWORD` | `AuthService` | Create password reset notification with the reset token in the email URL query parameter |
 | `ACCOUNT_CREATED` | `AccountService` | Notify account creation |

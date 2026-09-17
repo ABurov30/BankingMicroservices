@@ -17,3 +17,9 @@ databaseChangeLog:
       file: db/changelog/changes/008-create-reset-password-token-table.sql
   - include:
       file: db/changelog/changes/009-outbox-processing.sql
+  - include:
+      file: db/changelog/changes/010-add-auth-user-access-state-version.sql
+  - include:
+      file: db/changelog/changes/011-add-auth-user-optimistic-lock-version.sql
+  - include:
+      file: db/changelog/changes/012-allow-cache-invalidation-outbox-event.sql

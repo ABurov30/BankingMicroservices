@@ -19,12 +19,12 @@ class AuthEventPayloadMapperTest {
             "lastName", "Last",
             "verificationCode", "123456",
             "status", "ACTIVE",
+            "version", 1L,
             "role", "USER",
             "resetPasswordToken", "reset");
     var mapper = new AuthEventPayloadMapperImpl();
     assertThat(mapper.toAuthUserCreatedEventPayload(common).getAuthUserId()).isEqualTo(id);
-    assertThat(mapper.toAuthUserBlockedEventPayload(common).getEmail()).isEqualTo("user@test");
-    assertThat(mapper.toAuthUserUnlockEventPayload(common).getAuthUserId()).isEqualTo(id);
+    assertThat(mapper.toAuthUserStatusChangedEventPayload(common).getVersion()).isEqualTo(1L);
     assertThat(mapper.toAuthUserVerifiedEventPayload(common).getEmail()).isEqualTo("user@test");
     assertThat(mapper.toAuthUserRoleChangedEventPayload(common).getRole()).isEqualTo("USER");
     assertThat(mapper.toAuthUserForgetPasswordEventPayload(common).getResetPasswordToken())

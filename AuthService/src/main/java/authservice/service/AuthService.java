@@ -199,6 +199,7 @@ public class AuthService {
         refreshToken, jwtProperties.refreshTokenTtlDays());
   }
 
+  @Transactional
   public void blockUser(BlockAuthUserCommand blockAuthUserCommand) {
     AuthUserEntity authUser =
         authUserRepository
@@ -210,16 +211,20 @@ public class AuthService {
     }
 
     authUser.setStatus(AuthUserStatus.BLOCKED);
+    authUser.setAccessStateVersion(authUser.getAccessStateVersion() + 1);
     authUserRepository.save(authUser);
 
     saveAuthOutboxEvent(
         authUser.getId(),
-        AuthEventType.AUTH_USER_BLOCKED,
+        AuthEventType.AUTH_USER_STATUS_CHANGED,
         Map.of(
             "authUserId", authUser.getId(),
-            "email", authUser.getEmail()));
+            "email", authUser.getEmail(),
+            "status", authUser.getStatus().name(),
+            "version", authUser.getAccessStateVersion()));
   }
 
+  @Transactional
   public void unlockUser(UnlockAuthUserCommand unlockAuthUserCommand) {
     AuthUserEntity authUser =
         authUserRepository
@@ -231,14 +236,17 @@ public class AuthService {
     }
 
     authUser.setStatus(AuthUserStatus.ACTIVE);
+    authUser.setAccessStateVersion(authUser.getAccessStateVersion() + 1);
     authUserRepository.save(authUser);
 
     saveAuthOutboxEvent(
         authUser.getId(),
-        AuthEventType.AUTH_USER_UNLOCK,
+        AuthEventType.AUTH_USER_STATUS_CHANGED,
         Map.of(
             "authUserId", authUser.getId(),
-            "email", authUser.getEmail()));
+            "email", authUser.getEmail(),
+            "status", authUser.getStatus().name(),
+            "version", authUser.getAccessStateVersion()));
   }
 
   @Transactional
@@ -320,6 +328,7 @@ public class AuthService {
   private void activateVerifiedAuthUser(AuthUserEntity authUser) {
     authUser.setEmailVerified(true);
     authUser.setStatus(AuthUserStatus.ACTIVE);
+    authUser.setAccessStateVersion(authUser.getAccessStateVersion() + 1);
     authUserRepository.save(authUser);
   }
 
@@ -330,6 +339,7 @@ public class AuthService {
         Map.of(
             "authUserId", authUser.getId(),
             "email", authUser.getEmail()));
+    saveAuthUserStatusChangedOutboxEvent(authUser);
   }
 
   private boolean canVerifyWithoutCode(String role) {
@@ -396,6 +406,7 @@ public class AuthService {
     revokeResetPasswordTokensByAuthUserId(authUser.getId());
 
     authUser.setStatus(AuthUserStatus.FORGET_PASSWORD);
+    authUser.setAccessStateVersion(authUser.getAccessStateVersion() + 1);
 
     var resetPasswordToken = tokenService.generateRefreshToken();
     var hashResetPasswordToken = tokenService.hashToken(resetPasswordToken);
@@ -409,6 +420,7 @@ public class AuthService {
 
     authUserRepository.save(authUser);
     saveAuthUserForgetPasswordOutboxEvent(authUser, resetPasswordToken);
+    saveAuthUserStatusChangedOutboxEvent(authUser);
   }
 
   private void revokeRefreshTokensByAuthUserId(UUID authUserId) {
@@ -442,8 +454,10 @@ public class AuthService {
 
     authUser.setPasswordHash(passwordEncoder.encode(command.newPassword()));
     authUser.setStatus(AuthUserStatus.ACTIVE);
+    authUser.setAccessStateVersion(authUser.getAccessStateVersion() + 1);
 
     authUserRepository.save(authUser);
+    saveAuthUserStatusChangedOutboxEvent(authUser);
 
     UserRoleEntity userRole =
         userRoleRepository
@@ -461,6 +475,12 @@ public class AuthService {
     resetPasswordTokensEntities.forEach((rpt) -> rpt.setUsedAt(LocalDateTime.now()));
 
     resetPasswordTokenRepository.saveAllAndFlush(resetPasswordTokensEntities);
+  }
+
+  private void ensureActiveForLogin(AuthUserEntity authUser) {
+    if (authUser.getStatus() != AuthUserStatus.ACTIVE) {
+      throw new AuthUserNotActiveException(authUser.getId());
+    }
   }
 
   private RefreshTokenEntity saveRefreshToken(AuthUserEntity authUser, String refreshToken) {
@@ -499,6 +519,17 @@ public class AuthService {
             authUser.getId()));
   }
 
+  private void saveAuthUserStatusChangedOutboxEvent(AuthUserEntity authUser) {
+    saveAuthOutboxEvent(
+        authUser.getId(),
+        AuthEventType.AUTH_USER_STATUS_CHANGED,
+        Map.of(
+            "authUserId", authUser.getId(),
+            "email", authUser.getEmail(),
+            "status", authUser.getStatus().name(),
+            "version", authUser.getAccessStateVersion()));
+  }
+
   private AuthOutboxEventEntity saveAuthOutboxEvent(
       UUID authUserId, AuthEventType eventType, Map<String, Object> payload) {
     var authOutboxEvent = AuthOutboxEventFactory.create(authUserId, eventType);
@@ -532,6 +563,7 @@ public class AuthService {
 
     if (socialAccount.isPresent()) {
       var authUserFromSocialAccount = socialAccount.get().getAuthUser();
+      ensureActiveForLogin(authUserFromSocialAccount);
       UserRoleEntity userRole =
           userRoleRepository
               .findByAuthUserId(authUserFromSocialAccount.getId())
@@ -542,6 +574,7 @@ public class AuthService {
 
     var authUser = authUserRepository.findByEmail(command.email());
     if (authUser.isPresent()) {
+      ensureActiveForLogin(authUser.get());
       saveAuthSocialAccount(command, authUser.get());
       saveUserCacheInvalidation(authUser.get().getId(), authUser.get().getEmail());
       UserRoleEntity userRole =

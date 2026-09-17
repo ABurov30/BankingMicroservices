@@ -1,9 +1,11 @@
 package apigateway.websocket;
 
+import apigateway.security.AccessStateRedisService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServerHttpRequest;
@@ -20,6 +22,7 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 public class JwtHandshakeInterceptor implements HandshakeInterceptor {
 
   private final JwtDecoder jwtDecoder;
+  private final AccessStateRedisService accessStateRedisService;
 
   @Override
   public boolean beforeHandshake(
@@ -48,7 +51,11 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
     }
 
     try {
-      jwtDecoder.decode(accessToken);
+      var jwt = jwtDecoder.decode(accessToken);
+      if (!accessStateRedisService.isActive(UUID.fromString(jwt.getSubject()))) {
+        response.setStatusCode(HttpStatus.FORBIDDEN);
+        return false;
+      }
       return true;
     } catch (JwtException ex) {
       response.setStatusCode(HttpStatus.UNAUTHORIZED);

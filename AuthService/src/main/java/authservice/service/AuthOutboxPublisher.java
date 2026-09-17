@@ -76,8 +76,8 @@ public class AuthOutboxPublisher {
     AuthEventType eventType = AuthEventType.valueOf(event.getEventType());
     return switch (eventType) {
       case AUTH_USER_CREATED -> eventPayloadMapper.toAuthUserCreatedEventPayload(payload);
-      case AUTH_USER_BLOCKED -> eventPayloadMapper.toAuthUserBlockedEventPayload(payload);
-      case AUTH_USER_UNLOCK -> eventPayloadMapper.toAuthUserUnlockEventPayload(payload);
+      case AUTH_USER_STATUS_CHANGED ->
+          eventPayloadMapper.toAuthUserStatusChangedEventPayload(payload);
       case AUTH_USER_VERIFIED -> eventPayloadMapper.toAuthUserVerifiedEventPayload(payload);
       case AUTH_USER_ROLE_CHANGED -> eventPayloadMapper.toAuthUserRoleChangedEventPayload(payload);
       case AUTH_USER_FORGET_PASSWORD ->

@@ -8,6 +8,7 @@
 | --- | --- | --- |
 | `PUSH_NOTIFICATION_CREATED` | `NotificationService` | `GatewayKafkaListener.handlePushNotificationCreated` |
 | `CACHE_INVALIDATION` | Domain services | `GatewayKafkaListener.handleCacheInvalidation` |
+| `AUTH_USER_STATUS_CHANGED` | `AuthService` | `GatewayKafkaListener.handleAuthUserStatusChanged` updates the Redis access-state projection |
 
 ## Event Handling Flow
 
@@ -39,6 +40,10 @@ and the transactional outbox provide durable delivery of the original invalidati
 ## Producer Behavior
 
 `ApiGateway` is currently a consumer only. It does not publish domain events.
+
+`AUTH_USER_STATUS_CHANGED` is keyed by `authUserId`, so status transitions for one user remain
+ordered in one Kafka partition. Gateway uses the Redis projection, rather than JWT `status`, for
+protected HTTP authorization.
 
 ## Agent Notes
 

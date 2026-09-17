@@ -3,10 +3,9 @@ package userservice.mapper.command;
 import enums.user.UserProfileStatus;
 import java.util.UUID;
 import kafkacontracts.auth.AuthSocialAccountAuthUserCreatedEventPayload;
-import kafkacontracts.auth.AuthUserBlockedEventPayload;
 import kafkacontracts.auth.AuthUserCreatedEventPayload;
 import kafkacontracts.auth.AuthUserRoleChangedEventPayload;
-import kafkacontracts.auth.AuthUserUnlockEventPayload;
+import kafkacontracts.auth.AuthUserStatusChangedEventPayload;
 import kafkacontracts.auth.AuthUserVerifiedEventPayload;
 import org.mapstruct.Mapper;
 import user.contract.v1.GetRecipientByEmailRequest;
@@ -35,11 +34,11 @@ public interface UserCommandMapper {
         payload.getAuthUserId(), payload.getEmail(), payload.getFirstName(), payload.getLastName());
   }
 
-  default BlockedUserCommand toBlockedUserCommand(AuthUserBlockedEventPayload payload) {
+  default BlockedUserCommand toBlockedUserCommand(AuthUserStatusChangedEventPayload payload) {
     return new BlockedUserCommand(payload.getAuthUserId());
   }
 
-  default UnlockUserCommand toUnlockUserCommand(AuthUserUnlockEventPayload payload) {
+  default UnlockUserCommand toUnlockUserCommand(AuthUserStatusChangedEventPayload payload) {
     return new UnlockUserCommand(payload.getAuthUserId());
   }
 

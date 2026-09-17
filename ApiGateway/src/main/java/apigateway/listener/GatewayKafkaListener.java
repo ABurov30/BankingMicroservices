@@ -3,9 +3,12 @@ package apigateway.listener;
 import apigateway.cache.LocalCacheInvalidationPublisher;
 import apigateway.cache.RedisCacheService;
 import apigateway.mapper.result.NotificationResultMapper;
+import apigateway.security.AccessStateRedisService;
+import enums.auth.AuthUserStatus;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import kafkacontracts.account.NotificationCreatedEventPayload;
+import kafkacontracts.auth.AuthUserStatusChangedEventPayload;
 import kafkacontracts.cache.CacheInvalidationEventPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +28,7 @@ public class GatewayKafkaListener {
 
   private final RedisCacheService redisCacheService;
   private final LocalCacheInvalidationPublisher publisher;
+  private final AccessStateRedisService accessStateRedisService;
   private final Counter cacheInvalidationEvents;
   private final Counter cacheInvalidationKeys;
 
@@ -33,11 +37,13 @@ public class GatewayKafkaListener {
       NotificationResultMapper notificationResultMapper,
       RedisCacheService redisCacheService,
       LocalCacheInvalidationPublisher publisher,
+      AccessStateRedisService accessStateRedisService,
       MeterRegistry meters) {
     this.messagingTemplate = messagingTemplate;
     this.notificationResultMapper = notificationResultMapper;
     this.redisCacheService = redisCacheService;
     this.publisher = publisher;
+    this.accessStateRedisService = accessStateRedisService;
     this.cacheInvalidationEvents = meters.counter("cache.invalidation.events");
     this.cacheInvalidationKeys = meters.counter("cache.invalidation.keys");
   }
@@ -68,5 +74,14 @@ public class GatewayKafkaListener {
 
     payload.getKeys().forEach(redisCacheService::evict);
     payload.getKeys().forEach(publisher::publish);
+  }
+
+  @IdempotentKafkaEvent
+  @KafkaListener(
+      topics = "#{T(kafkacontracts.auth.AuthEventType).AUTH_USER_STATUS_CHANGED.getTopic()}")
+  public void handleAuthUserStatusChanged(
+      AuthUserStatusChangedEventPayload payload, @EventKey @Header("eventId") String eventId) {
+    accessStateRedisService.update(
+        payload.getAuthUserId(), AuthUserStatus.valueOf(payload.getStatus()));
   }
 }

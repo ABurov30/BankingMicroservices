@@ -37,6 +37,7 @@ Primary storage is PostgreSQL. Schema changes are managed by Liquibase under `sr
 ## Data Integrity Notes
 
 Balance mutation, hold creation, and hold release are financial operations. Keep them transactional and verify compensation behavior when changing them.
+The account outbox also permits `CACHE_INVALIDATION`, used for account and transaction read-model cache eviction.
 
 Funds reservation rejects transactions whose requested currency does not match the source account
 currency. The hold stores the source account currency used for the reserved minor-unit amount.

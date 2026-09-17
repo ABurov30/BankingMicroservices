@@ -7,8 +7,7 @@
 | Event | Source | Purpose |
 | --- | --- | --- |
 | `AUTH_USER_CREATED` | `AuthService` | Create profile projection |
-| `AUTH_USER_BLOCKED` | `AuthService` | Block profile projection |
-| `AUTH_USER_UNLOCK` | `AuthService` | Unblock profile projection |
+| `AUTH_USER_STATUS_CHANGED` | `AuthService` | Block or unblock profile projection according to payload `status` |
 | `AUTH_USER_VERIFIED` | `AuthService` | Mark profile as verified/active |
 | `AUTH_USER_ROLE_CHANGED` | `AuthService` | Update projected role |
 | `AUTH_SOCIAL_ACCOUNT_AUTH_USER_CREATED` | `AuthService` | Create profile projection for OAuth-created auth users |

@@ -1,5 +1,6 @@
 package userservice.listener;
 
+import enums.auth.AuthUserStatus;
 import kafkacontracts.auth.*;
 import kafkacontracts.common.KafkaTopics;
 import lombok.RequiredArgsConstructor;
@@ -26,17 +27,17 @@ public class UserKafkaListener {
   }
 
   @IdempotentKafkaEvent
-  @KafkaListener(topics = "#{T(kafkacontracts.auth.AuthEventType).AUTH_USER_BLOCKED.getTopic()}")
-  public void handleAuthUserBlocked(
-      AuthUserBlockedEventPayload payload, @EventKey @Header("eventId") String eventId) {
-    userService.blockUser(commandMapper.toBlockedUserCommand(payload));
-  }
-
-  @IdempotentKafkaEvent
-  @KafkaListener(topics = "#{T(kafkacontracts.auth.AuthEventType).AUTH_USER_UNLOCK.getTopic()}")
-  public void handleAuthUserUnlock(
-      AuthUserUnlockEventPayload payload, @EventKey @Header("eventId") String eventId) {
-    userService.unlockUser(commandMapper.toUnlockUserCommand(payload));
+  @KafkaListener(
+      topics = "#{T(kafkacontracts.auth.AuthEventType).AUTH_USER_STATUS_CHANGED.getTopic()}")
+  public void handleAuthUserStatusChanged(
+      AuthUserStatusChangedEventPayload payload, @EventKey @Header("eventId") String eventId) {
+    if (AuthUserStatus.BLOCKED.name().equals(payload.getStatus())) {
+      userService.blockUser(commandMapper.toBlockedUserCommand(payload));
+      return;
+    }
+    if (AuthUserStatus.ACTIVE.name().equals(payload.getStatus())) {
+      userService.unlockUser(commandMapper.toUnlockUserCommand(payload));
+    }
   }
 
   @IdempotentKafkaEvent

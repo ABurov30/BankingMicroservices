@@ -1,5 +1,6 @@
 package notificationservice.mapper.command;
 
+import enums.auth.AuthUserStatus;
 import kafkacontracts.auth.*;
 import notificationservice.dto.CreateEmailNotificationCommand;
 import notificationservice.enums.email.EmailNotificationType;
@@ -8,12 +9,13 @@ import org.mapstruct.Mapper;
 @Mapper(componentModel = "spring")
 public interface EmailNotificationCommandMapper {
   default CreateEmailNotificationCommand toCreateEmailNotificationCommand(
-      AuthUserUnlockEventPayload payload) {
+      AuthUserStatusChangedEventPayload payload) {
+    EmailNotificationType type =
+        AuthUserStatus.BLOCKED.name().equals(payload.getStatus())
+            ? EmailNotificationType.AUTH_USER_BLOCKED
+            : EmailNotificationType.AUTH_USER_UNLOCKED;
     return new CreateEmailNotificationCommand(
-        payload.getAuthUserId(),
-        payload.getEmail(),
-        EmailNotificationType.AUTH_USER_UNLOCKED,
-        null);
+        payload.getAuthUserId(), payload.getEmail(), type, null);
   }
 
   default CreateEmailNotificationCommand toCreateEmailNotificationCommand(
@@ -23,12 +25,6 @@ public interface EmailNotificationCommandMapper {
         payload.getEmail(),
         EmailNotificationType.AUTH_USER_CREATED,
         payload.getVerificationCode());
-  }
-
-  default CreateEmailNotificationCommand toCreateEmailNotificationCommand(
-      AuthUserBlockedEventPayload payload) {
-    return new CreateEmailNotificationCommand(
-        payload.getAuthUserId(), payload.getEmail(), EmailNotificationType.AUTH_USER_BLOCKED, null);
   }
 
   default CreateEmailNotificationCommand toCreateEmailNotificationCommand(

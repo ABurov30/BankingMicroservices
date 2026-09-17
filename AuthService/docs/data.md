@@ -10,7 +10,7 @@ Primary storage is PostgreSQL. Schema changes are managed by Liquibase under `sr
 
 | Entity | Purpose |
 | --- | --- |
-| `AuthUserEntity` | Auth user credentials, verification state, and status |
+| `AuthUserEntity` | Auth user credentials, verification state, status, monotonic access-state version, and optimistic-lock version |
 | `RefreshTokenEntity` | Refresh token state and revocation/expiration data |
 | `RoleEntity` | Available roles |
 | `UserRoleEntity` | Auth user to role relation |
@@ -38,7 +38,11 @@ Primary storage is PostgreSQL. Schema changes are managed by Liquibase under `sr
 
 ## Data Integrity Notes
 
-Refresh token and user status changes affect security. Avoid bypassing service methods that enforce token revocation, status checks, and event publication.
+Refresh token and user status changes affect security. `access_state_version` advances on every
+block/unlock transition and is included in the `AUTH_USER_STATUS_CHANGED` outbox payload. Avoid
+bypassing service methods that enforce status checks and event publication.
+The separate JPA `version` column prevents concurrent writes from silently overwriting an auth
+user state transition.
 Changing a password revokes all active refresh tokens for the auth user and stores one replacement
 refresh token for the current session.
 

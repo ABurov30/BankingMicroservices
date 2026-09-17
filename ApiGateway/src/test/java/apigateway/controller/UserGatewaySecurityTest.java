@@ -13,9 +13,11 @@ import apigateway.mapper.request.SocialLoginRequestMapper;
 import apigateway.query.UserInfoQueryHandler;
 import apigateway.ratelimit.RateLimitProperties;
 import apigateway.ratelimit.RedisRateLimitService;
+import apigateway.security.AccessStateRedisService;
 import enums.auth.AuthUserStatus;
 import enums.auth.Roles;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +44,7 @@ public class UserGatewaySecurityTest {
   @MockitoBean private CookieConfig cookieConfig;
   @MockitoBean private AuthGrpcClient authClient;
   @MockitoBean private SocialLoginRequestMapper socialLoginRequestMapper;
+  @MockitoBean private AccessStateRedisService accessStateRedisService;
 
   @MockitoBean private RedisRateLimitService rateLimitService;
   @MockitoBean private RateLimitProperties rateLimitProperties;
@@ -51,12 +54,18 @@ public class UserGatewaySecurityTest {
 
   @Test
   void shouldDenyUserAccessToAllUserInfo() throws Exception {
+    UUID authUserId = UUID.randomUUID();
+    when(accessStateRedisService.isActive(authUserId)).thenReturn(true);
     mockMvc
         .perform(
             get(ALL_USER_INFO_URL)
                 .with(
                     jwt()
-                        .jwt(builder -> builder.claim("status", AuthUserStatus.ACTIVE.name()))
+                        .jwt(
+                            builder ->
+                                builder
+                                    .subject(authUserId.toString())
+                                    .claim("status", AuthUserStatus.ACTIVE.name()))
                         .authorities(new SimpleGrantedAuthority("ROLE_" + Roles.USER.name()))))
         .andExpect(status().isForbidden());
     verify(userInfoQueryHandler, never()).getAllUserInfoWithAuthInfo();
@@ -64,15 +73,43 @@ public class UserGatewaySecurityTest {
 
   @Test
   void shouldAllowActiveManagerAccessToAllUserInfo() throws Exception {
+    UUID authUserId = UUID.randomUUID();
+    when(accessStateRedisService.isActive(authUserId)).thenReturn(true);
+    when(userInfoQueryHandler.getAllUserInfoWithAuthInfo()).thenReturn(List.of());
     mockMvc
         .perform(
             get(ALL_USER_INFO_URL)
                 .with(
                     jwt()
-                        .jwt(builder -> builder.claim("status", AuthUserStatus.ACTIVE.name()))
+                        .jwt(
+                            builder ->
+                                builder
+                                    .subject(authUserId.toString())
+                                    .claim("status", AuthUserStatus.ACTIVE.name()))
                         .authorities(new SimpleGrantedAuthority("ROLE_" + Roles.MANAGER.name()))))
         .andExpect(status().isOk());
-    when(userInfoQueryHandler.getAllUserInfoWithAuthInfo()).thenReturn(List.of());
     verify(userInfoQueryHandler, times(1)).getAllUserInfoWithAuthInfo();
+  }
+
+  @Test
+  void shouldDenyBlockedUserWithJwtIssuedBeforeBlocking() throws Exception {
+    UUID authUserId = UUID.randomUUID();
+    when(accessStateRedisService.isActive(authUserId)).thenReturn(false);
+
+    mockMvc
+        .perform(
+            get(ALL_USER_INFO_URL)
+                .with(
+                    jwt()
+                        .jwt(
+                            builder ->
+                                builder
+                                    .subject(authUserId.toString())
+                                    .issuedAt(java.time.Instant.now().minusSeconds(60))
+                                    .claim("status", AuthUserStatus.ACTIVE.name()))
+                        .authorities(new SimpleGrantedAuthority("ROLE_" + Roles.MANAGER.name()))))
+        .andExpect(status().isForbidden());
+
+    verify(userInfoQueryHandler, never()).getAllUserInfoWithAuthInfo();
   }
 }

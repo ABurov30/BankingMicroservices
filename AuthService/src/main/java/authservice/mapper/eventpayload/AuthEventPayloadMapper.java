@@ -20,16 +20,12 @@ public interface AuthEventPayloadMapper {
         .build();
   }
 
-  default AuthUserBlockedEventPayload toAuthUserBlockedEventPayload(Map<String, Object> value) {
-    return AuthUserBlockedEventPayload.newBuilder()
+  default AuthUserStatusChangedEventPayload toAuthUserStatusChangedEventPayload(
+      Map<String, Object> value) {
+    return AuthUserStatusChangedEventPayload.newBuilder()
         .setAuthUserId(id(value))
-        .setEmail(value.get("email").toString())
-        .build();
-  }
-
-  default AuthUserUnlockEventPayload toAuthUserUnlockEventPayload(Map<String, Object> value) {
-    return AuthUserUnlockEventPayload.newBuilder()
-        .setAuthUserId(id(value))
+        .setStatus(value.get("status").toString())
+        .setVersion(Long.parseLong(value.get("version").toString()))
         .setEmail(value.get("email").toString())
         .build();
   }
