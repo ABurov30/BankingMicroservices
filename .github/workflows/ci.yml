@@ -85,7 +85,6 @@ jobs:
         run: mvn -s .mvn/settings-docker.xml checkstyle:check
 
       - name: Generate ephemeral JWT keys
-        working-directory: Infra
         if: matrix.keys_required == true
         run: |
           mkdir -p secrets
@@ -175,7 +174,7 @@ jobs:
           SITE_URL: ${{ vars.SITE_URL }}
           ACCOUNT_OVERVIEW_CACHE_ENABLED: ${{ vars.ACCOUNT_OVERVIEW_CACHE_ENABLED || 'true' }}
           ACCOUNT_OVERVIEW_CACHE_L1_TTL: ${{ vars.ACCOUNT_OVERVIEW_CACHE_L1_TTL || '2s' }}
-          ACCOUNT_OVERVIEW_CACHE_L2_TTL: ${{ vars.ACCOUNT_OVERVIEW_CACHE_L2_TTL || '5s' }}
+          ACCOUNT_OVERVIEW_CACHE_L2_TTL: ${{ vars.ACCOUNT_OVERVIEW_CACHE_L2_TTL || '30s' }}
           ACCOUNT_OVERVIEW_CACHE_L1_MAX_SIZE: ${{ vars.ACCOUNT_OVERVIEW_CACHE_L1_MAX_SIZE || '10000' }}
 
           AUTH_NAME: ${{ vars.AUTH_NAME }}
@@ -257,8 +256,8 @@ jobs:
           MAIL_USERNAME: ${{ vars.MAIL_USERNAME }}
           MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
 
-          JWT_PRIVATE_KEY_PATH: ${{ github.workspace }}/Infra${{ vars.JWT_PRIVATE_KEY_PATH }}
-          JWT_PUBLIC_KEY_PATH: ${{ github.workspace }}/Infra${{ vars.JWT_PUBLIC_KEY_PATH }}
+          JWT_PRIVATE_KEY_PATH: ${{ github.workspace }}${{ vars.JWT_PRIVATE_KEY_PATH }}
+          JWT_PUBLIC_KEY_PATH: ${{ github.workspace }}${{ vars.JWT_PUBLIC_KEY_PATH }}
         run: mvn -s .mvn/settings-docker.xml test -Pintegration-tests
 
       - name: Print test reports
@@ -284,7 +283,6 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Generate ephemeral JWT keys
-        working-directory: Infra
         run: |
           mkdir -p secrets
           openssl genrsa -out secrets/private.pem 2048
@@ -312,7 +310,7 @@ jobs:
           SITE_URL: ${{ vars.SITE_URL }}
           ACCOUNT_OVERVIEW_CACHE_ENABLED: ${{ vars.ACCOUNT_OVERVIEW_CACHE_ENABLED || 'true' }}
           ACCOUNT_OVERVIEW_CACHE_L1_TTL: ${{ vars.ACCOUNT_OVERVIEW_CACHE_L1_TTL || '2s' }}
-          ACCOUNT_OVERVIEW_CACHE_L2_TTL: ${{ vars.ACCOUNT_OVERVIEW_CACHE_L2_TTL || '5s' }}
+          ACCOUNT_OVERVIEW_CACHE_L2_TTL: ${{ vars.ACCOUNT_OVERVIEW_CACHE_L2_TTL || '30s' }}
           ACCOUNT_OVERVIEW_CACHE_L1_MAX_SIZE: ${{ vars.ACCOUNT_OVERVIEW_CACHE_L1_MAX_SIZE || '10000' }}
 
           AUTH_NAME: ${{ vars.AUTH_NAME }}
@@ -439,7 +437,7 @@ jobs:
           SITE_URL: ${{ vars.SITE_URL }}
           ACCOUNT_OVERVIEW_CACHE_ENABLED: ${{ vars.ACCOUNT_OVERVIEW_CACHE_ENABLED || 'true' }}
           ACCOUNT_OVERVIEW_CACHE_L1_TTL: ${{ vars.ACCOUNT_OVERVIEW_CACHE_L1_TTL || '2s' }}
-          ACCOUNT_OVERVIEW_CACHE_L2_TTL: ${{ vars.ACCOUNT_OVERVIEW_CACHE_L2_TTL || '5s' }}
+          ACCOUNT_OVERVIEW_CACHE_L2_TTL: ${{ vars.ACCOUNT_OVERVIEW_CACHE_L2_TTL || '30s' }}
           ACCOUNT_OVERVIEW_CACHE_L1_MAX_SIZE: ${{ vars.ACCOUNT_OVERVIEW_CACHE_L1_MAX_SIZE || '10000' }}
 
           AUTH_NAME: ${{ vars.AUTH_NAME }}
@@ -552,7 +550,7 @@ jobs:
           SITE_URL: ${{ vars.SITE_URL }}
           ACCOUNT_OVERVIEW_CACHE_ENABLED: ${{ vars.ACCOUNT_OVERVIEW_CACHE_ENABLED || 'true' }}
           ACCOUNT_OVERVIEW_CACHE_L1_TTL: ${{ vars.ACCOUNT_OVERVIEW_CACHE_L1_TTL || '2s' }}
-          ACCOUNT_OVERVIEW_CACHE_L2_TTL: ${{ vars.ACCOUNT_OVERVIEW_CACHE_L2_TTL || '5s' }}
+          ACCOUNT_OVERVIEW_CACHE_L2_TTL: ${{ vars.ACCOUNT_OVERVIEW_CACHE_L2_TTL || '30s' }}
           ACCOUNT_OVERVIEW_CACHE_L1_MAX_SIZE: ${{ vars.ACCOUNT_OVERVIEW_CACHE_L1_MAX_SIZE || '10000' }}
 
           AUTH_NAME: ${{ vars.AUTH_NAME }}

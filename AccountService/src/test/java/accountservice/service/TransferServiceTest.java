@@ -24,8 +24,10 @@ class TransferServiceTest {
   private final CurrencyService currency = mock(CurrencyService.class);
   private final AccountOutboxService outbox = mock(AccountOutboxService.class);
   private final AccountResultMapper mapper = mock(AccountResultMapper.class);
+  private final AccountOverviewCacheInvalidationService cacheInvalidationService =
+      mock(AccountOverviewCacheInvalidationService.class);
   private final TransferService service =
-      new TransferService(holds, accounts, currency, outbox, mapper);
+      new TransferService(holds, accounts, currency, outbox, cacheInvalidationService, mapper);
   private final UUID sourceId = UUID.randomUUID();
   private final UUID targetId = UUID.randomUUID();
   private final UUID transactionId = UUID.randomUUID();
@@ -60,6 +62,7 @@ class TransferServiceTest {
     assertThat(source.getReservedBalanceMinorUnits()).isEqualTo(400);
     verify(holds).save(any(AccountHoldEntity.class));
     verify(accounts).save(source);
+    verify(cacheInvalidationService).invalidate(source);
   }
 
   @Test

@@ -25,9 +25,17 @@ class CardServiceTest {
   private final CardOutboxEventRepository outbox = mock(CardOutboxEventRepository.class);
   private final CardLimitHoldRepository holds = mock(CardLimitHoldRepository.class);
   private final CardResultMapper mapper = mock(CardResultMapper.class);
+  private final AccountOverviewCacheInvalidationService cacheInvalidationService =
+      mock(AccountOverviewCacheInvalidationService.class);
   private final CardService service =
       new CardService(
-          cards, ownership, outbox, holds, mock(CardLimitReservationService.class), mapper);
+          cards,
+          ownership,
+          outbox,
+          holds,
+          mock(CardLimitReservationService.class),
+          cacheInvalidationService,
+          mapper);
   private final UUID accountId = UUID.randomUUID();
   private final UUID userId = UUID.randomUUID();
   private final UUID cardId = UUID.randomUUID();
@@ -131,7 +139,9 @@ class CardServiceTest {
   @Test
   void failedLimitReservationIsConvertedToFailedResult() {
     var reservation = mock(CardLimitReservationService.class);
-    var failing = new CardService(cards, ownership, outbox, holds, reservation, mapper);
+    var failing =
+        new CardService(
+            cards, ownership, outbox, holds, reservation, cacheInvalidationService, mapper);
     when(reservation.reserve(any())).thenThrow(new IllegalStateException("failed"));
     var result =
         failing.reserveLimitsForTransaction(

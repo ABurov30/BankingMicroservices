@@ -39,11 +39,11 @@ Training banking microservices project built with Spring Boot. `ApiGateway` expo
 GitHub Packages requires a token with `read:packages` access to the contracts, Kafka contracts, and support package repositories.
 
 ```bash
-cd Infra
-cp .env.example .env
 mkdir -p secrets
 openssl genrsa -out secrets/private.pem 2048
 openssl rsa -in secrets/private.pem -pubout -out secrets/public.pem
+cd Infra
+cp .env.example .env
 docker compose up --build -d
 ```
 
@@ -53,6 +53,8 @@ After startup:
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
 - Kafka UI: `http://localhost:8079`
 - Schema Registry: `http://localhost:9081`
+- RedisInsight: `http://localhost:5540` (Redis connection `local-redis` is preconfigured)
+- Docker Redis: `localhost:6380`
 
 Stop the environment:
 

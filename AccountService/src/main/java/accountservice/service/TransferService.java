@@ -32,6 +32,7 @@ public class TransferService {
   private final AccountRepository accountRepository;
   private final CurrencyService currencyService;
   private final AccountOutboxService accountOutboxService;
+  private final AccountOverviewCacheInvalidationService cacheInvalidationService;
   private final AccountResultMapper resultMapper;
   private static final Logger log = LoggerFactory.getLogger(TransferService.class);
   private static final long HOLD_TTL_MINUTES = 5;
@@ -109,6 +110,8 @@ public class TransferService {
     accountRepository.save(targetAccount);
     accountRepository.save(sourceAccount);
     accountHoldRepository.save(accountHold);
+    cacheInvalidationService.invalidate(sourceAccount);
+    cacheInvalidationService.invalidate(targetAccount);
 
     Map<String, Object> recipientPayload =
         Map.of(
@@ -199,6 +202,7 @@ public class TransferService {
       sourceAccount.setReservedBalanceMinorUnits(
           sourceAccount.getReservedBalanceMinorUnits() + amount);
       accountRepository.save(sourceAccount);
+      cacheInvalidationService.invalidate(sourceAccount);
 
       return new ReserveFundsForTransactionResult(
           resultMapper.toGetAccountResult(sourceAccount),
@@ -245,5 +249,6 @@ public class TransferService {
 
     accountOutboxService.saveAccountOutboxEvent(
         accountHold.getTransactionId(), AccountEventType.TRANSACTION_COMPENSATED, payload);
+    cacheInvalidationService.invalidate(sourceAccount);
   }
 }

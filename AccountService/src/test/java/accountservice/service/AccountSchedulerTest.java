@@ -25,10 +25,13 @@ class AccountSchedulerTest {
   private final AccountOutboxService outbox = mock(AccountOutboxService.class);
   private final AccountHoldRepository holds = mock(AccountHoldRepository.class);
   private final AccountInterestService interest = mock(AccountInterestService.class);
+  private final AccountOverviewCacheInvalidationService cacheInvalidationService =
+      mock(AccountOverviewCacheInvalidationService.class);
   private final SimpleMeterRegistry metrics = new SimpleMeterRegistry();
 
   private AccountScheduler scheduler(Clock clock) {
-    return new AccountScheduler(accounts, holds, interest, metrics, outbox, clock);
+    return new AccountScheduler(
+        accounts, holds, interest, metrics, outbox, cacheInvalidationService, clock);
   }
 
   @ParameterizedTest

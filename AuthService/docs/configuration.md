@@ -33,7 +33,8 @@ The application sets:
 
 ## Local Secrets
 
-Do not commit real keys or tokens. For local Docker Compose, JWT keys normally live under `Infra/secrets`.
+Do not commit real keys or tokens. For local development and Docker Compose, JWT keys live under
+the repository-root `secrets` directory.
 
 ## Outbox settings
 

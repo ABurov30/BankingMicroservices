@@ -8,6 +8,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
+import kafkacontracts.cache.CacheEventType;
 import kafkacontracts.card.CardEventType;
 import lombok.RequiredArgsConstructor;
 import org.apache.avro.specific.SpecificRecord;
@@ -37,8 +38,7 @@ public class CardOutboxPublisher {
   }
 
   private CompletionStage<?> send(CardOutboxEventEntity event) {
-    SpecificRecord payload =
-        extractPayload(CardEventType.valueOf(event.getEventType()), event.getPayload());
+    SpecificRecord payload = extractPayload(event);
     var message =
         MessageBuilder.withPayload(payload)
             .setHeader(KafkaHeaders.TOPIC, event.getTopic())
@@ -67,7 +67,13 @@ public class CardOutboxPublisher {
             });
   }
 
-  private SpecificRecord extractPayload(CardEventType eventType, Map<String, Object> payload) {
+  private SpecificRecord extractPayload(CardOutboxEventEntity event) {
+    Map<String, Object> payload = event.getPayload();
+    if (CacheEventType.CACHE_INVALIDATION.name().equals(event.getEventType())) {
+      return eventPayloadMapper.toCacheInvalidationEventPayload(payload);
+    }
+
+    CardEventType eventType = CardEventType.valueOf(event.getEventType());
     return switch (eventType) {
       case CARD_CREATED -> eventPayloadMapper.toCardCreatedEventPayload(payload);
       case CARD_FROZEN -> eventPayloadMapper.toCardFrozenEventPayload(payload);

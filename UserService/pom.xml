@@ -120,12 +120,12 @@
         <dependency>
             <groupId>com.burov</groupId>
             <artifactId>kafka-contracts</artifactId>
-            <version>0.0.18</version>
+            <version>0.0.19</version>
         </dependency>
         <dependency>
             <groupId>com.burov</groupId>
             <artifactId>support</artifactId>
-            <version>0.0.6-SNAPSHOT</version>
+            <version>0.0.7</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>

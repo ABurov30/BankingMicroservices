@@ -25,6 +25,7 @@ public class AccountInterestService {
 
   private final AccountRepository accountRepository;
   private final AccountInterestAccrualRepository accrualRepository;
+  private final AccountOverviewCacheInvalidationService cacheInvalidationService;
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public boolean accrueInterest(UUID accountId, LocalDate businessDate) {
@@ -52,6 +53,7 @@ public class AccountInterestService {
     }
     account.setAvailableBalanceMinorUnits(newBalance);
     accountRepository.saveAndFlush(account);
+    cacheInvalidationService.invalidate(account);
     return true;
   }
 }

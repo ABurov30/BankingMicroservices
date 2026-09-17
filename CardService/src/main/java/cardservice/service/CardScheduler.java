@@ -19,6 +19,7 @@ public class CardScheduler {
   private final CardRepository cardRepository;
   private final CardLimitHoldRepository cardLimitHoldRepository;
   private final CardOutboxService cardOutboxService;
+  private final AccountOverviewCacheInvalidationService cacheInvalidationService;
 
   @Scheduled(fixedDelay = 5000)
   @Transactional
@@ -41,6 +42,7 @@ public class CardScheduler {
               card.setSpendMonthlyLimitMinorUnits(
                   card.getSpendMonthlyLimitMinorUnits() - limitsHold.getMinorUnits());
               cardRepository.save(card);
+              cacheInvalidationService.invalidate(card.getId(), card.getAccountId());
               limitsHold.setStatus(ReservationStatus.RELEASED_BY_TIME);
               limitsHold.setReleasedAt(LocalDateTime.now());
               cardOutboxService.saveCardOutboxEvent(
@@ -55,12 +57,16 @@ public class CardScheduler {
   @Scheduled(cron = "0 0 0 * * *")
   @Transactional
   public void resetSpendDailyLimit() {
-    cardRepository.resetSpendDailyLimitMinorUnits(Long.valueOf(0));
+    if (cardRepository.resetSpendDailyLimitMinorUnits(Long.valueOf(0)) > 0) {
+      cacheInvalidationService.invalidateAll();
+    }
   }
 
   @Scheduled(cron = "0 0 0 1 * *")
   @Transactional
   public void resetSpendMonthlyLimit() {
-    cardRepository.resetSpendMonthlyLimitMinorUnits(Long.valueOf(0));
+    if (cardRepository.resetSpendMonthlyLimitMinorUnits(Long.valueOf(0)) > 0) {
+      cacheInvalidationService.invalidateAll();
+    }
   }
 }

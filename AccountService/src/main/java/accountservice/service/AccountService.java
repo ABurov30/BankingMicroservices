@@ -14,6 +14,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import kafkacontracts.account.AccountEventType;
@@ -38,6 +39,7 @@ public class AccountService {
   private final TransferCommandMapper transferCommandMapper;
   private static final Logger log = LoggerFactory.getLogger(AccountService.class);
   private final AccountOutboxService accountOutboxService;
+  private final AccountOverviewCacheInvalidationService cacheInvalidationService;
 
   private String generateUniqueAccountNumber() {
     for (int i = 0; i < TRY_TO_GENERATE_ACCOUNT_NUMBER; i++) {
@@ -120,6 +122,7 @@ public class AccountService {
 
     accountOutboxService.saveAccountOutboxEvent(
         accountEntity.getId(), AccountEventType.ACCOUNT_CREATED, payload);
+    cacheInvalidationService.invalidate(accountEntity);
 
     return new CreateAccountResult(
         accountEntity.getId(),
@@ -219,6 +222,7 @@ public class AccountService {
 
     accountOutboxService.saveAccountOutboxEvent(
         account.getId(), AccountEventType.ACCOUNT_FROZEN, payload);
+    cacheInvalidationService.invalidate(account);
   }
 
   @Transactional
@@ -251,6 +255,7 @@ public class AccountService {
 
     accountOutboxService.saveAccountOutboxEvent(
         account.getId(), AccountEventType.ACCOUNT_FROZEN, payload);
+    cacheInvalidationService.invalidate(account);
   }
 
   @Transactional
@@ -283,13 +288,14 @@ public class AccountService {
 
     accountOutboxService.saveAccountOutboxEvent(
         account.getId(), AccountEventType.ACCOUNT_UNFROZEN, payload);
+    cacheInvalidationService.invalidate(account);
   }
 
   private boolean canAccessAccount(AccountEntity account, FreezeAccountCommand command) {
     return canAccessAccount(account, command.authUserId(), command.role());
   }
 
-  private boolean canAccessAccount(AccountEntity account, java.util.UUID authUserId, String role) {
+  private boolean canAccessAccount(AccountEntity account, UUID authUserId, String role) {
     if (authUserId == null) {
       return true;
     }
@@ -356,6 +362,8 @@ public class AccountService {
     account.setAvailableBalanceMinorUnits(account.getAvailableBalanceMinorUnits() + amount);
 
     accountRepository.save(account);
+
+    cacheInvalidationService.invalidate(account);
     return resultMapper.toGetAccountResult(account);
   }
 
@@ -379,6 +387,7 @@ public class AccountService {
     account.setAvailableBalanceMinorUnits(account.getAvailableBalanceMinorUnits() - amount);
 
     accountRepository.save(account);
+    cacheInvalidationService.invalidate(account);
     return resultMapper.toGetAccountResult(account);
   }
 

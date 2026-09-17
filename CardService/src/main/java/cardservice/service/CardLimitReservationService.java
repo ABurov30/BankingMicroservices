@@ -22,6 +22,7 @@ public class CardLimitReservationService {
   private final CardRepository cardRepository;
   private final AccountOwnershipProjectionRepository accountOwnershipProjectionRepository;
   private final CardLimitHoldRepository cardLimitHoldRepository;
+  private final AccountOverviewCacheInvalidationService cacheInvalidationService;
 
   @Transactional
   public ReserveLimitsForTransactionResult reserve(ReserveLimitsForTransactionCommand command) {
@@ -74,6 +75,7 @@ public class CardLimitReservationService {
     card.setSpendMonthlyLimitMinorUnits(
         card.getSpendMonthlyLimitMinorUnits() + command.minorUnits());
     cardRepository.save(card);
+    cacheInvalidationService.invalidate(card.getId(), card.getAccountId());
   }
 
   private boolean isAccountOwnedBy(UUID accountId, UUID authUserId) {

@@ -22,8 +22,10 @@ class CardLimitReservationServiceTest {
   private final AccountOwnershipProjectionRepository ownership =
       mock(AccountOwnershipProjectionRepository.class);
   private final CardLimitHoldRepository holds = mock(CardLimitHoldRepository.class);
+  private final AccountOverviewCacheInvalidationService cacheInvalidationService =
+      mock(AccountOverviewCacheInvalidationService.class);
   private final CardLimitReservationService service =
-      new CardLimitReservationService(cards, ownership, holds);
+      new CardLimitReservationService(cards, ownership, holds, cacheInvalidationService);
   private final UUID cardId = UUID.randomUUID();
   private final UUID accountId = UUID.randomUUID();
   private final UUID userId = UUID.randomUUID();

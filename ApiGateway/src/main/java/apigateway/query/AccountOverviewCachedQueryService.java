@@ -4,36 +4,37 @@ import apigateway.cache.CacheProperties;
 import apigateway.cache.RedisCacheService;
 import apigateway.dto.command.account.GetAllAccountsWithCardsByAuthUserIdCommandDto;
 import apigateway.dto.response.account.GetAccountWithCardsResponseDto;
+import cache.BaseCachedQueryService;
 import cache.CacheKeyGenerator;
+import cache.CaffeineCacheServiceFactory;
 import cache.enums.CachePath;
 import cache.enums.CachePrefix;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
-public class AccountOverviewCachedQueryService {
+public class AccountOverviewCachedQueryService
+    extends BaseCachedQueryService<List<GetAccountWithCardsResponseDto>> {
   private final AccountQueryHandler loader;
   private final CacheProperties cacheProperties;
   private final RedisCacheService redisCacheService;
-  private final Cache<String, List<GetAccountWithCardsResponseDto>> cache;
   private static final TypeReference<List<GetAccountWithCardsResponseDto>> ACCOUNT_OVERVIEW_TYPE =
       new TypeReference<>() {};
+
+  private static final Logger log =
+      LoggerFactory.getLogger(AccountOverviewCachedQueryService.class);
 
   public AccountOverviewCachedQueryService(
       AccountQueryHandler loader,
       CacheProperties cacheProperties,
       RedisCacheService redisCacheService) {
+    super(CaffeineCacheServiceFactory.create(cacheProperties));
     this.loader = loader;
     this.cacheProperties = cacheProperties;
     this.redisCacheService = redisCacheService;
-    this.cache =
-        Caffeine.newBuilder()
-            .maximumSize(cacheProperties.getL1MaxSize())
-            .expireAfterWrite(cacheProperties.getL1Ttl())
-            .build();
   }
 
   public List<GetAccountWithCardsResponseDto> getMyAccounts(
@@ -43,10 +44,8 @@ public class AccountOverviewCachedQueryService {
     }
 
     var key =
-        CacheKeyGenerator.generateKey(
-            CachePrefix.ACCOUNT_OVERVIEW, CachePath.ME, dto.authUserId(), dto.role());
-
-    return cache.get(
+        CacheKeyGenerator.generateKey(CachePrefix.ACCOUNT_OVERVIEW, CachePath.ME, dto.authUserId());
+    return getFromL1(
         key,
         ignored ->
             redisCacheService
@@ -54,7 +53,7 @@ public class AccountOverviewCachedQueryService {
                 .orElseGet(
                     () -> {
                       var result = loader.getAccountsWithCardsByAuthUserId(dto);
-                      redisCacheService.put(key, result, cacheProperties.getL2Ttl());
+                      redisCacheService.put(key, result);
                       return result;
                     }));
   }

@@ -85,6 +85,7 @@ class AccountInterestAccrualIT {
         interest,
         metrics,
         org.mockito.Mockito.mock(AccountOutboxService.class),
+        org.mockito.Mockito.mock(AccountOverviewCacheInvalidationService.class),
         Clock.systemUTC());
   }
 

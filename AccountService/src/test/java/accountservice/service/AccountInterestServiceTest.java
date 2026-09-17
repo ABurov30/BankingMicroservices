@@ -22,7 +22,10 @@ class AccountInterestServiceTest {
   private final AccountRepository accounts = mock(AccountRepository.class);
   private final AccountInterestAccrualRepository accruals =
       mock(AccountInterestAccrualRepository.class);
-  private final AccountInterestService service = new AccountInterestService(accounts, accruals);
+  private final AccountOverviewCacheInvalidationService cacheInvalidationService =
+      mock(AccountOverviewCacheInvalidationService.class);
+  private final AccountInterestService service =
+      new AccountInterestService(accounts, accruals, cacheInvalidationService);
   private final UUID accountId = UUID.randomUUID();
   private final LocalDate date = LocalDate.of(2026, 9, 14);
 

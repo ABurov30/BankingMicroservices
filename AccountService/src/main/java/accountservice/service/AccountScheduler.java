@@ -29,6 +29,7 @@ public class AccountScheduler {
   private final AccountInterestService interestService;
   private final MeterRegistry meterRegistry;
   private final AccountOutboxService accountOutboxService;
+  private final AccountOverviewCacheInvalidationService cacheInvalidationService;
   private final Clock accountClock;
   private static final Logger log = LoggerFactory.getLogger(AccountScheduler.class);
   private static final ZoneId BUSINESS_ZONE = ZoneId.of("Europe/Paris");
@@ -96,6 +97,7 @@ public class AccountScheduler {
                   account.getReservedBalanceMinorUnits() - accountHold.getMinorUnits());
 
               accountRepository.save(account);
+              cacheInvalidationService.invalidate(account);
               accountHold.setStatus(ReservationStatus.RELEASED_BY_TIME);
               accountHold.setReleasedAt(LocalDateTime.now());
               accountOutboxService.saveAccountOutboxEvent(

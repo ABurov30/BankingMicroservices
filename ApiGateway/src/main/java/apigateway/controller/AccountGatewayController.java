@@ -9,6 +9,7 @@ import apigateway.dto.response.account.GetAccountResponseDto;
 import apigateway.dto.response.account.GetAccountWithCardsResponseDto;
 import apigateway.dto.result.auth.AuthUserIdAndRoleResult;
 import apigateway.mapper.command.AccountCommandMapper;
+import apigateway.query.AccountOverviewCachedQueryService;
 import apigateway.query.AccountQueryHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -25,6 +26,7 @@ public class AccountGatewayController {
 
   private final AccountGrpcClient accountClient;
   private final AccountQueryHandler accountOverviewQueryHandler;
+  private final AccountOverviewCachedQueryService accountOverviewCachedQueryService;
   private final CookieConfig cookieConfig;
   private final AccountCommandMapper accountCommandMapper;
 
@@ -45,7 +47,8 @@ public class AccountGatewayController {
   public List<GetAccountWithCardsResponseDto> getAccountsWithCardsByAuthUserId(
       HttpServletRequest httpRequest) {
     AuthUserIdAndRoleResult authUser = cookieConfig.getAuthUserIdAndRole(httpRequest);
-    return accountOverviewQueryHandler.getAccountsWithCardsByAuthUserId(
+
+    return accountOverviewCachedQueryService.getMyAccounts(
         accountCommandMapper.toGetAllAccountsWithCardsByAuthUserIdCommandDto(
             authUser.authUserId(), authUser.role()));
   }

@@ -7,6 +7,7 @@ target/
 .env*
 !.env.example
 !**/.env.example
+secrets
 
 ### STS ###
 .apt_generated

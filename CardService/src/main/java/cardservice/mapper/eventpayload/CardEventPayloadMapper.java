@@ -2,6 +2,7 @@ package cardservice.mapper.eventpayload;
 
 import java.util.Map;
 import java.util.UUID;
+import kafkacontracts.cache.CacheInvalidationEventPayload;
 import kafkacontracts.card.CardCreatedEventPayload;
 import kafkacontracts.card.CardFrozenEventPayload;
 import kafkacontracts.card.CardLimitHoldReleasedByTimeEventPayload;
@@ -49,5 +50,17 @@ public interface CardEventPayloadMapper {
     return CardLimitHoldReleasedByTimeEventPayload.newBuilder()
         .setTransactionId(uuid(payload.get("transactionId")))
         .build();
+  }
+
+  default CacheInvalidationEventPayload toCacheInvalidationEventPayload(
+      Map<String, Object> payload) {
+    Object keys = payload.get("keys");
+    if (!(keys instanceof Iterable<?> iterable)) {
+      throw new IllegalArgumentException("Outbox payload field 'keys' is required");
+    }
+
+    var values = new java.util.ArrayList<String>();
+    iterable.forEach(value -> values.add(value.toString()));
+    return CacheInvalidationEventPayload.newBuilder().setKeys(values).build();
   }
 }

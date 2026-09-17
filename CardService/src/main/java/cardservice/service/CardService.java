@@ -40,6 +40,7 @@ public class CardService {
   private final CardOutboxEventRepository cardOutboxEventRepository;
   private final CardLimitHoldRepository cardLimitHoldRepository;
   private final CardLimitReservationService cardLimitReservationService;
+  private final AccountOverviewCacheInvalidationService cacheInvalidationService;
   private final CardResultMapper resultMapper;
   private static final int CARD_EXPIRATION_YEARS = 5;
   private static final String CARD_BIN = "400000";
@@ -141,6 +142,7 @@ public class CardService {
           createdCardCommand.authUserId(),
           createdCardCommand.accountNumber());
     }
+    cacheInvalidationService.invalidate(savedCard.getId(), savedCard.getAccountId());
     return resultMapper.toCreateCardResult(savedCard, accountCurrency);
   }
 
@@ -196,6 +198,8 @@ public class CardService {
             });
 
     cardRepository.saveAll(cards.get());
+    cacheInvalidationService.invalidate(
+        freezeCardsCommand.accountId(), freezeCardsCommand.accountId());
   }
 
   @Transactional
@@ -230,6 +234,8 @@ public class CardService {
             });
 
     cardRepository.saveAll(cards.get());
+    cacheInvalidationService.invalidate(
+        unfreezeCardsCommand.accountId(), unfreezeCardsCommand.accountId());
   }
 
   @Transactional
@@ -268,6 +274,7 @@ public class CardService {
     }
 
     CardEntity savedCard = cardRepository.save(cardEntity);
+    cacheInvalidationService.invalidate(savedCard.getId(), savedCard.getAccountId());
 
     return resultMapper.toUpdateCardResult(savedCard, getAccountCurrency(savedCard.getAccountId()));
   }
@@ -406,6 +413,7 @@ public class CardService {
 
     cardRepository.save(card);
     cardLimitHoldRepository.save(limitHold);
+    cacheInvalidationService.invalidate(card.getId(), card.getAccountId());
   }
 
   @Transactional

@@ -3,6 +3,7 @@ package accountservice.mapper.eventpayload;
 import java.util.Map;
 import java.util.UUID;
 import kafkacontracts.account.*;
+import kafkacontracts.cache.CacheInvalidationEventPayload;
 import kafkacontracts.card.AccountHoldReleasedByTimeEventPayload;
 import org.mapstruct.Mapper;
 
@@ -56,6 +57,18 @@ public interface AccountEventPayloadMapper {
     return AccountHoldReleasedByTimeEventPayload.newBuilder()
         .setTransactionId(UUID.fromString(payload.get("transactionId").toString()))
         .build();
+  }
+
+  default CacheInvalidationEventPayload toCacheInvalidationEventPayload(
+      Map<String, Object> payload) {
+    Object keys = payload.get("keys");
+    if (!(keys instanceof Iterable<?> iterable)) {
+      throw new IllegalArgumentException("Outbox payload field 'keys' is required");
+    }
+
+    var values = new java.util.ArrayList<String>();
+    iterable.forEach(value -> values.add(value.toString()));
+    return CacheInvalidationEventPayload.newBuilder().setKeys(values).build();
   }
 
   private static Long toLong(Object value) {

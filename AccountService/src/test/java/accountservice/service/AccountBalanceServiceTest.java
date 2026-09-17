@@ -25,6 +25,8 @@ import org.junit.jupiter.api.Test;
 class AccountBalanceServiceTest {
   private final AccountRepository accounts = mock(AccountRepository.class);
   private final AccountEntity account = new AccountEntity();
+  private final AccountOverviewCacheInvalidationService cacheInvalidationService =
+      mock(AccountOverviewCacheInvalidationService.class);
   private final AccountService service =
       new AccountService(
           accounts,
@@ -33,7 +35,8 @@ class AccountBalanceServiceTest {
           mock(AccountHoldRepository.class),
           mock(TransferService.class),
           mock(TransferCommandMapper.class),
-          mock(AccountOutboxService.class));
+          mock(AccountOutboxService.class),
+          cacheInvalidationService);
   private final UUID accountId = UUID.randomUUID();
   private final UUID userId = UUID.randomUUID();
 
@@ -88,7 +91,8 @@ class AccountBalanceServiceTest {
             mock(AccountHoldRepository.class),
             mock(TransferService.class),
             mock(TransferCommandMapper.class),
-            outbox);
+            outbox,
+            mock(AccountOverviewCacheInvalidationService.class));
     when(currencies.findByName(Currency.USD)).thenReturn(currency);
     when(accounts.existsByAccountNumber(anyString())).thenReturn(false);
     when(accounts.saveAndFlush(any(AccountEntity.class)))

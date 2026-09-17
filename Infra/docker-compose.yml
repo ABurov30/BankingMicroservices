@@ -112,8 +112,8 @@ services:
       OTLP_TRACING_ENDPOINT: http://jaeger:4318/v1/traces
       MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED: "false"
     volumes:
-      - ./secrets/private.pem:${JWT_PRIVATE_KEY_PATH}:ro
-      - ./secrets/public.pem:${JWT_PUBLIC_KEY_PATH}:ro
+      - ../secrets/private.pem:${JWT_PRIVATE_KEY_PATH}:ro
+      - ../secrets/public.pem:${JWT_PUBLIC_KEY_PATH}:ro
 
   # User service
   user-postgres:
@@ -382,7 +382,7 @@ services:
       AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
       ACCOUNT_OVERVIEW_CACHE_ENABLED: ${ACCOUNT_OVERVIEW_CACHE_ENABLED:-true}
       ACCOUNT_OVERVIEW_CACHE_L1_TTL: ${ACCOUNT_OVERVIEW_CACHE_L1_TTL:-2s}
-      ACCOUNT_OVERVIEW_CACHE_L2_TTL: ${ACCOUNT_OVERVIEW_CACHE_L2_TTL:-5s}
+      ACCOUNT_OVERVIEW_CACHE_L2_TTL: ${ACCOUNT_OVERVIEW_CACHE_L2_TTL:-30s}
       ACCOUNT_OVERVIEW_CACHE_L1_MAX_SIZE: ${ACCOUNT_OVERVIEW_CACHE_L1_MAX_SIZE:-10000}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
@@ -406,9 +406,9 @@ services:
       OTLP_TRACING_ENDPOINT: http://jaeger:4318/v1/traces
       MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED: "false"
       REDIS_HOST: ${REDIS_HOST}
-      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PORT: 6379
     volumes:
-      - ./secrets/public.pem:${JWT_PUBLIC_KEY_PATH}:ro
+      - ../secrets/public.pem:${JWT_PUBLIC_KEY_PATH}:ro
 
   prometheus:
     image: prom/prometheus:v2.55.1
@@ -476,6 +476,20 @@ services:
     ports:
       - "${REDIS_PORT}:6379"
 
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: redisinsight
+    depends_on:
+      - redis
+    environment:
+      RI_REDIS_HOST: redis
+      RI_REDIS_PORT: 6379
+      RI_REDIS_ALIAS: local-redis
+    ports:
+      - "${REDISINSIGHT_PORT}:5540"
+    volumes:
+      - redisinsight_data:/data
+
 volumes:
   auth_postgres_data:
   user_postgres_data:
@@ -487,3 +501,4 @@ volumes:
   prometheus_data:
   grafana_data:
   loki_data:
+  redisinsight_data:

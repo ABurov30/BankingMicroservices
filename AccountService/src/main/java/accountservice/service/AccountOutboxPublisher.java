@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
 import kafkacontracts.account.AccountEventType;
+import kafkacontracts.cache.CacheEventType;
 import lombok.RequiredArgsConstructor;
 import org.apache.avro.specific.SpecificRecord;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -39,8 +40,7 @@ public class AccountOutboxPublisher {
   }
 
   private CompletionStage<?> send(AccountOutboxEventEntity event) {
-    SpecificRecord payload =
-        extractPayload(AccountEventType.valueOf(event.getEventType()), event.getPayload());
+    SpecificRecord payload = extractPayload(event);
     var message =
         MessageBuilder.withPayload(payload)
             .setHeader(KafkaHeaders.TOPIC, event.getTopic())
@@ -74,7 +74,13 @@ public class AccountOutboxPublisher {
             });
   }
 
-  private SpecificRecord extractPayload(AccountEventType eventType, Map<String, Object> payload) {
+  private SpecificRecord extractPayload(AccountOutboxEventEntity event) {
+    Map<String, Object> payload = event.getPayload();
+    if (CacheEventType.CACHE_INVALIDATION.name().equals(event.getEventType())) {
+      return eventPayloadMapper.toCacheInvalidationEventPayload(payload);
+    }
+
+    AccountEventType eventType = AccountEventType.valueOf(event.getEventType());
     return switch (eventType) {
       case ACCOUNT_CREATED -> eventPayloadMapper.toAccountCreatedEventPayload(payload);
       case ACCOUNT_FROZEN -> eventPayloadMapper.toAccountFrozenEventPayload(payload);

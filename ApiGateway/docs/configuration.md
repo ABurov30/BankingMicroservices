@@ -22,6 +22,7 @@ The default local file is `.env.local`. Set `ENV_FILE` to use a different file.
 | `JWT_PUBLIC_KEY_PATH` | Public key used to verify access tokens |
 | `KAFKA_BOOTSTRAP_SERVERS` | Kafka bootstrap servers |
 | `SCHEMA_REGISTRY_URL` | Confluent Schema Registry URL |
+| `REDIS_HOST`, `REDIS_PORT` | Redis host and port; local Gateway uses `localhost:6380` for Docker Redis |
 | `AUTH_GRPC_HOST`, `AUTH_GRPC_PORT` | Auth gRPC target |
 | `USER_GRPC_HOST`, `USER_GRPC_PORT` | User gRPC target |
 | `ACCOUNT_GRPC_HOST`, `ACCOUNT_GRPC_PORT` | Account gRPC target |
@@ -37,9 +38,9 @@ The default local file is `.env.local`. Set `ENV_FILE` to use a different file.
 | `AUTH_COOKIE_DOMAIN` | empty | Optional `Domain` attribute for auth cookies |
 | `AUTH_COOKIE_SAME_SITE` | `Strict` | `SameSite` attribute for JWT auth cookies |
 | `AUTH_COOKIE_SECURE` | `true` | `Secure` attribute for auth cookies |
-| `ACCOUNT_OVERVIEW_CACHE_ENABLED` | `true` | Enables the account-overview cache |
+| `ACCOUNT_OVERVIEW_CACHE_ENABLED` | `true` | Enables the account-overview cache and Redis Pub/Sub invalidation listener |
 | `ACCOUNT_OVERVIEW_CACHE_L1_TTL` | `2s` | L1 cache entry lifetime |
-| `ACCOUNT_OVERVIEW_CACHE_L2_TTL` | `5s` | L2 cache entry lifetime |
+| `ACCOUNT_OVERVIEW_CACHE_L2_TTL` | `30s` | L2 cache entry lifetime |
 | `ACCOUNT_OVERVIEW_CACHE_L1_MAX_SIZE` | `10000` | Maximum number of entries retained in L1 |
 
 ## Cookie Scope
@@ -76,7 +77,9 @@ introduce state-changing `GET` endpoints: mutations must use `POST`, `PUT`, `PAT
 
 The gateway needs only the JWT public key. It must not receive the private key.
 
-In Docker Compose, `Infra/secrets/public.pem` is mounted read-only into the gateway container.
+In Docker Compose, `secrets/public.pem` is mounted read-only into the gateway container.
+The Gateway connects to Redis over the Compose network at `redis:6379`; `6380` is only the host
+port for local tools and a Gateway process running outside Docker.
 
 ## gRPC Resilience
 

@@ -45,7 +45,7 @@ end-user account reads that include authenticated user identity and role.
 
 gRPC types come from `com.burov:contracts` version `0.0.29`. Event payloads come from
 `com.burov:kafka-contracts`. Shared outbox and processed-event helpers come from
-`com.burov:support` version `0.0.2`.
+`com.burov:support` version `0.0.7`.
 
 Source and target accounts for subscription authorization and each status update are fetched
 with one batch RPC and matched by account ID, independent of response order. Duplicate IDs

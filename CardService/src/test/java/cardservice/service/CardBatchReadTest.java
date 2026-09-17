@@ -27,6 +27,7 @@ class CardBatchReadTest {
           mock(CardOutboxEventRepository.class),
           mock(CardLimitHoldRepository.class),
           mock(CardLimitReservationService.class),
+          mock(AccountOverviewCacheInvalidationService.class),
           mapper);
 
   @Test
