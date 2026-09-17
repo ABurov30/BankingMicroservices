@@ -21,6 +21,9 @@
 list of cache keys that are no longer valid. Producers create the event in their transactional
 outbox so it is published only after the corresponding domain change commits.
 
+The Gateway currently recognizes `ACCOUNT_OVERVIEW`, `TRANSACTION_HISTORY`, `USER_INFO`, and
+`RECIPIENT_INFO` keys. All use the same Caffeine L1 and Redis L2 lifetimes.
+
 The Gateway consumes an event once per Kafka consumer group and performs the following steps in
 order:
 

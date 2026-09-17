@@ -7,6 +7,7 @@ import apigateway.dto.response.transaction.CreateTransactionResponseDto;
 import apigateway.dto.response.transaction.TransactionResponseDto;
 import apigateway.dto.result.auth.AuthUserIdAndRoleResult;
 import apigateway.mapper.command.TransactionCommandMapper;
+import apigateway.query.TransactionHistoryCachedQueryService;
 import apigateway.query.TransactionQueryHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -22,6 +23,7 @@ public class TransactionGatewayController {
 
   private final TransactionGrpcClient transactionClient;
   private final TransactionQueryHandler transactionQueryHandler;
+  private final TransactionHistoryCachedQueryService transactionHistoryCachedQueryService;
   private final CookieConfig cookieConfig;
   private final TransactionCommandMapper transactionCommandMapper;
 
@@ -40,7 +42,7 @@ public class TransactionGatewayController {
   @GetMapping("/user/me")
   public List<TransactionResponseDto> getTransactionsByMe(HttpServletRequest httpRequest) {
     AuthUserIdAndRoleResult authUser = cookieConfig.getAuthUserIdAndRole(httpRequest);
-    return transactionQueryHandler.getTransactionsByMe(
+    return transactionHistoryCachedQueryService.getTransactionsByMe(
         transactionCommandMapper.toGetTransactionByMeCommandDto(
             authUser.authUserId(), authUser.role()));
   }

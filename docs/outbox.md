@@ -1,7 +1,7 @@
 # Outbox publishing
 
 Account, Auth, Card, Transaction, User and PushNotification publishers use
-`com.burov:support:0.0.7` (`JpaOutboxAttemptStore` and `OutboxDispatcher`).
+`com.burov:support:0.0.8-SNAPSHOT` (`JpaOutboxAttemptStore` and `OutboxDispatcher`).
 Each service provides its entity/table, payload mapper, Kafka message headers,
 configuration adapter and database backlog metrics.
 
@@ -155,7 +155,7 @@ headers and order within one publisher batch; the PostgreSQL test verifies owner
 
 ## Rollout and rollback
 
-1. Make `support:0.0.7` available to all service builds and complete checks.
+1. Make `support:0.0.8-SNAPSHOT` available to all service builds and complete checks.
 2. Stop all old publisher schedulers/replicas and let outstanding sends and callbacks
    finish. Prevent old versions from restarting during the transition.
 3. Apply each service's `*-outbox-processing.sql` Liquibase migration. Existing fields

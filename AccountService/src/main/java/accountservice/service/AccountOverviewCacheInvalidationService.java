@@ -26,4 +26,12 @@ public class AccountOverviewCacheInvalidationService {
     accountOutboxService.saveCacheInvalidateEvent(
         aggregateId, CacheEventType.CACHE_INVALIDATION, Map.of("keys", List.of(key)));
   }
+
+  public void invalidateTransactionHistory(AccountEntity account) {
+    String key =
+        CacheKeyGenerator.generateKey(
+            CachePrefix.TRANSACTION_HISTORY, CachePath.ME, account.getOwnerAuthUserId());
+    accountOutboxService.saveCacheInvalidateEvent(
+        account.getId(), CacheEventType.CACHE_INVALIDATION, Map.of("keys", List.of(key)));
+  }
 }

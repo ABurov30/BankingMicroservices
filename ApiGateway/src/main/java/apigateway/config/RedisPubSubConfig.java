@@ -12,7 +12,11 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
 @Configuration
 @RequiredArgsConstructor
-@ConditionalOnProperty(prefix = "cache", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(
+    prefix = "cache",
+    name = "enabled",
+    havingValue = "true",
+    matchIfMissing = true)
 public class RedisPubSubConfig {
   private final RedisConnectionFactory connectionFactory;
   private final LocalCacheInvalidationSubscriber subscriber;

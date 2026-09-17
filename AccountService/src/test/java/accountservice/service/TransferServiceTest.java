@@ -63,6 +63,7 @@ class TransferServiceTest {
     verify(holds).save(any(AccountHoldEntity.class));
     verify(accounts).save(source);
     verify(cacheInvalidationService).invalidate(source);
+    verify(cacheInvalidationService).invalidateTransactionHistory(source);
   }
 
   @Test

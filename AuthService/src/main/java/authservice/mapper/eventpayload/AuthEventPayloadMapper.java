@@ -3,6 +3,7 @@ package authservice.mapper.eventpayload;
 import java.util.Map;
 import java.util.UUID;
 import kafkacontracts.auth.*;
+import kafkacontracts.cache.CacheInvalidationEventPayload;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
@@ -65,6 +66,18 @@ public interface AuthEventPayloadMapper {
         .setFirstName(value.get("firstName").toString())
         .setLastName(value.get("lastName").toString())
         .build();
+  }
+
+  default CacheInvalidationEventPayload toCacheInvalidationEventPayload(
+      Map<String, Object> payload) {
+    Object keys = payload.get("keys");
+    if (!(keys instanceof Iterable<?> iterable)) {
+      throw new IllegalArgumentException("Outbox payload field 'keys' is required");
+    }
+
+    var values = new java.util.ArrayList<String>();
+    iterable.forEach(value -> values.add(value.toString()));
+    return CacheInvalidationEventPayload.newBuilder().setKeys(values).build();
   }
 
   private UUID id(Map<String, Object> value) {

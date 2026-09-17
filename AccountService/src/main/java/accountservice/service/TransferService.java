@@ -112,6 +112,8 @@ public class TransferService {
     accountHoldRepository.save(accountHold);
     cacheInvalidationService.invalidate(sourceAccount);
     cacheInvalidationService.invalidate(targetAccount);
+    cacheInvalidationService.invalidateTransactionHistory(sourceAccount);
+    cacheInvalidationService.invalidateTransactionHistory(targetAccount);
 
     Map<String, Object> recipientPayload =
         Map.of(
@@ -203,6 +205,7 @@ public class TransferService {
           sourceAccount.getReservedBalanceMinorUnits() + amount);
       accountRepository.save(sourceAccount);
       cacheInvalidationService.invalidate(sourceAccount);
+      cacheInvalidationService.invalidateTransactionHistory(sourceAccount);
 
       return new ReserveFundsForTransactionResult(
           resultMapper.toGetAccountResult(sourceAccount),
@@ -250,5 +253,6 @@ public class TransferService {
     accountOutboxService.saveAccountOutboxEvent(
         accountHold.getTransactionId(), AccountEventType.TRANSACTION_COMPENSATED, payload);
     cacheInvalidationService.invalidate(sourceAccount);
+    cacheInvalidationService.invalidateTransactionHistory(sourceAccount);
   }
 }

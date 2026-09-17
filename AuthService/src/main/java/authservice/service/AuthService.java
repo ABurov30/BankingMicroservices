@@ -6,15 +6,21 @@ import authservice.entity.*;
 import authservice.exception.*;
 import authservice.mapper.result.AuthResultMapper;
 import authservice.repository.*;
+import cache.CacheKeyGenerator;
+import cache.enums.CachePath;
+import cache.enums.CachePrefix;
 import enums.auth.AuthUserStatus;
 import enums.auth.Roles;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import kafkacontracts.auth.AuthEventType;
+import kafkacontracts.cache.CacheEventType;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -497,7 +503,25 @@ public class AuthService {
       UUID authUserId, AuthEventType eventType, Map<String, Object> payload) {
     var authOutboxEvent = AuthOutboxEventFactory.create(authUserId, eventType);
     authOutboxEvent.setPayload(payload);
-    return authOutboxEventRepository.save(authOutboxEvent);
+    var savedEvent = authOutboxEventRepository.save(authOutboxEvent);
+    saveUserCacheInvalidation(authUserId, payload.get("email"));
+    return savedEvent;
+  }
+
+  private void saveUserCacheInvalidation(UUID authUserId, Object email) {
+    var keys = new ArrayList<String>();
+    keys.add(CacheKeyGenerator.generateKey(CachePrefix.USER_INFO, CachePath.AUTH_USER, authUserId));
+    if (email != null) {
+      keys.add(
+          CacheKeyGenerator.generateKey(
+              CachePrefix.RECIPIENT_INFO,
+              CachePath.EMAIL,
+              email.toString().trim().toLowerCase(Locale.ROOT)));
+    }
+
+    var cacheEvent = AuthOutboxEventFactory.create(authUserId, CacheEventType.CACHE_INVALIDATION);
+    cacheEvent.setPayload(Map.of("keys", keys));
+    authOutboxEventRepository.save(cacheEvent);
   }
 
   @Transactional
@@ -519,6 +543,7 @@ public class AuthService {
     var authUser = authUserRepository.findByEmail(command.email());
     if (authUser.isPresent()) {
       saveAuthSocialAccount(command, authUser.get());
+      saveUserCacheInvalidation(authUser.get().getId(), authUser.get().getEmail());
       UserRoleEntity userRole =
           userRoleRepository
               .findByAuthUserId(authUser.get().getId())

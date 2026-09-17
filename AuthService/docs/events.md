@@ -15,6 +15,12 @@ Known auth event categories include:
 - auth user role changed
 - auth user password reset or forget-password flow events
 - social account auth user created
+- cache invalidation for Gateway user and recipient read models
+
+Every auth outbox write additionally creates a `CACHE_INVALIDATION` event for
+`USER_INFO:AUTH_USER:<authUserId>`. When the auth event has an email, it also invalidates the
+normalized `RECIPIENT_INFO:EMAIL:<email>` key. ApiGateway clears Redis L2 and broadcasts the key
+to local Caffeine L1 caches through Redis Pub/Sub.
 
 ## Consumed Events
 
@@ -67,7 +73,7 @@ without this header requires an explicit stable event-ID backfill before replay.
 
 ## Outbox delivery
 
-Publishing uses `support:0.0.7` claim/lease and guarded acknowledgements. Retries preserve
+Publishing uses `support:0.0.8-SNAPSHOT` claim/lease and guarded acknowledgements. Retries preserve
 eventId and the stored Kafka key. Delivery is at least once; consumers must retain deduplication.
 See [shared outbox publishing](../../docs/outbox.md) for settings, guarantees, metrics and rollout.
 

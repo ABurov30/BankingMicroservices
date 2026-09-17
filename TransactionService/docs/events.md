@@ -71,6 +71,6 @@ without this header requires an explicit stable event-ID backfill before replay.
 
 ## Outbox delivery
 
-Publishing uses `support:0.0.7` claim/lease and guarded acknowledgements. Retries preserve
+Publishing uses `support:0.0.8-SNAPSHOT` claim/lease and guarded acknowledgements. Retries preserve
 eventId and the stored Kafka key. Delivery is at least once; consumers must retain deduplication.
 See [shared outbox publishing](../../docs/outbox.md) for settings, guarantees, metrics and rollout.

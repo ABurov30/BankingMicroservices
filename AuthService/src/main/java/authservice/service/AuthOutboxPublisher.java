@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
 import kafkacontracts.auth.AuthEventType;
+import kafkacontracts.cache.CacheEventType;
 import lombok.RequiredArgsConstructor;
 import org.apache.avro.specific.SpecificRecord;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -37,8 +38,7 @@ public class AuthOutboxPublisher {
   }
 
   private CompletionStage<?> send(AuthOutboxEventEntity event) {
-    SpecificRecord payload =
-        extractPayload(AuthEventType.valueOf(event.getEventType()), event.getPayload());
+    SpecificRecord payload = extractPayload(event);
     var message =
         MessageBuilder.withPayload(payload)
             .setHeader(KafkaHeaders.TOPIC, event.getTopic())
@@ -67,7 +67,13 @@ public class AuthOutboxPublisher {
             });
   }
 
-  private SpecificRecord extractPayload(AuthEventType eventType, Map<String, Object> payload) {
+  private SpecificRecord extractPayload(AuthOutboxEventEntity event) {
+    Map<String, Object> payload = event.getPayload();
+    if (CacheEventType.CACHE_INVALIDATION.name().equals(event.getEventType())) {
+      return eventPayloadMapper.toCacheInvalidationEventPayload(payload);
+    }
+
+    AuthEventType eventType = AuthEventType.valueOf(event.getEventType());
     return switch (eventType) {
       case AUTH_USER_CREATED -> eventPayloadMapper.toAuthUserCreatedEventPayload(payload);
       case AUTH_USER_BLOCKED -> eventPayloadMapper.toAuthUserBlockedEventPayload(payload);

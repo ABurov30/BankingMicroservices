@@ -32,8 +32,9 @@ Known produced event categories include:
 When an account-overview cache entry becomes stale, AccountService writes a `CACHE_INVALIDATION`
 event to the account outbox in the same transaction as the account change. Account creation,
 status changes, balance top-ups and withdrawals, reservations, transfers, compensations, expired
-holds, and savings-interest accrual all invalidate the owner's overview. The payload contains
-`keys`, a list of shared cache keys generated through `CacheKeyGenerator`.
+holds, and savings-interest accrual all invalidate the owner's overview. Reservations, transfers,
+and compensations also invalidate transaction-history entries for affected account owners. The
+payload contains `keys`, a list of shared cache keys generated through `CacheKeyGenerator`.
 
 After the outbox publisher sends the event to Kafka, ApiGateway deletes those keys from Redis L2
 and publishes them to Redis Pub/Sub. Every live Gateway instance then removes the matching local
@@ -96,6 +97,6 @@ without this header requires an explicit stable event-ID backfill before replay.
 
 ## Outbox delivery
 
-Publishing uses `support:0.0.7` claim/lease and guarded acknowledgements. Retries preserve
+Publishing uses `support:0.0.8-SNAPSHOT` claim/lease and guarded acknowledgements. Retries preserve
 eventId and the stored Kafka key. Delivery is at least once; consumers must retain deduplication.
 See [shared outbox publishing](../../docs/outbox.md) for settings, guarantees, metrics and rollout.
