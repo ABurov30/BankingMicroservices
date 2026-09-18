@@ -13,6 +13,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Tag("integration")
 @ActiveProfiles("test")
@@ -23,12 +28,23 @@ import org.springframework.test.context.ActiveProfiles;
       "KAFKA_BOOTSTRAP_SERVERS=localhost:9092",
       "SCHEMA_REGISTRY_URL=http://localhost:8081"
     })
+@Testcontainers
 class ApiGatewayApplicationTests {
 
   @LocalServerPort private int port;
 
   @Test
   void contextLoads() {}
+
+  @Container
+  static GenericContainer<?> redis =
+      new GenericContainer<>("redis:7-alpine").withExposedPorts(6379);
+
+  @DynamicPropertySource
+  static void redisProperties(DynamicPropertyRegistry registry) {
+    registry.add("spring.data.redis.host", redis::getHost);
+    registry.add("spring.data.redis.port", () -> redis.getMappedPort(6379));
+  }
 
   @Test
   void asyncApiDocsArePubliclyAvailable() throws IOException, InterruptedException {

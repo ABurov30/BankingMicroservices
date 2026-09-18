@@ -5,17 +5,21 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import apigateway.cache.RedisCacheService;
 import apigateway.client.AuthGrpcClient;
 import apigateway.client.UserGrpcClient;
 import apigateway.config.CookieConfig;
 import apigateway.config.SecurityConfig;
 import apigateway.mapper.request.SocialLoginRequestMapper;
+import apigateway.query.RecipientInfoCachedQueryService;
+import apigateway.query.UserInfoCachedQueryService;
 import apigateway.query.UserInfoQueryHandler;
 import apigateway.ratelimit.RateLimitProperties;
 import apigateway.ratelimit.RedisRateLimitService;
 import apigateway.security.AccessStateRedisService;
 import enums.auth.AuthUserStatus;
 import enums.auth.Roles;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Tag;
@@ -23,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -33,7 +38,9 @@ import org.springframework.test.web.servlet.MockMvc;
 @Tag("integration")
 @ActiveProfiles("test")
 @WebMvcTest(controllers = UserGatewayController.class, properties = "site.url=https://bank.example")
-@Import(SecurityConfig.class)
+@Import({
+  SecurityConfig.class,
+})
 public class UserGatewaySecurityTest {
   private static final String ALL_USER_INFO_URL = "/user/manager/all-user-info";
 
@@ -45,6 +52,12 @@ public class UserGatewaySecurityTest {
   @MockitoBean private AuthGrpcClient authClient;
   @MockitoBean private SocialLoginRequestMapper socialLoginRequestMapper;
   @MockitoBean private AccessStateRedisService accessStateRedisService;
+  @MockitoBean private UserInfoCachedQueryService userInfoCachedQueryService;
+  @MockitoBean private RedisCacheService redisCacheService;
+  @MockitoBean private RecipientInfoCachedQueryService recipientInfoCachedQueryService;
+
+  @MockitoBean private StringRedisTemplate redisTemplate;
+  @MockitoBean private MeterRegistry meterRegistry;
 
   @MockitoBean private RedisRateLimitService rateLimitService;
   @MockitoBean private RateLimitProperties rateLimitProperties;

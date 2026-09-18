@@ -27,16 +27,26 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.SimpleTransactionStatus;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.kafka.KafkaContainer;
+import org.testcontainers.utility.DockerImageName;
 import outboxsupport.OutboxAttempt;
 import outboxsupport.OutboxAttemptStore;
 import outboxsupport.OutboxDispatcher;
 import outboxsupport.OutboxProperties;
 
 @Tag("integration")
+@Testcontainers
 class OutboxKafkaKeyIT {
+
+  @Container
+  static final KafkaContainer kafka =
+      new KafkaContainer(DockerImageName.parse("apache/kafka-native:3.8.0"));
+
   @Test
   void publisherPreservesOrderPerAggregateAndDistributesAggregates() throws Exception {
-    String bootstrap = System.getenv().getOrDefault("KAFKA_BOOTSTRAP_SERVERS", "localhost:29092");
+    String bootstrap = kafka.getBootstrapServers();
     String topic = "outbox-key-test-" + UUID.randomUUID();
     Map<String, Object> producerConfig =
         Map.of("bootstrap.servers", bootstrap, "acks", "all", "enable.idempotence", true);

@@ -81,13 +81,14 @@ Both sender and recipient `TRANSACTION_COMPLETED` records, and compensation reco
 use the saga `transactionId`. Direction remains in the payload and the existing
 `transaction-notification-direction` header. Each record retains its own event ID.
 
-`OutboxKafkaKeyIT` exercises the real publisher against Kafka with a temporary four-partition
-topic, verifies per-aggregate send order and distinct event IDs, and checks that multiple
-partitions are used. It uses JSON serialization of Avro records to avoid requiring Schema
-Registry; this test covers key routing and headers, not Avro wire compatibility. Run:
+`OutboxKafkaKeyIT` exercises the real publisher against a Kafka Testcontainer with a temporary
+four-partition topic, verifies per-aggregate send order and distinct event IDs, and checks that
+multiple partitions are used. It uses JSON serialization of Avro records to avoid requiring
+Schema Registry; this test covers key routing and headers, not Avro wire compatibility. Docker
+must be running, but no external Kafka or Schema Registry is required. Run:
 
 ```bash
-KAFKA_BOOTSTRAP_SERVERS=localhost:29092 ./mvnw -Pintegration-tests -Dtest=OutboxKafkaKeyIT test
+./mvnw -Pintegration-tests -Dtest=OutboxKafkaKeyIT test
 ```
 
 Idempotent listeners require the `eventId` header and store it in the existing

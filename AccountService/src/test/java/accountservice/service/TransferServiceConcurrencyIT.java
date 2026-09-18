@@ -43,7 +43,12 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @ActiveProfiles("test")
 @Testcontainers
 @DataJpaTest
-@Import({TransferService.class, CurrencyService.class, AccountOutboxService.class})
+@Import({
+  TransferService.class,
+  CurrencyService.class,
+  AccountOutboxService.class,
+  AccountOverviewCacheInvalidationService.class
+})
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 public class TransferServiceConcurrencyIT {
 

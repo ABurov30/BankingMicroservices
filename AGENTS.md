@@ -7,6 +7,7 @@ Instructions for agents working in this repository.
 - Read [README.md](README.md) and the relevant service documentation.
 - Each service is a separate Maven project with its own `pom.xml`, `.mvn/settings-docker.xml`, Dockerfile, `.env.example`, `README.md`, `AGENTS.md`, and `docs` folder.
 - Do not commit real `.env` files, JWT keys, SMTP passwords, or GitHub tokens.
+- When an agent changes code or behavior, update or add the relevant automated tests in the same change.
 - When a change affects behavior, public APIs, gRPC/Kafka contracts, configuration, persistence, or operational flows, update the relevant service docs in the same change.
 - When a change affects public HTTP/WebSocket interfaces, update [bank-microservices.postman_collection.json](bank-microservices.postman_collection.json) in the same change.
 - If you change build, formatting, or Checkstyle behavior, verify all seven services.

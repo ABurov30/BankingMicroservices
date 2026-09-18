@@ -41,7 +41,11 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @ActiveProfiles("test")
 @Testcontainers
 @DataJpaTest(properties = "spring.jpa.hibernate.ddl-auto=validate")
-@Import(AccountInterestService.class)
+@Import({
+  AccountInterestService.class,
+  AccountOverviewCacheInvalidationService.class,
+  AccountOutboxService.class
+})
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 class AccountInterestAccrualIT {
   @Container @ServiceConnection

@@ -52,7 +52,9 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @Import({
   CardService.class,
   CardLimitReservationService.class,
-  CardLimitReservationIT.RaceConfiguration.class
+  CardLimitReservationIT.RaceConfiguration.class,
+  AccountOverviewCacheInvalidationService.class,
+  CardOutboxService.class
 })
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 class CardLimitReservationIT {
