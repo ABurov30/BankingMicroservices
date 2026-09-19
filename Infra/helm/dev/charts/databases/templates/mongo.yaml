@@ -1,4 +1,4 @@
-{{- range $key, $svc := .Values.services }}
+{{- range $key, $svc := .Values.global.services }}
 {{- if $svc.mongo }}
 apiVersion: v1
 kind: Secret

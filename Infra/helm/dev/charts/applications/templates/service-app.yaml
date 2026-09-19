@@ -1,4 +1,4 @@
-{{- range $key, $svc := .Values.services }}
+{{- range $key, $svc := .Values.global.services }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -30,21 +30,21 @@ spec:
               value: {{ $svc.port | quote }}
             - name: {{ upper $key }}_GRPC_PORT
               value: {{ $svc.grpcPort | quote }}
-{{- if $svc.siteUrl }}
+{{- if eq $key "notification" }}
             - name: SITE_URL
-              value: {{ $svc.siteUrl | quote }}
+              value: {{ $.Values.global.siteUrl | quote }}
 {{- end }}
             - name: KAFKA_BOOTSTRAP_SERVERS
-              value: {{ $.Values.kafka.bootstrapServers | quote }}
+              value: {{ $.Values.global.kafka.bootstrapServers | quote }}
             - name: SCHEMA_REGISTRY_URL
-              value: {{ $.Values.kafka.schemaRegistry.url | quote }}
-{{- if $.Values.jaeger.enabled }}
+              value: {{ $.Values.global.kafka.schemaRegistryUrl | quote }}
+{{- if $.Values.global.jaeger.enabled }}
             - name: TRACING_SAMPLING_PROBABILITY
-              value: {{ $.Values.jaeger.tracing.samplingProbability | quote }}
+              value: {{ $.Values.global.jaeger.tracing.samplingProbability | quote }}
             - name: OTLP_TRACING_ENDPOINT
-              value: "http://{{ $.Values.jaeger.name }}:{{ $.Values.jaeger.otlpHttpPort }}/v1/traces"
+              value: "http://{{ $.Values.global.jaeger.name }}:{{ $.Values.global.jaeger.otlpHttpPort }}/v1/traces"
             - name: MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED
-              value: {{ $.Values.jaeger.tracing.metricsExportEnabled | quote }}
+              value: {{ $.Values.global.jaeger.tracing.metricsExportEnabled | quote }}
 {{- end }}
 {{- if $svc.postgres }}
             - name: SPRING_DATASOURCE_URL
@@ -56,9 +56,25 @@ spec:
 {{- end }}
 {{- if eq $key "auth" }}
             - name: JWT_PRIVATE_KEY_PATH
-              value: {{ $.Values.jwt.privateKeyPath | quote }}
+              value: {{ $.Values.global.jwt.privateKeyPath | quote }}
             - name: JWT_PUBLIC_KEY_PATH
-              value: {{ $.Values.jwt.publicKeyPath | quote }}
+              value: {{ $.Values.global.jwt.publicKeyPath | quote }}
+            - name: AUTH_BOOTSTRAP_ADMIN_ENABLED
+              value: {{ $svc.bootstrap.adminEnabled | quote }}
+            - name: AUTH_BOOTSTRAP_ADMIN_EMAIL
+              value: {{ $svc.bootstrap.adminEmail | quote }}
+            - name: AUTH_BOOTSTRAP_ADMIN_PASSWORD
+              value: {{ $svc.bootstrap.adminPassword | quote }}
+{{- end }}
+{{- if eq $key "transaction" }}
+            - name: CARD_GRPC_HOST
+              value: {{ $.Values.global.services.card.name | quote }}
+            - name: CARD_GRPC_PORT
+              value: {{ $.Values.global.services.card.grpcPort | quote }}
+            - name: ACCOUNT_GRPC_HOST
+              value: {{ $.Values.global.services.account.name | quote }}
+            - name: ACCOUNT_GRPC_PORT
+              value: {{ $.Values.global.services.account.grpcPort | quote }}
 {{- end }}
 {{- if $svc.mongo }}
             - name: NOTIFICATION_MONGO_URI
@@ -86,7 +102,7 @@ spec:
       volumes:
         - name: jwt-keys
           secret:
-            secretName: {{ $.Values.jwt.secretName }}
+            secretName: {{ $.Values.global.jwt.secretName }}
 {{- end }}
 ---
 apiVersion: v1

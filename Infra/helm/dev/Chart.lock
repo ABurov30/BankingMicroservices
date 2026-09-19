@@ -1,0 +1,15 @@
+dependencies:
+- name: dev-platform
+  repository: file://charts/platform
+  version: 1.0.0
+- name: dev-databases
+  repository: file://charts/databases
+  version: 1.0.0
+- name: dev-applications
+  repository: file://charts/applications
+  version: 1.0.0
+- name: dev-observability
+  repository: file://charts/observability
+  version: 1.0.0
+digest: sha256:3adea41d9b3ea9513adca43211249be0993485ad597d066503731a99e898cf5e
+generated: "2026-09-18T15:34:41.288504+03:00"

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: dev-applications
+description: Helm chart for dev environment of applications for banking microservices
+type: application
+version: 1.0.0
+appVersion: '1.0.0'

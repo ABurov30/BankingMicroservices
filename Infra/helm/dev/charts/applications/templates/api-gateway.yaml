@@ -1,0 +1,129 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-gateway
+  namespace: bank-dev
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: banking.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.global.apiGateway.name }}
+                port:
+                  number: {{ .Values.global.apiGateway.port }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.global.apiGateway.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.global.apiGateway.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.global.apiGateway.name }}
+    spec:
+      containers:
+        - name: {{ .Values.global.apiGateway.name }}
+          image: "{{ .Values.images.apiGateway }}:{{ .Values.global.imageTag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.global.apiGateway.port }}
+          env:
+            - name: API_GATEWAY_NAME
+              value: {{ .Values.global.apiGateway.name | quote }}
+            - name: API_GATEWAY_PORT
+              value: {{ .Values.global.apiGateway.port | quote }}
+            - name: SITE_URL
+              value: {{ $.Values.global.siteUrl | quote }}
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: {{ $.Values.global.kafka.bootstrapServers | quote }}
+            - name: SCHEMA_REGISTRY_URL
+              value: {{ $.Values.global.kafka.schemaRegistryUrl | quote }}
+            - name: REDIS_HOST
+              value: {{ $.Values.global.redis.host | quote }}
+            - name: REDIS_PORT
+              value: {{ $.Values.global.redis.port | quote }}
+            - name: AUTH_COOKIE_SECURE
+              value: "false"
+            - name: AUTH_COOKIE_SAME_SITE
+              value: "Lax"
+            - name: AUTH_COOKIE_DOMAIN
+              value: ""
+
+{{- if .Values.global.jaeger.enabled }}
+            - name: TRACING_SAMPLING_PROBABILITY
+              value: {{ .Values.global.jaeger.tracing.samplingProbability | quote }}
+            - name: OTLP_TRACING_ENDPOINT
+              value: "http://{{ .Values.global.jaeger.name }}:{{ .Values.global.jaeger.otlpHttpPort }}/v1/traces"
+            - name: MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED
+              value: {{ .Values.global.jaeger.tracing.metricsExportEnabled | quote }}
+{{- end }}
+
+            - name: AUTH_GRPC_HOST
+              value: {{ .Values.global.services.auth.name | quote }}
+            - name: AUTH_GRPC_PORT
+              value: {{ .Values.global.services.auth.grpcPort | quote }}
+
+            - name: USER_GRPC_HOST
+              value: {{ .Values.global.services.user.name | quote }}
+            - name: USER_GRPC_PORT
+              value: {{ .Values.global.services.user.grpcPort | quote }}
+
+            - name: ACCOUNT_GRPC_HOST
+              value: {{ .Values.global.services.account.name | quote }}
+            - name: ACCOUNT_GRPC_PORT
+              value: {{ .Values.global.services.account.grpcPort | quote }}
+
+            - name: CARD_GRPC_HOST
+              value: {{ .Values.global.services.card.name | quote }}
+            - name: CARD_GRPC_PORT
+              value: {{ .Values.global.services.card.grpcPort | quote }}
+
+            - name: TRANSACTION_GRPC_HOST
+              value: {{ .Values.global.services.transaction.name | quote }}
+            - name: TRANSACTION_GRPC_PORT
+              value: {{ .Values.global.services.transaction.grpcPort | quote }}
+
+            - name: NOTIFICATION_PORT
+              value: {{ .Values.global.services.notification.port | quote }}
+            - name: NOTIFICATION_GRPC_HOST
+              value: {{ .Values.global.services.notification.name | quote }}
+            - name: NOTIFICATION_GRPC_PORT
+              value: {{ .Values.global.services.notification.grpcPort | quote }}
+
+            - name: JWT_PUBLIC_KEY_PATH
+              value: {{ .Values.global.jwt.publicKeyPath | quote }}
+          volumeMounts:
+            - name: jwt-keys
+              mountPath: /secrets
+              readOnly: true
+      volumes:
+        - name: jwt-keys
+          secret:
+            secretName: {{ .Values.global.jwt.secretName }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.global.apiGateway.name }}
+spec:
+  type: {{ .Values.apiGateway.serviceType }}
+  selector:
+    app: {{ .Values.global.apiGateway.name }}
+  ports:
+    - name: http
+      port: {{ .Values.global.apiGateway.port }}
+      targetPort: http

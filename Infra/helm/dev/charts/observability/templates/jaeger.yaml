@@ -1,0 +1,61 @@
+{{- if .Values.global.jaeger.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.global.jaeger.name }}
+  labels:
+    app: {{ .Values.global.jaeger.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.global.jaeger.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.global.jaeger.name }}
+    spec:
+      containers:
+        - name: {{ .Values.global.jaeger.name }}
+          image: {{ .Values.global.jaeger.image | quote }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: ui
+              containerPort: {{ .Values.global.jaeger.uiPort }}
+            - name: otlp-grpc
+              containerPort: {{ .Values.global.jaeger.otlpGrpcPort }}
+            - name: otlp-http
+              containerPort: {{ .Values.global.jaeger.otlpHttpPort }}
+            - name: sampling
+              containerPort: {{ .Values.global.jaeger.samplingPort }}
+            - name: zipkin
+              containerPort: {{ .Values.global.jaeger.zipkinPort }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.global.jaeger.name }}
+  labels:
+    app: {{ .Values.global.jaeger.name }}
+spec:
+  type: {{ .Values.global.jaeger.serviceType }}
+  selector:
+    app: {{ .Values.global.jaeger.name }}
+  ports:
+    - name: ui
+      port: {{ .Values.global.jaeger.uiPort }}
+      targetPort: ui
+    - name: otlp-grpc
+      port: {{ .Values.global.jaeger.otlpGrpcPort }}
+      targetPort: otlp-grpc
+    - name: otlp-http
+      port: {{ .Values.global.jaeger.otlpHttpPort }}
+      targetPort: otlp-http
+    - name: sampling
+      port: {{ .Values.global.jaeger.samplingPort }}
+      targetPort: sampling
+    - name: zipkin
+      port: {{ .Values.global.jaeger.zipkinPort }}
+      targetPort: zipkin
+{{- end }}

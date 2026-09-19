@@ -39,7 +39,7 @@ data:
         type: jaeger
         uid: jaeger
         access: proxy
-        url: http://{{ .Values.jaeger.name }}:{{ .Values.jaeger.uiPort }}
+        url: http://{{ .Values.global.jaeger.name }}:{{ .Values.global.jaeger.uiPort }}
         jsonData:
           tracesToLogsV2:
             datasourceUid: loki

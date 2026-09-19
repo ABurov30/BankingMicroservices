@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  labels:
+    app: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: {{ .Values.redis.image | quote }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: redis
+              containerPort: {{ .Values.global.redis.port }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  labels:
+    app: redis
+spec:
+  type: ClusterIP
+  selector:
+    app: redis
+  ports:
+    - name: redis
+      port: {{ .Values.global.redis.port }}
+      targetPort: redis
+{{- if .Values.redis.ui.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-ui
+  labels:
+    app: redis-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-ui
+  template:
+    metadata:
+      labels:
+        app: redis-ui
+    spec:
+      containers:
+        - name: redis-ui
+          image: {{ .Values.redis.ui.image | quote }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: {{ .Values.redis.ui.port }}
+          env:
+            - name: RI_REDIS_HOST
+              value: {{ .Values.global.redis.host | quote }}
+            - name: RI_REDIS_PORT
+              value: {{ .Values.global.redis.port | quote }}
+            - name: RI_REDIS_ALIAS
+              value: local-redis
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-ui
+  labels:
+    app: redis-ui
+spec:
+  type: ClusterIP
+  selector:
+    app: redis-ui
+  ports:
+    - name: http
+      port: {{ .Values.redis.ui.port }}
+{{- end }}

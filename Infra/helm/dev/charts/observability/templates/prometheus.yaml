@@ -12,9 +12,9 @@ data:
       - job_name: api-gateway
         metrics_path: /actuator/prometheus
         static_configs:
-          - targets: ["{{ .Values.apiGateway.name }}:{{ .Values.apiGateway.port }}"]
+          - targets: ["{{ .Values.global.apiGateway.name }}:{{ .Values.global.apiGateway.port }}"]
 
-  {{- range $key, $svc := .Values.services }}
+  {{- range $key, $svc := .Values.global.services }}
       - job_name: {{ $svc.name }}
         metrics_path: /actuator/prometheus
         static_configs:

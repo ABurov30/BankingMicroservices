@@ -4,3 +4,24 @@ description: Helm chart for dev environment for banking microservices
 type: application
 version: 1.0.0
 appVersion: '1.0.0'
+
+dependencies:
+  - name: dev-platform
+    version: 1.0.0
+    alias: platform
+    repository: file://charts/platform
+
+  - name: dev-databases
+    version: 1.0.0
+    alias: databases
+    repository: file://charts/databases
+
+  - name: dev-applications
+    version: 1.0.0
+    alias: applications
+    repository: file://charts/applications
+
+  - name: dev-observability
+    version: 1.0.0
+    alias: observability
+    repository: file://charts/observability
